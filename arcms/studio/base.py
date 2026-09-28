@@ -42,7 +42,8 @@ class Crud:
 
     def __init__(self, *, model, form, cap, name: str, title: str, singular: str, columns: list[tuple[str, str]],
                  queryset=None, search_field: str | None = None, template_list="studio/crud_list.html",
-                 template_form="studio/crud_form.html", deletable=True, public_url: bool = True, help_text: str = ""):
+                 template_form="studio/crud_form.html", deletable=True, public_url: bool = True, help_text: str = "",
+                 list_extra=None, form_extra=None):
         self.model = model
         self.form = form
         self.cap = cap
@@ -57,6 +58,9 @@ class Crud:
         self.deletable = deletable
         self.public_url = public_url
         self.help_text = help_text
+        # دوال اختيارية تضيف سياقاً للقائمة أو النموذج: (request) و(request, obj).
+        self.list_extra = list_extra
+        self.form_extra = form_extra
 
     def qs(self):
         return self.queryset() if callable(self.queryset) else self.model.objects.all()
@@ -88,7 +92,8 @@ class Crud:
                 }
                 for obj in page
             ]
-            return render(request, crud.template_list, crud.ctx(page=page, rows=rows, q=q))
+            extra = crud.list_extra(request) if crud.list_extra else {}
+            return render(request, crud.template_list, crud.ctx(page=page, rows=rows, q=q, **extra))
 
         @requires(crud.cap)
         def form_view(request, pk=None):
@@ -100,7 +105,8 @@ class Crud:
                 if "save_add" in request.POST:
                     return redirect(f"studio:{crud.name}_new")
                 return redirect(f"studio:{crud.name}_list")
-            return render(request, crud.template_form, crud.ctx(form=form, obj=obj))
+            extra = crud.form_extra(request, obj) if crud.form_extra else {}
+            return render(request, crud.template_form, crud.ctx(form=form, obj=obj, **extra))
 
         @requires(crud.cap)
         @require_POST

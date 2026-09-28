@@ -1,0 +1,26 @@
+{% extends "studio/base.html" %}
+{% block title %}التقويم التحريري{% endblock %}
+{% block content %}
+<div class="page-title">
+  <div><h1>التقويم التحريري</h1><p>ما جُدول للنشر وما نُشر خلال الأسبوع. {{ scheduled_total }} مجدولة · {{ published_total }} منشورة.</p></div>
+  <div class="btn-row">
+    <a class="btn sm" href="?week={{ prev }}">→ الأسبوع السابق</a>
+    {% if not this_week %}<a class="btn sm" href="?">هذا الأسبوع</a>{% endif %}
+    <a class="btn sm" href="?week={{ next }}">الأسبوع التالي ←</a>
+  </div>
+</div>
+<div class="calendar">
+  {% for col in columns %}
+  <section class="cal-day{% if col.today %} today{% endif %}">
+    <header><strong>{{ col.weekday }}</strong><span>{{ col.day|ar_date_short }}</span></header>
+    {% for item in col.items %}
+      <a class="cal-item{% if item.scheduled %} scheduled{% endif %}" href="{% url 'studio:article_edit' item.article.pk %}">
+        <span class="t">{{ item.time|ar_time }}{% if item.scheduled %} · مجدولة{% endif %}</span>
+        {{ item.article.title|truncatechars:70 }}
+        <span class="c">{{ item.article.category|default:"" }}</span>
+      </a>
+    {% empty %}<p class="empty small">—</p>{% endfor %}
+  </section>
+  {% endfor %}
+</div>
+{% endblock %}

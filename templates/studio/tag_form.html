@@ -1,0 +1,15 @@
+{% extends "studio/crud_form.html" %}
+{% block content %}
+{{ block.super }}
+{% if obj %}
+<section class="panel" style="max-width:820px;margin-top:18px">
+  <h2>{{ "link"|icon:18 }} دمج هذا الوسم في وسم آخر</h2>
+  <p class="small muted">تُنقل المواد ({{ article_count }}) إلى الوسم المختار، ويُحذف هذا الوسم، ويُحوَّل رابطه القديم تحويلاً دائماً.</p>
+  <form method="post" action="{% url 'studio:tag_merge' obj.pk %}" class="btn-row" data-confirm="دمج الوسم؟ لا يمكن التراجع.">
+    {% csrf_token %}
+    <select name="target" required style="max-width:320px"><option value="">— اختر —</option>{% for t in merge_targets %}<option value="{{ t.pk }}">{{ t.name }}</option>{% endfor %}</select>
+    <button class="btn" type="submit">دمج</button>
+  </form>
+</section>
+{% endif %}
+{% endblock %}

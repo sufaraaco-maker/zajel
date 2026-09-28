@@ -1,0 +1,30 @@
+{% extends "studio/base.html" %}
+{% block title %}مشتركو النشرة{% endblock %}
+{% block content %}
+<div class="page-title">
+  <div><h1>مشتركو النشرة البريدية</h1><p><a href="{% url 'studio:distribution' %}">← التوزيع</a> · البريد بيانات شخصية: التصدير يُسجَّل في سجل التدقيق، والحذف نهائي.</p></div>
+  <a class="btn" href="{% url 'studio:subscribers_export' %}">{{ "download"|icon:16 }} تصدير المؤكَّدين (CSV)</a>
+</div>
+<div class="tabs">
+  <a href="?" class="{% if not state %}active{% endif %}">الكل</a>
+  <a href="?state=active" class="{% if state == 'active' %}active{% endif %}">مؤكَّدون ({{ counts.active }})</a>
+  <a href="?state=pending" class="{% if state == 'pending' %}active{% endif %}">بانتظار التأكيد ({{ counts.pending }})</a>
+  <a href="?state=left" class="{% if state == 'left' %}active{% endif %}">ألغوا الاشتراك ({{ counts.left }})</a>
+</div>
+<form class="filters" method="get"><input type="search" name="q" value="{{ q }}" placeholder="ابحث بالبريد" dir="ltr">{% if state %}<input type="hidden" name="state" value="{{ state }}">{% endif %}<button class="btn">بحث</button></form>
+<div class="table-wrap"><table class="data">
+  <thead><tr><th>البريد</th><th>الحالة</th><th>اشترك</th><th>المصدر</th><th></th></tr></thead>
+  <tbody>
+  {% for s in page %}
+  <tr>
+    <td dir="ltr" style="text-align:right">{{ s.email }}</td>
+    <td>{% if s.unsubscribed_at %}<span class="pill">ألغى {{ s.unsubscribed_at|ar_date_short }}</span>{% elif s.confirmed_at %}<span class="pill ok">مؤكَّد</span>{% else %}<span class="pill warn">بانتظار التأكيد</span>{% endif %}</td>
+    <td class="small">{{ s.created_at|ar_date_short }}</td>
+    <td class="small">{{ s.source }}</td>
+    <td class="num"><form method="post" action="{% url 'studio:subscriber_delete' s.pk %}" data-confirm="حذف هذا البريد نهائياً؟">{% csrf_token %}<button class="btn sm danger">حذف</button></form></td>
+  </tr>
+  {% empty %}<tr><td colspan="5" class="empty">لا مشتركين.</td></tr>{% endfor %}
+  </tbody>
+</table></div>
+{% include "studio/partials/pagination.html" %}
+{% endblock %}

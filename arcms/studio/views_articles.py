@@ -217,6 +217,7 @@ def article_edit(request, pk: int | None = None):
         messages.error(request, "راجع الحقول المعلَّمة.")
 
     ctx = {
+        "stats": _article_stats(article) if article is not None and article.first_published_at else None,
         "form": form,
         "article": article,
         "editable": editable,
@@ -231,6 +232,23 @@ def article_edit(request, pk: int | None = None):
         "now_local": timezone.localtime().strftime("%Y-%m-%dT%H:%M"),
     }
     return render(request, "studio/article_edit.html", ctx)
+
+
+def _article_stats(article: Article) -> dict:
+    """أرقام مادة منشورة: الإجمالي، اليوم، آخر 7 أيام، ومصادر الزيارات."""
+    from arcms.analytics.models import PageView
+
+    start_today = timezone.localtime().replace(hour=0, minute=0, second=0, microsecond=0)
+    week = PageView.objects.filter(article_id=article.pk, ts__gte=timezone.now() - timedelta(days=7))
+    labels = dict(PageView.Source.choices)
+    sources = list(week.values("source").annotate(n=Count("id")).order_by("-n")[:5])
+    week_total = sum(r["n"] for r in sources) or 1
+    return {
+        "total": article.view_count,
+        "today": PageView.objects.filter(article_id=article.pk, ts__gte=start_today).count(),
+        "week": week.count(),
+        "sources": [(labels.get(r["source"], r["source"]), r["n"], round(100 * r["n"] / week_total)) for r in sources],
+    }
 
 
 @requires(Cap.ARTICLE_CREATE, Cap.ARTICLE_EDIT_ANY)

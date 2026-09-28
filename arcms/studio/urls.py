@@ -9,6 +9,7 @@ from . import views_admin as admin
 from . import views_articles as articles
 from . import views_media as media
 from . import views_newsroom as newsroom
+from . import views_tools as tools
 from .base import Crud
 from .forms import AdSlotForm, AuthorForm, CategoryForm, DossierForm, MenuItemForm, PageForm, TagForm
 
@@ -26,6 +27,10 @@ tags = Crud(
     columns=[("name", "الوسم"), ("n", "المواد"), ("slug", "الرابط")],
     queryset=lambda: Tag.objects.annotate(n=Count("articles")).order_by("-n", "name"),
     search_field="name",
+    template_list="studio/tags_list.html",
+    template_form="studio/tag_form.html",
+    list_extra=tools.tags_list_extra,
+    form_extra=tools.tag_form_extra,
 )
 authors = Crud(
     model=Author, form=AuthorForm, cap=Cap.TAXONOMY, name="authors", title="الكتّاب", singular="الكاتب",
@@ -106,6 +111,12 @@ urlpatterns = [
     path("import/", admin.importer, name="importer"),
     path("inbox/", admin.inbox, name="inbox"),
     path("health/", admin.health, name="health"),
+    path("tags/<int:pk>/merge/", tools.tag_merge, name="tag_merge"),
+    path("tags/merge-group/", tools.tag_merge_group, name="tag_merge_group"),
+    path("subscribers/", tools.subscribers, name="subscribers"),
+    path("subscribers/export.csv", tools.subscribers_export, name="subscribers_export"),
+    path("subscribers/<int:pk>/delete/", tools.subscriber_delete, name="subscriber_delete"),
+    path("calendar/", tools.calendar, name="calendar"),
     *categories.urls(),
     *tags.urls(),
     *authors.urls(),

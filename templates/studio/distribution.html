@@ -3,7 +3,7 @@
 {% block content %}
 <div class="page-title"><div><h1>التوزيع التلقائي</h1><p>عند نشر مادة تُرسل تلقائياً حسب خياراتها وإعدادات كل قناة. آخر 7 أيام أدناه.</p></div></div>
 <div class="cols cols-4" style="margin-bottom:18px">
-  <div class="kpi"><div class="label">مشتركو النشرة المؤكَّدون</div><div class="value">{{ subscribers.newsletter|ar_compact }}</div><div class="delta">بانتظار التأكيد: {{ subscribers.newsletter_pending }}</div></div>
+  <div class="kpi"><div class="label">مشتركو النشرة المؤكَّدون</div><div class="value">{{ subscribers.newsletter|ar_compact }}</div><div class="delta">بانتظار التأكيد: {{ subscribers.newsletter_pending }}{% if "distribution.manage" in user_caps %} · <a href="{% url 'studio:subscribers' %}">إدارة القائمة</a>{% endif %}</div></div>
   <div class="kpi"><div class="label">مشتركو الإشعارات</div><div class="value">{{ subscribers.push|ar_compact }}</div></div>
   <div class="kpi"><div class="label">مشتركو واتساب</div><div class="value">{{ subscribers.whatsapp|ar_compact }}</div><div class="delta"><a href="{% url 'studio:whatsapp_subscribers' %}">إدارة الأرقام</a></div></div>
   <div class="kpi"><div class="label">نشرات أُرسلت</div><div class="value">{{ issues|length }}</div></div>

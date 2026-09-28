@@ -22,6 +22,7 @@
       <a href="{% url 'studio:articles' %}" class="{% if '/studio/articles' in p %}active{% endif %}">{{ "list"|icon:18 }} المواد
         {% if nav_counts.review %}<span class="count" title="بانتظار مراجعتك">{{ nav_counts.review }}</span>{% elif nav_counts.returned %}<span class="count" title="أُعيدت إليك">{{ nav_counts.returned }}</span>{% endif %}</a>
       {% endif %}
+      {% if "article.publish" in user_caps or "article.review" in user_caps %}<a href="{% url 'studio:calendar' %}" class="{% if '/studio/calendar' in p %}active{% endif %}">{{ "clock"|icon:18 }} التقويم التحريري</a>{% endif %}
       {% if "breaking.manage" in user_caps %}<a href="{% url 'studio:breaking' %}" class="{% if '/studio/breaking' in p %}active{% endif %}">{{ "bolt"|icon:18 }} العاجل</a>{% endif %}
       {% if "live.post" in user_caps or "live.manage" in user_caps %}<a href="{% url 'studio:live_list' %}" class="{% if '/studio/live' in p %}active{% endif %}">{{ "live"|icon:18 }} التغطيات المباشرة</a>{% endif %}
       {% if "media.upload" in user_caps %}<a href="{% url 'studio:media' %}" class="{% if '/studio/media' in p %}active{% endif %}">{{ "image"|icon:18 }} مكتبة الوسائط</a>{% endif %}
@@ -42,7 +43,7 @@
       {% if "homepage.manage" in user_caps %}<a href="{% url 'studio:ads_list' %}" class="{% if '/studio/ads' in p %}active{% endif %}">{{ "image"|icon:18 }} الإعلانات</a>{% endif %}
 
       {% if "distribution.manage" in user_caps or "distribution.send" in user_caps %}<div class="group">التوزيع</div>
-      <a href="{% url 'studio:distribution' %}" class="{% if '/studio/distribution' in p or '/studio/whatsapp' in p %}active{% endif %}">{{ "send"|icon:18 }} القنوات والمشتركون</a>{% endif %}
+      <a href="{% url 'studio:distribution' %}" class="{% if '/studio/distribution' in p or '/studio/whatsapp' in p or '/studio/subscribers' in p %}active{% endif %}">{{ "send"|icon:18 }} القنوات والمشتركون</a>{% endif %}
 
       {% if "settings.manage" in user_caps or "users.manage" in user_caps or "audit.view" in user_caps %}<div class="group">الإدارة والأمان</div>{% endif %}
       {% if "settings.manage" in user_caps %}<a href="{% url 'studio:settings' %}" class="{% if '/studio/settings' in p %}active{% endif %}">{{ "gear"|icon:18 }} إعدادات الموقع</a>

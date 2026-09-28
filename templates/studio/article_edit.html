@@ -82,6 +82,20 @@
     <section class="panel"><h2>{{ "pen"|icon:18 }} مادة جديدة</h2><button class="btn primary block" type="submit" form="article-form" name="action" value="save">حفظ كمسودة</button><p class="small muted">بعد الحفظ تظهر أزرار الإرسال للمراجعة أو النشر.</p></section>
     {% endif %}
 
+    {% if stats %}
+    <section class="panel viz">
+      <h2>{{ "chart"|icon:18 }} جمهور هذه المادة</h2>
+      <div class="cols cols-3" style="gap:8px;margin-bottom:10px">
+        <div><div class="small muted">الإجمالي</div><strong style="font-size:1.3rem">{{ stats.total|ar_compact }}</strong></div>
+        <div><div class="small muted">اليوم</div><strong style="font-size:1.3rem">{{ stats.today|ar_compact }}</strong></div>
+        <div><div class="small muted">7 أيام</div><strong style="font-size:1.3rem">{{ stats.week|ar_compact }}</strong></div>
+      </div>
+      {% for label, n, pct in stats.sources %}
+      <div class="hbar" style="grid-template-columns:90px minmax(0,1fr) 44px"><span class="small">{{ label }}</span><div class="track"><div class="fill" style="width:{{ pct }}%"></div></div><span class="num small">{{ pct }}٪</span></div>
+      {% empty %}<p class="small muted">لا زيارات مسجّلة خلال 7 أيام.</p>{% endfor %}
+    </section>
+    {% endif %}
+
     <section class="panel">
       <h2>{{ "folder"|icon:18 }} التصنيف</h2>
       {% include "studio/partials/field.html" with field=form.category %}

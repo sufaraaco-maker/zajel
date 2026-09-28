@@ -1,0 +1,22 @@
+{% extends "studio/crud_list.html" %}
+{% block content %}
+{% if similar %}
+<section class="panel">
+  <h2>{{ "link"|icon:18 }} وسوم متشابهة قد تحتاج دمجاً</h2>
+  <p class="small muted">جُمعت بجذعها اللغوي بعد توحيد الهمزات: «الاعتقال» و«اعتقالات» و«الإعتقالات» وسم واحد في نظر القارئ. اختر الوسم الذي يبقى، وتُنقل إليه المواد ويُحوَّل رابط البقية.</p>
+  {% for group in similar %}
+  <form method="post" action="{% url 'studio:tag_merge_group' %}" class="block-item" style="flex-wrap:wrap" data-confirm="دمج هذه الوسوم؟ لا يمكن التراجع.">
+    {% csrf_token %}
+    <div class="grow checks-inline">
+      {% for t in group %}
+        <input type="hidden" name="tag" value="{{ t.pk }}">
+        <label class="check"><input type="radio" name="target" value="{{ t.pk }}"{% if forloop.first %} checked{% endif %}> {{ t.name }} <span class="muted small">({{ t.n }})</span></label>
+      {% endfor %}
+    </div>
+    <button class="btn sm" type="submit">دمج في المختار</button>
+  </form>
+  {% endfor %}
+</section>
+{% endif %}
+{{ block.super }}
+{% endblock %}
