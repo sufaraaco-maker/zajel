@@ -11,7 +11,7 @@
     <li class="block-item{% if not b.is_active %} off{% endif %}">
       <div class="grow">
         <strong>{{ b.title|default:b.get_kind_display }}</strong>
-        <div class="kind">{{ b.get_kind_display }}{% if b.category %} · {{ b.category }}{% endif %}{% if b.dossier %} · {{ b.dossier }}{% endif %}{% if b.article_kind %} · {{ b.article_kind }}{% endif %} · {{ b.get_layout_display }} · {{ b.count }} مواد{% if b.dark %} · خلفية داكنة{% endif %}</div>
+        <div class="kind">{{ b.get_kind_display }}{% if b.category %} · {{ b.category }}{% endif %}{% if b.dossier %} · {{ b.dossier }}{% endif %}{% if b.article_kind %} · {{ b.article_kind_label }}{% endif %} · {{ b.get_layout_display }} · {{ b.count }} مواد{% if b.dark %} · خلفية داكنة{% endif %}</div>
       </div>
       <form method="post" action="{% url 'studio:homepage_action' b.pk %}" class="btn-row">{% csrf_token %}
         <button class="btn sm" name="action" value="up" title="للأعلى" {% if forloop.first %}disabled{% endif %}>↑</button>

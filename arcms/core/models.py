@@ -272,6 +272,12 @@ class HomeBlock(models.Model):
     def __str__(self) -> str:
         return self.title or self.get_kind_display()
 
+    @property
+    def article_kind_label(self) -> str:
+        from arcms.content.models import ArticleKind
+
+        return dict(ArticleKind.choices).get(self.article_kind, self.article_kind)
+
 
 class AdSlot(models.Model):
     class Placement(models.TextChoices):

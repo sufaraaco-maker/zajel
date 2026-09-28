@@ -191,6 +191,11 @@ class SanitizeTests(ArcmsTestCase):
         self.assertNotIn("tracker.example", out)
         self.assertEqual(out.count("<iframe"), 1)
 
+    def test_plain_text_keeps_sentence_boundaries(self):
+        from arcms.content.sanitize import plain_text
+
+        self.assertEqual(plain_text("<p>جملة أولى.</p><p>جملة ثانية.</p>"), "جملة أولى. جملة ثانية.")
+
     def test_links_get_rel(self):
         out = sanitize_html('<a href="https://example.org" target="_blank">x</a>')
         self.assertIn('rel="noopener noreferrer nofollow"', out)

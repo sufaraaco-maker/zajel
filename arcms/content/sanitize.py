@@ -84,7 +84,9 @@ def render_embeds(html: str) -> str:
 
 
 def plain_text(html: str) -> str:
-    text = nh3.clean(html or "", tags=set())
+    # مسافة مكان نهاية كل كتلة، حتى لا تلتصق الجمل عند نزع الوسوم.
+    html = re.sub(r"</(p|h\d|li|div|blockquote|figcaption|td|tr)>|<br\s*/?>", " ", html or "")
+    text = nh3.clean(html, tags=set())
     import html as _html
 
     return re.sub(r"\s+", " ", _html.unescape(text)).strip()
