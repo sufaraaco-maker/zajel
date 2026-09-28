@@ -8,12 +8,13 @@
 <link rel="stylesheet" href="{% static 'css/fonts.css' %}">
 <link rel="stylesheet" href="{% static 'css/studio.css' %}">
 <style>:root{--primary:{{ site.primary_color }}}</style>
+<link rel="icon" href="{% if site.logo %}{{ site.logo.thumb }}{% else %}{% static 'img/icon-192.png' %}{% endif %}">
 {% block head %}{% endblock %}
 </head>
 <body>
 <div class="shell">
   <aside class="side" id="side">
-    <a class="brand" href="{% url 'studio:home' %}"><span class="mark">{{ "pigeon"|icon:22 }}</span><span>{{ site.short_name }}<small>غرفة التحرير</small></span></a>
+    <a class="brand" href="{% url 'studio:home' %}">{% if site.logo_dark %}<img class="brand-logo" src="{{ site.logo_dark.url }}" alt="{{ site.short_name }}"><span><small>غرفة التحرير</small></span>{% elif site.logo %}<span class="mark logo"><img src="{{ site.logo.thumb }}" alt=""></span><span>{{ site.short_name }}<small>غرفة التحرير</small></span>{% else %}<span class="mark">{{ "pigeon"|icon:22 }}</span><span>{{ site.short_name }}<small>غرفة التحرير</small></span>{% endif %}</a>
     {% if "article.create" in user_caps %}<a class="btn primary new-btn" href="{% url 'studio:article_new' %}">{{ "plus"|icon:16 }} مادة جديدة</a>{% endif %}
     <nav aria-label="غرفة التحرير">
       {% with p=request.path %}

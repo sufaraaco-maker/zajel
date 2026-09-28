@@ -6,7 +6,7 @@
 <tr><td align="center" style="padding:20px 10px;">
   <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:6px;overflow:hidden;">
     <tr><td style="background:{{ site.primary_color }};padding:18px 22px;color:#fff;text-align:right;">
-      <div style="font-size:24px;font-weight:bold;">{{ site.name }}</div>
+      {% if site.logo_dark %}<img src="{{ home_url }}{{ site.logo_dark.url|slice:'1:' }}" alt="{{ site.name }}" height="40" style="height:40px;width:auto;display:block;margin-bottom:6px;">{% else %}<div style="font-size:24px;font-weight:bold;">{{ site.name }}</div>{% endif %}
       <div style="font-size:14px;opacity:.9;">النشرة اليومية · {{ day_label }}</div>
     </td></tr>
     {% for a in articles %}

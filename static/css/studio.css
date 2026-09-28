@@ -326,3 +326,7 @@ label.theme-card:has(input:checked) { border-color: var(--t-primary, var(--prima
 .anchor-panel { margin-top: 14px; }
 .anchor-panel summary { cursor: pointer; }
 .anchor-code { word-break: break-all; font-size: .8rem; }
+.side .brand .brand-logo { max-height: 38px; max-width: 150px; width: auto; object-fit: contain; }
+.side .brand .mark.logo { background: #fff; overflow: hidden; }
+.side .brand .mark.logo img { max-width: 30px; max-height: 30px; object-fit: contain; }
+.auth-brand .auth-logo { max-height: 52px; max-width: 200px; width: auto; object-fit: contain; }

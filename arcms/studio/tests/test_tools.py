@@ -171,3 +171,18 @@ class SetupWizardTests(ArcmsTestCase):
     def test_chief_cannot_open_wizard(self):
         login(self.client, make_user("chief", Role.CHIEF))
         self.assertEqual(self.client.get(reverse("studio:setup")).status_code, 403)
+
+
+class WhiteLabelTests(ArcmsTestCase):
+    def test_client_logo_in_studio_and_login(self):
+        from arcms.content.imaging import store_image
+        from arcms.core.models import SiteSettings
+        from arcms.core.testing import image_bytes
+
+        logo, _ = store_image(image_bytes(fmt="PNG", size=(300, 100)))
+        site = SiteSettings.load()
+        site.logo = logo
+        site.save()
+        self.assertContains(self.client.get(reverse("accounts:login")), logo.url)
+        login(self.client, make_user("chief", Role.CHIEF))
+        self.assertContains(self.client.get(reverse("studio:home")), logo.thumb)
