@@ -20,7 +20,7 @@
 {% if form.errors %}<div class="alert error">{{ "alert"|icon:18 }} <div>لم تُحفظ المادة. {% for f in form %}{% if f.errors %}<div><strong>{{ f.label }}:</strong> {{ f.errors|join:" " }}</div>{% endif %}{% endfor %}{{ form.non_field_errors }}</div></div>{% endif %}
 
 <div class="editor-layout">
-  <form id="article-form" method="post" class="editor-main" data-article-editor
+  <form id="article-form" method="post" enctype="multipart/form-data" class="editor-main" data-article-editor
         data-autosave="{% if article and editable %}{% url 'studio:article_autosave' article.pk %}{% endif %}"
         data-heartbeat="{% if article and editable %}{% url 'studio:article_heartbeat' article.pk %}{% endif %}"
         data-status="{{ article.status|default:'draft' }}">
@@ -38,8 +38,13 @@
       <div class="form-row">{{ form.title }}<div class="counter" data-counter-for="{{ form.title.id_for_label }}" data-soft="90"></div>{% if form.title.errors %}<ul class="errors"><li>{{ form.title.errors.0 }}</li></ul>{% endif %}</div>
       <div class="form-row subtitle-input">{{ form.subtitle }}</div>
       <div class="form-row"><label for="{{ form.excerpt.id_for_label }}">{{ form.excerpt.label }}</label>{{ form.excerpt }}<div class="counter" data-counter-for="{{ form.excerpt.id_for_label }}" data-soft="280"></div></div>
-      <div class="form-row" data-kind-only="video">
+      <div class="form-row" data-kind-only="video short">
         <label for="{{ form.video_url.id_for_label }}">{{ form.video_url.label }}</label>{{ form.video_url }}<div class="help">{{ form.video_url.help_text }}. يُعرض عبر youtube-nocookie فلا يتتبّع يوتيوب القرّاء قبل التشغيل.</div>
+      </div>
+      <div class="form-row" data-kind-only="podcast">
+        <label for="{{ form.audio.id_for_label }}">{{ form.audio.label }}</label>{{ form.audio }}
+        <div class="help">{{ form.audio.help_text }} تُنزع من MP3 وسوم ID3 (اسم المعدّ والبرنامج والصورة المضمَّنة).</div>
+        {% if form.audio.errors %}<ul class="errors"><li>{{ form.audio.errors.0 }}</li></ul>{% endif %}
       </div>
       <div class="form-row">
         <span class="label">المتن</span>

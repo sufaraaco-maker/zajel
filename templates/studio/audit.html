@@ -20,7 +20,7 @@
     <td>{{ e.actor_label }}</td>
     <td><span class="pill {% if e.action == 'login_failed' or e.action == 'delete' or e.action == 'security' %}fail{% elif e.action == 'publish' %}ok{% endif %}">{{ e.get_action_display }}</span></td>
     <td class="small">{{ e.object_type }}{% if e.object_id %} #{{ e.object_id }}{% endif %}<div>{{ e.object_repr|truncatechars:60 }}</div></td>
-    <td class="small">{{ e.message }}{% if e.changes %}<details><summary>الحقول ({{ e.changes|length }})</summary><ul style="margin:0;padding-inline-start:16px">{% for k, v in e.changes.items %}<li><strong>{{ k }}</strong>: {{ v|stringformat:"s"|truncatechars:160 }}</li>{% endfor %}</ul></details>{% endif %}</td>
+    <td class="small">{{ e.message }}{% if e.changes %}<details><summary>الحقول ({{ e.changes|length }})</summary><ul style="margin:0;padding-inline-start:16px">{% for k, v in e.changes|dict_items %}<li><strong>{{ k }}</strong>: {{ v|stringformat:"s"|truncatechars:160 }}</li>{% endfor %}</ul></details>{% endif %}</td>
     <td class="small" dir="ltr">{{ e.ip|default:"" }}</td>
   </tr>
   {% empty %}<tr><td colspan="7" class="empty">لا قيود.</td></tr>{% endfor %}

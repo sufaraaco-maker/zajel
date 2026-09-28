@@ -171,4 +171,78 @@
       });
     });
   }
+  // --- الشرائط المتحركة: أزرار ونقاط فوق التمرير الأصلي (يعمل السحب دون سكربت) ---
+  $$("[data-carousel]").forEach(function (root) {
+    var track = $(".carousel-track", root);
+    var nav = $(".carousel-nav", root);
+    var dotsBox = $("[data-carousel-dots]", root);
+    var prev = $("[data-carousel-prev]", root);
+    var next = $("[data-carousel-next]", root);
+    if (!track || !nav) return;
+    var rtl = getComputedStyle(track).direction === "rtl";
+    function pages() { return Math.max(1, Math.round(track.scrollWidth / Math.max(1, track.clientWidth))); }
+    function current() { return Math.round(Math.abs(track.scrollLeft) / Math.max(1, track.clientWidth)); }
+    function go(i) {
+      var x = Math.max(0, Math.min(i, pages() - 1)) * track.clientWidth;
+      track.scrollTo({ left: rtl ? -x : x, behavior: "smooth" });
+    }
+    function build() {
+      var n = pages();
+      nav.hidden = n < 2;
+      dotsBox.innerHTML = "";
+      for (var i = 0; i < n; i++) {
+        var d = document.createElement("button");
+        d.type = "button";
+        d.setAttribute("aria-label", "الصفحة " + (i + 1));
+        d.addEventListener("click", go.bind(null, i));
+        dotsBox.appendChild(d);
+      }
+      sync();
+    }
+    function sync() {
+      var c = current(), n = pages();
+      $$("button", dotsBox).forEach(function (d, i) { d.setAttribute("aria-current", i === c ? "true" : "false"); });
+      if (prev) prev.disabled = c <= 0;
+      if (next) next.disabled = c >= n - 1;
+    }
+    if (prev) prev.addEventListener("click", function () { go(current() - 1); });
+    if (next) next.addEventListener("click", function () { go(current() + 1); });
+    var t;
+    track.addEventListener("scroll", function () { clearTimeout(t); t = setTimeout(sync, 80); }, { passive: true });
+    window.addEventListener("resize", function () { clearTimeout(t); t = setTimeout(build, 150); });
+    build();
+  });
+
+  // --- مشغّل الفيديو: لا يُطلب شيء من منصة الفيديو قبل ضغط القارئ ---
+  $$("[data-video-embed]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var src = btn.getAttribute("data-video-embed");
+      if (!/^https:\/\//.test(src)) return;
+      var f = document.createElement("iframe");
+      f.src = src + (src.indexOf("?") >= 0 ? "&" : "?") + "autoplay=1";
+      f.title = btn.getAttribute("aria-label") || "فيديو";
+      f.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
+      f.referrerPolicy = "strict-origin-when-cross-origin";
+      f.allowFullscreen = true;
+      var box = document.createElement("div");
+      box.className = "video-facade";
+      box.appendChild(f);
+      btn.replaceWith(box);
+    }, { once: true });
+  });
+
+  // --- تبويبات (الأكثر قراءة اليوم / هذا الأسبوع) ---
+  $$(".tabs-inline").forEach(function (list) {
+    var tabs = $$("[data-tab]", list);
+    tabs.forEach(function (tab) {
+      tab.addEventListener("click", function () {
+        tabs.forEach(function (t) {
+          var on = t === tab;
+          t.setAttribute("aria-selected", on ? "true" : "false");
+          var panel = document.getElementById(t.getAttribute("data-tab"));
+          if (panel) panel.hidden = !on;
+        });
+      });
+    });
+  });
 })();

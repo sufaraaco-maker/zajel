@@ -2,10 +2,25 @@
 {% block title %}كتلة{% endblock %}
 {% block content %}
 <div class="page-title"><div><h1>{% if block %}تعديل كتلة{% else %}كتلة جديدة{% endif %}</h1><p><a href="{% url 'studio:homepage' %}">← الصفحة الرئيسية</a></p></div></div>
-<form method="post" class="panel" style="max-width:760px">
+<form method="post" class="panel" style="max-width:780px" data-block-form data-media-form>
   {% csrf_token %}
-  {% for field in form %}{% include "studio/partials/field.html" %}{% endfor %}
-  <p class="small muted">الحقول المطلوبة حسب النوع: «قسم» يحتاج قسماً، «أعمدة» تحتاج أقساماً، «ملف خاص» يحتاج ملفاً، «نوع مادة» يحتاج نوعاً، «إعلان» يحتاج مساحة إعلانية.</p>
+  {{ field_kinds|json_script:"block-field-kinds" }}
+  {% for field in form %}
+    {% if field.name == "pick_ids" %}
+    <div class="form-row" data-block-field="pick_ids">
+      <span class="label">المواد المختارة (بالترتيب)</span>
+      {{ field }}
+      <input type="search" data-picker-search placeholder="ابحث عن مادة منشورة لإضافتها…">
+      <div class="chips" data-picker-chips>{% for a in form.picks %}<span class="chip" data-id="{{ a.pk }}">{{ a.title|truncatechars:60 }}</span>{% endfor %}</div>
+      <div class="help">إن لم تختر شيئاً تُعرض المواد المعلَّمة «في الواجهة» بعد الخبر الرئيسي.</div>
+    </div>
+    {% elif field.name == "image" %}
+    <div class="form-row" data-block-field="image"><span class="label">{{ field.label }}</span>{% include "studio/partials/image_field.html" %}</div>
+    {% else %}
+    <div data-block-field="{{ field.name }}">{% include "studio/partials/field.html" %}</div>
+    {% endif %}
+  {% endfor %}
   <div class="btn-row"><button class="btn primary">حفظ</button><a class="btn" href="{% url 'studio:homepage' %}">إلغاء</a></div>
 </form>
 {% endblock %}
+{% block modals %}{% include "studio/partials/media_modal.html" %}{% endblock %}

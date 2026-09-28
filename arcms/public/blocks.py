@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from django.db.models import Q
+from django.urls import reverse
 from django.utils import timezone
 
-from arcms.content.models import Article, ArticleKind, LiveCoverage
-from arcms.core.models import HomeBlock
+from arcms.content.models import Article, ArticleKind, BreakingNews, LiveCoverage
+from arcms.core.models import HomeBlock, HomeBlockArticle, SiteSettings
 
 
 def published():
@@ -51,7 +52,7 @@ def build_blocks() -> list[dict]:
             seen.update(a.pk for a in items)
             hero_ids = {a.pk for a in items}
             ctx["lead"], ctx["items"] = (items[0] if items else None), items[1:]
-            if block.layout != HomeBlock.Layout.GRID:
+            if block.layout not in (HomeBlock.Layout.GRID, HomeBlock.Layout.LIST):
                 ctx["latest_timeline"] = list(published()[:7])
         elif block.kind == HomeBlock.Kind.LATEST:
             ctx["items"] = list(published()[:n])
@@ -71,17 +72,16 @@ def build_blocks() -> list[dict]:
             ctx["columns"] = columns
         elif block.kind == HomeBlock.Kind.MOST_READ:
             ctx["items"] = most_read(n)
+            ctx["tabs"] = [("اليوم", ctx["items"] if n else []), ("هذا الأسبوع", most_read(n, days=7))]
         elif block.kind == HomeBlock.Kind.OPINION:
-            ctx["items"] = list(published().filter(kind=ArticleKind.OPINION).prefetch_related("authors__photo")[:n])
-            from django.urls import reverse
-
-            ctx["more_url"] = reverse("public:kind", args=["opinion"])
+            kind = block.article_kind or ArticleKind.OPINION
+            ctx["items"] = list(published().filter(kind=kind).prefetch_related("authors__photo")[:n])
+            ctx["more_url"] = reverse("public:kind", args=[kind])
         elif block.kind in (HomeBlock.Kind.VIDEO, HomeBlock.Kind.KIND):
-            kind = ArticleKind.VIDEO if block.kind == HomeBlock.Kind.VIDEO else (block.article_kind or ArticleKind.REPORT)
+            default = ArticleKind.VIDEO if block.kind == HomeBlock.Kind.VIDEO else ArticleKind.REPORT
+            kind = block.article_kind or default
             # كتل الأنواع واجهات عرض لشكل المادة: لا تستبعد ما ظهر في كتل الأقسام.
             items = list(published().filter(kind=kind).exclude(pk__in=hero_ids)[:n])
-            from django.urls import reverse
-
             ctx["items"] = items
             ctx["more_url"] = reverse("public:kind", args=[kind])
             ctx["title"] = block.title or dict(ArticleKind.choices).get(kind, "")
@@ -99,6 +99,28 @@ def build_blocks() -> list[dict]:
             if not block.ad_slot or not block.ad_slot.is_active:
                 continue
             ctx["ad"] = block.ad_slot
+        elif block.kind == HomeBlock.Kind.BRIEF:
+            ctx.update(_brief(block, n))
+            if not ctx["briefs"] and not ctx["audio"]:
+                continue
+        elif block.kind == HomeBlock.Kind.PICKS:
+            picks = HomeBlockArticle.objects.filter(block=block).select_related("article__featured_image", "article__category")
+            items = [p.article for p in picks if p.article.is_live][:n]
+            if not items:  # لم يختر المحرر شيئاً بعد: المواد المميزة بعد الواجهة
+                items = list(published().filter(is_featured=True).exclude(pk__in=hero_ids)[:n])
+            ctx["items"] = items
+        elif block.kind == HomeBlock.Kind.PROMO:
+            ctx["link"] = block.safe_link()
+            ctx["qr_svg"] = _qr(ctx["link"]) if ctx["link"] else ""
+            ctx["title"] = block.title
+        elif block.kind == HomeBlock.Kind.STATS:
+            ctx["stats"] = block.item_pairs()
+            if not ctx["stats"]:
+                continue
+        elif block.kind == HomeBlock.Kind.PLATFORMS:
+            ctx["platforms"] = _platforms(block)
+            if not ctx["platforms"]:
+                continue
         elif block.kind in (HomeBlock.Kind.NEWSLETTER, HomeBlock.Kind.HTML):
             pass
         else:
@@ -107,3 +129,39 @@ def build_blocks() -> list[dict]:
             continue
         out.append(ctx)
     return out
+
+
+def _brief(block: HomeBlock, n: int) -> dict:
+    """موجز: آخر العاجل خلال يوم (أو آخر العناوين)، وآخر حلقة صوتية إن وُجدت."""
+    briefs = [
+        {"time": b.created_at, "text": b.text, "url": b.get_url()} for b in BreakingNews.current(hours=24)[:n]
+    ]
+    if len(briefs) < n:
+        briefs += [
+            {"time": a.published_at, "text": a.title, "url": a.get_absolute_url()}
+            for a in published()[: n - len(briefs)]
+        ]
+    podcasts = published().filter(kind=ArticleKind.PODCAST).exclude(audio="")
+    if block.category_id:
+        podcasts = podcasts.filter(category_id__in=block.category.family_ids())
+    return {"briefs": briefs, "audio": podcasts.first(), "title": block.title or "موجز الأخبار"}
+
+
+def _qr(link: str) -> str:
+    import segno
+
+    from arcms.core.utils import absolute_url
+
+    target = absolute_url(link) if link.startswith("/") else link
+    return segno.make(target, error="m").svg_inline(scale=4, border=1, dark="#111418", light="#ffffff")
+
+
+def _platforms(block: HomeBlock) -> list[dict]:
+    followers = {k.strip().lower(): v for k, v in block.item_pairs()}
+    aliases = {"twitter": "x", "تيليجرام": "telegram", "واتساب": "whatsapp", "إكس": "x", "فيسبوك": "facebook",
+               "إنستغرام": "instagram", "يوتيوب": "youtube", "تيك توك": "tiktok"}
+    followers = {aliases.get(k, k): v for k, v in followers.items()}
+    return [
+        {"key": key, "label": label, "url": url, "followers": followers.get(key, "")}
+        for key, label, url in SiteSettings.load().social_links
+    ]

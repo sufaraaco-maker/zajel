@@ -9,6 +9,7 @@ import uuid
 from dataclasses import dataclass
 
 from django.db import connection, models, transaction
+from django.db.models.fields.files import FieldFile
 from django.db.models.signals import post_delete, post_save, pre_save
 
 from .models import Action, AuditEntry
@@ -137,8 +138,8 @@ def _jsonable(value):
         return str(value)
     if isinstance(value, models.Model):
         return value.pk
-    if hasattr(value, "name") and hasattr(value, "url"):  # ملفات
-        return getattr(value, "name", "")
+    if isinstance(value, FieldFile):  # ملفات (والحقل الفارغ لا رابط له)
+        return value.name or ""
     return value
 
 

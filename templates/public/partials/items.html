@@ -1,0 +1,17 @@
+{# عرض مواد كتلة حسب تخطيطها. المتغيرات: b (سياق الكتلة) #}
+{% with layout=b.block.layout items=b.items %}
+{% if layout == 'feature' %}
+  <div class="feature">
+    {% include "public/partials/card.html" with a=items.0 variant="overlay" excerpt=True %}
+    <div class="feature-list">{% for a in items|slice:"1:" %}{% include "public/partials/card.html" with a=a variant="row" %}{% endfor %}</div>
+  </div>
+{% elif layout == 'list' %}
+  <ul class="list-compact">{% for a in items %}<li><a href="{{ a.get_absolute_url }}">{{ a.title }}</a> <span class="meta">{{ a.published_at|ar_relative }}</span></li>{% endfor %}</ul>
+{% elif layout == 'strip' %}
+  <div class="grid grid-4">{% for a in items|slice:":4" %}{% include "public/partials/card.html" with a=a %}{% endfor %}</div>
+{% elif layout == 'carousel' or layout == 'overlay' or layout == 'reels' %}
+  {% include "public/partials/carousel.html" with items=items variant=layout %}
+{% else %}
+  <div class="grid grid-3">{% for a in items %}{% include "public/partials/card.html" with a=a excerpt=forloop.first %}{% endfor %}</div>
+{% endif %}
+{% endwith %}

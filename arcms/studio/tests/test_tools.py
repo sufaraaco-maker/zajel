@@ -129,3 +129,16 @@ class ArticleStatsTests(ArcmsTestCase):
         self.assertEqual(resp.context["stats"]["sources"][0][0], "تطبيقات المراسلة")
         draft = make_article("مسودة", status=Status.DRAFT, created_by=chief)
         self.assertIsNone(self.client.get(reverse("studio:article_edit", args=[draft.pk])).context["stats"])
+
+
+class TemplateKeyCollisionTests(ArcmsTestCase):
+    def test_audit_and_pagination_with_items_key(self):
+        from arcms.core.models import HomeBlock
+
+        admin = make_user("root", Role.ADMIN)
+        login(self.client, admin)
+        block = HomeBlock.objects.create(kind="stats")
+        block.items = "1 | واحد"
+        block.save()  # قيد تدقيق فيه حقل اسمه items
+        self.assertEqual(self.client.get(reverse("studio:audit")).status_code, 200)
+        self.assertEqual(self.client.get(reverse("studio:audit"), {"items": "x", "page": 1}).status_code, 200)

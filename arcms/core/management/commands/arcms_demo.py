@@ -33,7 +33,7 @@ from arcms.content.models import (
     Status,
     Tag,
 )
-from arcms.core.demo_data import ARTICLES, AUTHORS, BREAKING, LIVE
+from arcms.core.demo_data import ARTICLES, AUTHORS, BREAKING, EXTRA_ARTICLES, LIVE, silent_mp3
 from arcms.core.models import HomeBlock, SiteSettings
 
 DEMO_PASSWORD = "zajel-demo-2026"
@@ -98,6 +98,7 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("--force", action="store_true", help="التشغيل حتى لو وُجدت مواد")
         parser.add_argument("--no-traffic", action="store_true")
+        parser.add_argument("--theme", default="modern-blue", help="المظهر الجاهز للموقع التجريبي")
 
     def handle(self, *args, **opts):
         if not settings.DEBUG and not opts["force"]:
@@ -116,7 +117,14 @@ class Command(BaseCommand):
             site.whatsapp = "https://whatsapp.com/channel/example"
             site.alt_language_url = "https://example.org/en"
             site.footer_about = "زاجل موقع تجريبي لمنصة arcms: منصة نشر إخبارية عربية تعمل على خوادم المؤسسة وتملك بياناتها."
+            site.header_cta_label = "أرسل معلومة"
+            site.header_cta_url = "/tips/"
+            site.app_android_url = "https://play.google.com/store/apps/details?id=org.example.news"
+            site.app_ios_url = "https://apps.apple.com/app/id0000000000"
             site.save()
+            from arcms.core.presets import apply_theme
+
+            apply_theme(site, opts.get("theme") or "modern-blue")
             creds = self._users()
             authors = self._authors()
             self._articles(authors)
@@ -174,7 +182,7 @@ class Command(BaseCommand):
         chief = User.objects.get(username="chief")
         reporter = User.objects.get(username="reporter")
         cats = {c.name: c for c in Category.objects.all()}
-        for i, data in enumerate(ARTICLES):
+        for i, data in enumerate([*ARTICLES, *EXTRA_ARTICLES]):
             cat = cats.get(data["category"])
             raw = make_art(i + 1, cat.color if cat else "#3c4650", tall=data.get("tall", False))
             if i == 0:
@@ -204,6 +212,13 @@ class Command(BaseCommand):
                 reviewed_by=chief,
                 source_notes="مصدر أول: موظف في البلدية (لا يُذكر اسمه). تم التحقق عبر اتصال هاتفي." if i == 0 else "",
             )
+            if data.get("audio"):
+                from django.core.files.base import ContentFile
+
+                from arcms.content.audio import clean_audio
+
+                clean = clean_audio(silent_mp3())
+                article.audio.save(clean.filename, ContentFile(clean.content), save=True)
             article.authors.set([authors[data["author"]]])
             article.tags.set([Tag.get_or_create_by_name(t) for t in data.get("tags", [])])
             for n in range(data.get("gallery", 0)):
@@ -236,6 +251,20 @@ class Command(BaseCommand):
                                          description="كل ما نشرناه عن موسم الزيتون: الحصاد، والأسعار، وحكايات المزارعين.")
         dossier.articles.set(Article.objects.filter(tags__name="الزيتون"))
         HomeBlock.objects.create(kind=HomeBlock.Kind.DOSSIER, dossier=dossier, order=45, count=4)
+        # كتل الواجهة التي تحتاج بيانات الموقع التجريبي: رابط القناة للترويج، ومختارات المحررين، وأعداد المتابعين
+        site = SiteSettings.objects.get(pk=1)
+        HomeBlock.objects.filter(kind=HomeBlock.Kind.PROMO, link="").update(link=site.telegram)
+        HomeBlock.objects.filter(kind=HomeBlock.Kind.PLATFORMS).update(
+            items="telegram | 1.2 مليون\nwhatsapp | 480 ألف\nx | 350 ألف\nfacebook | 2.1 مليون\ninstagram | 900 ألف\nyoutube | 610 ألف"
+        )
+        from arcms.core.models import HomeBlockArticle
+
+        picks = HomeBlock.objects.filter(kind=HomeBlock.Kind.PICKS).first()
+        if picks:
+            chosen = Article.objects.published().filter(kind__in=["investigation", "interview", "report", "gallery"])[:5]
+            HomeBlockArticle.objects.bulk_create(
+                [HomeBlockArticle(block=picks, article=a, order=n) for n, a in enumerate(chosen)]
+            )
         from arcms.tips.services import add_newsroom_reply, create_tip
 
         tip, _ = create_tip(

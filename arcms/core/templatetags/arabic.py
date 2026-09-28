@@ -125,3 +125,9 @@ def localdate(value):
     from django.utils import timezone
 
     return timezone.localtime(value).date() if value else None
+
+
+@register.filter
+def dict_items(value):
+    """أزواج قاموس للحلقات. ‎d.items‎ في القوالب تُقرأ مفتاحاً إن وُجد مفتاح اسمه items."""
+    return list(value.items()) if isinstance(value, dict) else []

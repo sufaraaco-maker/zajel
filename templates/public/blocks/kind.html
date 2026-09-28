@@ -1,13 +1,8 @@
-<section class="section{% if b.block.dark %} dark{% endif %}">
+<section class="section {{ b.block.section_class }}">
   {% include "public/blocks/_head.html" %}
-  {% if b.block.layout == 'feature' %}
-  <div class="feature">
-    {% include "public/partials/card.html" with a=b.items.0 variant="big" excerpt=True %}
-    <div class="feature-list">{% for a in b.items|slice:"1:" %}{% include "public/partials/card.html" with a=a variant="row" %}{% endfor %}</div>
-  </div>
-  {% elif b.block.layout == 'strip' or b.block.article_kind == 'infographic' or b.block.article_kind == 'cartoon' %}
+  {% if b.block.layout == 'grid' and b.block.article_kind == 'infographic' or b.block.layout == 'grid' and b.block.article_kind == 'cartoon' %}
   <div class="tall-grid">{% for a in b.items|slice:":4" %}{% include "public/partials/card.html" with a=a %}{% endfor %}</div>
   {% else %}
-  <div class="grid grid-3">{% for a in b.items %}{% include "public/partials/card.html" with a=a excerpt=True %}{% endfor %}</div>
+  {% include "public/partials/items.html" %}
   {% endif %}
 </section>

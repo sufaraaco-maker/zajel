@@ -1,0 +1,10 @@
+<article class="opinion-card{% if profile %} profile{% endif %}">
+  {% with au=a.primary_author %}{% if au %}
+  <a class="author-chip" href="{{ au.get_absolute_url }}">
+    {% if au.photo %}<img class="avatar" src="{{ au.photo.thumb }}" alt="{{ au.name }}" loading="lazy">{% else %}<span class="avatar">{{ au.name|slice:":1" }}</span>{% endif %}
+    <span><strong>{{ au.name }}</strong><span>{{ au.title|default:"كاتب" }}</span></span>
+  </a>
+  {% endif %}{% endwith %}
+  <h3><a href="{{ a.get_absolute_url }}">{{ a.title }}</a></h3>
+  <div class="meta"><time datetime="{{ a.published_at|isoformat }}">{{ a.published_at|ar_relative }}</time></div>
+</article>

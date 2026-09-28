@@ -1,0 +1,16 @@
+{# شريط متحرك بالسحب، مع أزرار ونقاط تُضاف بالسكربت. variant: carousel | overlay | reels | opinion #}
+<div class="carousel carousel-{{ variant }}" data-carousel>
+  <div class="carousel-track" tabindex="0" aria-label="{{ b.title }}">
+    {% for a in items %}<div class="carousel-item">
+      {% if variant == 'opinion' %}{% include "public/partials/opinion_card.html" with a=a profile=True %}
+      {% elif variant == 'overlay' %}{% include "public/partials/card.html" with a=a variant="overlay" %}
+      {% elif variant == 'reels' %}{% include "public/partials/card.html" with a=a variant="reel" %}
+      {% else %}{% include "public/partials/card.html" with a=a %}{% endif %}
+    </div>{% endfor %}
+  </div>
+  <div class="carousel-nav" hidden>
+    <button class="carousel-btn" type="button" data-carousel-prev aria-label="السابق">{{ "arrow-right"|icon:18 }}</button>
+    <div class="carousel-dots" data-carousel-dots></div>
+    <button class="carousel-btn" type="button" data-carousel-next aria-label="التالي">{{ "arrow-left"|icon:18 }}</button>
+  </div>
+</div>

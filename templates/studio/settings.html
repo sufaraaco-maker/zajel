@@ -2,6 +2,19 @@
 {% block title %}إعدادات الموقع{% endblock %}
 {% block content %}
 <div class="page-title"><div><h1>إعدادات الموقع</h1><p>الهوية والألوان والتواريخ والسياسات. الأسرار (رموز البوتات وكلمات مرور البريد) تُضبط في ملف البيئة على الخادم، لا هنا.</p></div></div>
+<section class="panel themes-panel">
+  <h2>مظاهر جاهزة</h2>
+  <p class="small muted">نقطة بداية سريعة لكل مؤسسة: تغيّر الألوان والخطوط وشكل الترويسة والزوايا، ولا تمس الشعار ولا الأقسام ولا المحتوى.</p>
+  <div class="themes">
+    {% for key, t in themes|dict_items %}
+    <form method="post">{% csrf_token %}<input type="hidden" name="apply_theme" value="{{ key }}">
+      <button class="theme-card{% if site.primary_color == t.primary_color and site.header_style == t.header_style %} current{% endif %}" type="submit" style="--t-primary: {{ t.primary_color }}; --t-accent: {{ t.accent_color }}">
+        <span class="swatch"><i></i><i></i></span><strong>{{ t.label }}</strong><small>{% if t.header_style == "compact" %}ترويسة حديثة{% else %}ترويسة كلاسيكية{% endif %}</small>
+      </button>
+    </form>
+    {% endfor %}
+  </div>
+</section>
 <form method="post" data-media-form>
   {% csrf_token %}
   {% if form.errors %}<div class="alert error">راجع الحقول المعلَّمة.</div>{% endif %}

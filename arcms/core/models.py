@@ -99,6 +99,20 @@ class SiteSettings(models.Model):
     require_review = models.BooleanField(
         "إلزام المراجعة قبل النشر", default=True, help_text="يمنع رئيس القسم من نشر مادته دون مراجعة زميل."
     )
+    header_style = models.CharField(
+        "شكل الترويسة",
+        max_length=10,
+        choices=[("classic", "كلاسيكي: الشعار ثم شريط قائمة ملوّن"), ("compact", "حديث: الشعار والقائمة في سطر واحد")],
+        default="classic",
+    )
+    header_cta_label = models.CharField("زر في الترويسة", max_length=40, blank=True, help_text="مثل: أرسل خبراً، تبرّع، البث المباشر")
+    header_cta_url = models.CharField("رابط الزر", max_length=300, blank=True)
+    corner_style = models.CharField(
+        "زوايا البطاقات", max_length=10, choices=[("sharp", "حادة"), ("soft", "مدوّرة قليلاً"), ("round", "مدوّرة")],
+        default="soft",
+    )
+    app_ios_url = models.URLField("تطبيق iPhone (App Store)", blank=True)
+    app_android_url = models.URLField("تطبيق Android (Google Play)", blank=True)
     tips_enabled = models.BooleanField(
         "صندوق المعلومات الآمن",
         default=True,
@@ -151,6 +165,12 @@ class SiteSettings(models.Model):
             hijri_adjust=self.hijri_adjust,
         )
 
+    def safe_cta_url(self) -> str:
+        from arcms.core.utils import is_safe_link
+
+        return self.header_cta_url if is_safe_link(self.header_cta_url) else ""
+
+    @property
     def social_links(self) -> list[tuple[str, str, str]]:
         items = [
             ("telegram", "تيليجرام", self.telegram),
@@ -241,6 +261,11 @@ class HomeBlock(models.Model):
         KIND = "kind", "نوع مادة (إنفوجراف، تقارير...)"
         DOSSIER = "dossier", "ملف خاص"
         LIVE = "live", "التغطية المباشرة الجارية"
+        BRIEF = "brief", "موجز الأخبار (صوتي ونصي)"
+        PICKS = "picks", "مختارات المحررين"
+        PROMO = "promo", "بطاقة ترويجية (قناة، تطبيق، حملة) مع رمز QR"
+        STATS = "stats", "أرقام وإحصاءات"
+        PLATFORMS = "platforms", "منصاتنا على التواصل"
         NEWSLETTER = "newsletter", "الاشتراك في النشرة"
         AD = "ad", "مساحة إعلانية"
         HTML = "html", "محتوى حر"
@@ -250,6 +275,15 @@ class HomeBlock(models.Model):
         FEATURE = "feature", "مادة كبيرة وقائمة"
         LIST = "list", "قائمة مضغوطة"
         STRIP = "strip", "شريط أفقي"
+        CAROUSEL = "carousel", "شريط متحرك (بطاقات)"
+        OVERLAY = "overlay", "شريط متحرك (العنوان على الصورة)"
+        REELS = "reels", "فيديو عمودي قصير"
+
+    class Background(models.TextChoices):
+        NONE = "", "بلا خلفية"
+        MUTED = "muted", "رمادية فاتحة"
+        DARK = "dark", "داكنة"
+        PRIMARY = "primary", "بلون الموقع"
 
     kind = models.CharField("نوع الكتلة", max_length=20, choices=Kind.choices)
     title = models.CharField("العنوان الظاهر", max_length=80, blank=True)
@@ -267,7 +301,23 @@ class HomeBlock(models.Model):
     article_kind = models.CharField("نوع المادة", max_length=20, blank=True)
     ad_slot = models.ForeignKey("core.AdSlot", verbose_name="الإعلان", null=True, blank=True, on_delete=models.SET_NULL)
     html = models.TextField("المحتوى الحر", blank=True)
-    dark = models.BooleanField("خلفية داكنة", default=False)
+    background = models.CharField("خلفية الكتلة", max_length=10, choices=Background.choices, blank=True, default="")
+    subtitle = models.CharField("سطر تعريفي", max_length=200, blank=True)
+    text = models.TextField("نص", blank=True)
+    link = models.CharField("الرابط", max_length=300, blank=True)
+    button_label = models.CharField("نص الزر", max_length=60, blank=True)
+    image = models.ForeignKey(
+        "content.MediaAsset", verbose_name="الصورة", null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    items = models.TextField(
+        "العناصر",
+        blank=True,
+        help_text="سطر لكل عنصر. للأرقام: القيمة | الوصف (مثل: 84493+ | خبر منشور). "
+        "للمنصات: اسم المنصة | عدد المتابعين (مثل: telegram | 1.2 مليون).",
+    )
+    articles = models.ManyToManyField(
+        "content.Article", verbose_name="المواد المختارة", blank=True, related_name="+", through="HomeBlockArticle"
+    )
     order = models.PositiveSmallIntegerField("الترتيب", default=0)
     is_active = models.BooleanField("مفعّلة", default=True)
 
@@ -284,6 +334,41 @@ class HomeBlock(models.Model):
         from arcms.content.models import ArticleKind
 
         return dict(ArticleKind.choices).get(self.article_kind, self.article_kind)
+
+    @property
+    def dark(self) -> bool:
+        return self.background == self.Background.DARK
+
+    @property
+    def section_class(self) -> str:
+        return f"bg-{self.background}" if self.background else ""
+
+    def item_pairs(self) -> list[tuple[str, str]]:
+        """«القيمة | الوصف» لكل سطر غير فارغ."""
+        pairs = []
+        for line in (self.items or "").splitlines():
+            if not line.strip():
+                continue
+            first, _, rest = line.partition("|")
+            pairs.append((first.strip(), rest.strip()))
+        return pairs
+
+    def safe_link(self) -> str:
+        from arcms.core.utils import is_safe_link
+
+        return self.link if is_safe_link(self.link) else ""
+
+
+class HomeBlockArticle(models.Model):
+    """ترتيب المواد التي يختارها المحرر يدوياً لكتلة."""
+
+    block = models.ForeignKey(HomeBlock, on_delete=models.CASCADE)
+    article = models.ForeignKey("content.Article", on_delete=models.CASCADE, related_name="+")
+    order = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ["order", "id"]
+        unique_together = [("block", "article")]
 
 
 class AdSlot(models.Model):

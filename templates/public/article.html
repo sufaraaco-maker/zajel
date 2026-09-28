@@ -48,7 +48,10 @@
       </div>
     </header>
 
-    {% if article.kind == "video" and article.video_embed %}
+    {% if article.audio %}
+      <div class="audio-player">{% if article.featured_image %}<img src="{{ article.featured_image.thumb }}" alt="" width="96" height="96">{% endif %}<div><span class="eyebrow">{{ "headphones"|icon:14 }} استمع</span><audio controls preload="metadata" src="{{ article.audio.url }}"></audio></div></div>
+    {% endif %}
+    {% if article.kind in "video short" and article.video_embed %}
       <div class="embed-video"><iframe src="{{ article.video_embed }}" title="{{ article.title }}" loading="lazy" allow="encrypted-media; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin"></iframe></div>
     {% elif article.featured_image and not article.hide_featured_image %}
       <figure class="figure">

@@ -1,7 +1,21 @@
-<section class="section dark">
+<section class="section {{ b.block.section_class|default:'bg-dark' }}">
   {% include "public/blocks/_head.html" %}
+  {% if b.block.layout == 'reels' or b.block.layout == 'carousel' or b.block.layout == 'overlay' %}
+  {% include "public/partials/carousel.html" with items=b.items variant=b.block.layout %}
+  {% else %}
   <div class="video-grid">
-    {% include "public/partials/card.html" with a=b.items.0 variant="big" %}
-    <div class="side">{% for a in b.items|slice:"1:4" %}{% include "public/partials/card.html" with a=a variant="row" %}{% endfor %}</div>
+    {% with a=b.items.0 %}
+    {% if a.video_embed %}
+    <div class="video-player">
+      <button class="video-facade" type="button" data-video-embed="{{ a.video_embed }}" aria-label="تشغيل: {{ a.title }}">
+        {% if a.featured_image %}<img src="{{ a.featured_image.large }}" alt="" loading="lazy">{% endif %}
+        <span class="play-big">{{ "play"|icon:34 }}</span>
+      </button>
+      <h3><a href="{{ a.get_absolute_url }}">{{ a.title }}</a></h3>
+    </div>
+    {% else %}{% include "public/partials/card.html" with a=a variant="big" %}{% endif %}
+    {% endwith %}
+    <div class="side">{% for a in b.items|slice:"1:5" %}{% include "public/partials/card.html" with a=a variant="row" %}{% endfor %}</div>
   </div>
+  {% endif %}
 </section>

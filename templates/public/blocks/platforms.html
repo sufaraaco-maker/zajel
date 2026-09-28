@@ -1,0 +1,6 @@
+<section class="section {{ b.block.section_class }}">
+  {% if b.block.title %}<div class="section-head"><h2 class="section-title">{{ b.block.title }}</h2></div>{% endif %}
+  <div class="platforms">
+    {% for p in b.platforms %}<a class="platform platform-{{ p.key }}" href="{{ p.url }}" target="_blank" rel="noopener"><span class="platform-icon">{{ p.key|icon:22 }}</span><span><strong>{{ p.label }}</strong>{% if p.followers %}<small>{{ p.followers|ar_digits }}</small>{% endif %}</span></a>{% endfor %}
+  </div>
+</section>

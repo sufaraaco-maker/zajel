@@ -399,4 +399,62 @@
       hit.addEventListener("blur", function () { tip.hidden = true; });
     });
   });
+  // --- نموذج كتلة الصفحة الرئيسية: إظهار حقول النوع المختار فقط، واختيار المواد ---
+  var blockForm = $("[data-block-form]");
+  if (blockForm) {
+    var kindsData = document.getElementById("block-field-kinds");
+    var fieldKinds = kindsData ? JSON.parse(kindsData.textContent) : {};
+    var kindSelect = blockForm.querySelector('[name="kind"]');
+    var syncBlock = function () {
+      var k = kindSelect ? kindSelect.value : "";
+      $$("[data-block-field]", blockForm).forEach(function (row) {
+        var only = fieldKinds[row.getAttribute("data-block-field")];
+        row.hidden = !!only && only.split(" ").indexOf(k) < 0;
+      });
+    };
+    if (kindSelect) kindSelect.addEventListener("change", syncBlock);
+    syncBlock();
+
+    var pickHidden = blockForm.querySelector('[name="pick_ids"]');
+    var pickSearch = $("[data-picker-search]", blockForm);
+    var pickChips = $("[data-picker-chips]", blockForm);
+    if (pickHidden && pickSearch && pickChips) {
+      var picks = [];
+      $$("[data-id]", pickChips).forEach(function (c) { picks.push({ id: c.getAttribute("data-id"), title: c.textContent }); });
+      var renderPicks = function () {
+        pickChips.innerHTML = "";
+        picks.forEach(function (p, i) {
+          var c = el("span", { "class": "chip" }, (i + 1) + ". " + p.title);
+          var x = el("button", { type: "button", "aria-label": "إزالة" }, "×");
+          x.addEventListener("click", function () { picks.splice(i, 1); renderPicks(); });
+          c.appendChild(x);
+          pickChips.appendChild(c);
+        });
+        pickHidden.value = picks.map(function (p) { return p.id; }).join(",");
+      };
+      renderPicks();
+      var pbox = el("div", { "class": "suggest", hidden: "" });
+      pickSearch.parentNode.appendChild(pbox);
+      var pt;
+      pickSearch.addEventListener("input", function () {
+        clearTimeout(pt);
+        pt = setTimeout(function () {
+          fetch("/studio/api/articles?q=" + encodeURIComponent(pickSearch.value), { credentials: "same-origin" })
+            .then(function (r) { return r.json(); })
+            .then(function (d) {
+              pbox.innerHTML = "";
+              d.items.forEach(function (a) {
+                var b = el("button", { type: "button" }, a.title + " · " + a.date);
+                b.addEventListener("click", function () {
+                  if (!picks.some(function (p) { return String(p.id) === String(a.id); })) picks.push({ id: a.id, title: a.title });
+                  renderPicks(); pbox.hidden = true; pickSearch.value = "";
+                });
+                pbox.appendChild(b);
+              });
+              pbox.hidden = !d.items.length;
+            });
+        }, 250);
+      });
+    }
+  }
 })();

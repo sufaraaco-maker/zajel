@@ -1,4 +1,11 @@
-<section class="section{% if b.block.dark %} dark{% endif %}">
-  {% include "public/blocks/_head.html" %}
-  <ol class="most-read grid-mode">{% for a in b.items %}<li><a href="{{ a.get_absolute_url }}">{{ a.title }}</a></li>{% endfor %}</ol>
+<section class="section {{ b.block.section_class }}">
+  <div class="section-head">
+    <h2 class="section-title">{{ b.title }}</h2>
+    <div class="tabs-inline" role="tablist">{% for label, items in b.tabs %}<button type="button" role="tab" data-tab="mr-{{ b.block.pk }}-{{ forloop.counter }}" aria-selected="{% if forloop.first %}true{% else %}false{% endif %}">{{ label }}</button>{% endfor %}</div>
+  </div>
+  {% for label, items in b.tabs %}
+  <ol class="most-read numbered{% if site.digits == 'arabic' %} arabic-digits{% endif %}" id="mr-{{ b.block.pk }}-{{ forloop.counter }}" role="tabpanel"{% if not forloop.first %} hidden{% endif %}>
+    {% for a in items %}<li><a href="{{ a.get_absolute_url }}">{{ a.title }}</a></li>{% endfor %}
+  </ol>
+  {% endfor %}
 </section>

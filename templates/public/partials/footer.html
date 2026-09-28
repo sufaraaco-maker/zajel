@@ -2,7 +2,7 @@
 <footer class="site-footer">
   <div class="container footer-grid">
     <div>
-      <div class="brand"><span class="brand-mark">{{ "pigeon"|icon:26 }}</span><span class="brand-name">{{ site.name }}</span></div>
+      <div class="brand">{% if site.logo_dark or site.logo %}<img class="footer-logo" src="{% if site.logo_dark %}{{ site.logo_dark.url }}{% else %}{{ site.logo.url }}{% endif %}" alt="{{ site.name }}" loading="lazy">{% else %}<span class="brand-mark">{{ "pigeon"|icon:26 }}</span><span class="brand-name">{{ site.name }}</span>{% endif %}</div>
       <p>{{ site.footer_about|default:site.description }}</p>
       <div class="social">
         {% for key, label, url in site.social_links %}<a href="{{ url }}" target="_blank" rel="noopener" aria-label="{{ label }}">{{ key|icon:18 }}</a>{% endfor %}
@@ -22,9 +22,17 @@
       </ul>
     </div>
     <div>
+      {% if site.app_ios_url or site.app_android_url %}
+      <h3>تطبيقاتنا</h3>
+      <div class="app-links">
+        {% if site.app_android_url %}<a class="app-badge" href="{{ site.app_android_url }}" target="_blank" rel="noopener">{{ "android"|icon:22 }}<span><small>متوفر على</small>Google Play</span></a>{% endif %}
+        {% if site.app_ios_url %}<a class="app-badge" href="{{ site.app_ios_url }}" target="_blank" rel="noopener">{{ "apple"|icon:22 }}<span><small>حمّله من</small>App Store</span></a>{% endif %}
+      </div>
+      {% else %}
       <h3>النشرة اليومية</h3>
       <p>أبرز الأخبار في بريدك كل صباح.</p>
       {% include "public/partials/newsletter_form.html" %}
+      {% endif %}
     </div>
   </div>
   <div class="container footer-bottom">

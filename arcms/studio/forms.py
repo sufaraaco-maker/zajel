@@ -49,7 +49,7 @@ class ArticleForm(forms.ModelForm):
         fields = [
             "kind", "kicker", "title", "subtitle", "excerpt", "dateline", "body",
             "category", "extra_categories", "authors", "dossiers",
-            "featured_image", "image_caption", "hide_featured_image", "video_url",
+            "featured_image", "image_caption", "hide_featured_image", "video_url", "audio",
             "source", "source_url", "source_notes", "correction",
             "is_breaking", "is_featured", "is_exclusive", "priority", "featured_until",
             "allow_indexing", "seo_title", "seo_description",
@@ -83,6 +83,7 @@ class ArticleForm(forms.ModelForm):
         self.fields["category"].required = False
         self.fields["extra_categories"].queryset = cats
         self.fields["featured_image"].queryset = MediaAsset.objects.all()
+        self.fields["audio"].widget.attrs["accept"] = "audio/mpeg,audio/mp4,audio/ogg,.mp3,.m4a,.ogg"
         if self.instance.pk:
             self.fields["tag_names"].initial = "، ".join(self.instance.tags.values_list("name", flat=True))
             self.fields["related_ids"].initial = ",".join(str(i) for i in self.instance.related.values_list("pk", flat=True))
@@ -99,6 +100,22 @@ class ArticleForm(forms.ModelForm):
 
     def clean_body(self):
         return sanitize_html(self.cleaned_data.get("body", ""))
+
+    def clean_audio(self):
+        from django.core.files.base import ContentFile
+        from django.core.files.uploadedfile import UploadedFile
+
+        from arcms.content.audio import AudioRejected, clean_audio
+
+        value = self.cleaned_data.get("audio")
+        if not isinstance(value, UploadedFile):
+            return value  # لم يُرفع جديد (أو طُلب الحذف)
+        try:
+            clean = clean_audio(value.read())
+        except AudioRejected as exc:
+            raise forms.ValidationError(str(exc)) from exc
+        self.audio_report = clean.removed, clean.warning
+        return ContentFile(clean.content, name=clean.filename)
 
     def clean_title(self):
         from arcms.arabic.text import clean_headline
@@ -229,11 +246,38 @@ class MenuItemForm(forms.ModelForm):
 
 
 class HomeBlockForm(forms.ModelForm):
+    # أي الحقول يخص أي نوع كتلة (ما لم يُذكر يظهر دائماً). يقرؤها سكربت النموذج لإخفاء ما لا يلزم.
+    FIELD_KINDS = {
+        "layout": "hero latest category kind video opinion picks",
+        "count": "hero latest category columns most_read opinion video kind dossier brief picks",
+        "category": "category brief",
+        "categories": "columns",
+        "dossier": "dossier",
+        "article_kind": "kind video opinion",
+        "ad_slot": "ad",
+        "html": "html",
+        "subtitle": "brief promo stats newsletter",
+        "text": "brief promo stats newsletter",
+        "link": "promo",
+        "button_label": "promo",
+        "image": "promo",
+        "items": "stats platforms",
+        "pick_ids": "picks",
+    }
+
+    pick_ids = forms.CharField(label="المواد المختارة", required=False, widget=forms.HiddenInput())
+
     class Meta:
         model = HomeBlock
-        fields = ["kind", "title", "layout", "count", "category", "categories", "dossier", "article_kind", "ad_slot",
-                  "html", "dark", "order", "is_active"]
-        widgets = {"html": forms.Textarea(attrs={"rows": 4, "dir": "ltr"}), "categories": forms.SelectMultiple(attrs={"size": 6})}
+        fields = ["kind", "title", "subtitle", "layout", "count", "category", "categories", "dossier", "article_kind",
+                  "ad_slot", "text", "link", "button_label", "image", "items", "html", "background", "order", "is_active"]
+        widgets = {
+            "html": forms.Textarea(attrs={"rows": 4, "dir": "ltr"}),
+            "categories": forms.SelectMultiple(attrs={"size": 6}),
+            "text": forms.Textarea(attrs={"rows": 3}),
+            "items": forms.Textarea(attrs={"rows": 5}),
+            "image": forms.HiddenInput(),
+        }
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -241,6 +285,31 @@ class HomeBlockForm(forms.ModelForm):
         self.fields["article_kind"] = forms.ChoiceField(
             label="نوع المادة", choices=[("", "—")] + list(ArticleKind.choices), required=False
         )
+        if self.instance.pk:
+            self.fields["pick_ids"].initial = ",".join(
+                str(i) for i in self.instance.homeblockarticle_set.values_list("article_id", flat=True)
+            )
+
+    def clean_link(self):
+        return _clean_link(self.cleaned_data.get("link"))
+
+    def picks(self) -> list:
+        ids = [int(i) for i in (self["pick_ids"].value() or "").split(",") if i.strip().isdigit()]
+        by_id = {a.pk: a for a in Article.objects.filter(pk__in=ids)}
+        return [by_id[i] for i in ids if i in by_id]
+
+    def save(self, commit=True):
+        block = super().save(commit=commit)
+        if commit:
+            from arcms.core.models import HomeBlockArticle
+
+            ids = [int(i) for i in (self.cleaned_data.get("pick_ids") or "").split(",") if i.strip().isdigit()]
+            valid = set(Article.objects.published().filter(pk__in=ids).values_list("pk", flat=True))
+            HomeBlockArticle.objects.filter(block=block).delete()
+            HomeBlockArticle.objects.bulk_create(
+                [HomeBlockArticle(block=block, article_id=i, order=n) for n, i in enumerate(dict.fromkeys(ids)) if i in valid]
+            )
+        return block
 
 
 RAW_HTML_HELP = "الشيفرة الخام يضيفها مدير النظام وحده: سكربت من طرف ثالث يعمل على نطاق الموقع نفسه."
@@ -286,7 +355,9 @@ class SiteSettingsForm(forms.ModelForm):
 
     SECTIONS = (
         ("الهوية", ["name", "short_name", "tagline", "description", "logo", "logo_dark", "default_share_image"]),
-        ("الألوان والخطوط", ["primary_color", "accent_color", "header_dark", "font_headings", "font_body"]),
+        ("الألوان والخطوط والشكل", ["primary_color", "accent_color", "header_dark", "font_headings", "font_body",
+                                    "corner_style"]),
+        ("الترويسة والتذييل", ["header_style", "header_cta_label", "header_cta_url", "app_ios_url", "app_android_url"]),
         ("التاريخ والأرقام", ["month_style", "digits", "clock", "show_hijri", "hijri_adjust"]),
         ("شريط العاجل", ["ticker_enabled", "ticker_label", "ticker_hours"]),
         ("روابط التواصل", ["telegram", "whatsapp", "x_twitter", "facebook", "instagram", "youtube", "tiktok",
@@ -297,6 +368,9 @@ class SiteSettingsForm(forms.ModelForm):
                               "newsletter_count", "push_enabled", "home_cache_seconds"]),
         ("متقدم", ["custom_head_html"]),
     )
+
+    def clean_header_cta_url(self):
+        return _clean_link(self.cleaned_data.get("header_cta_url"))
 
     def sections(self):
         for title, names in self.SECTIONS:

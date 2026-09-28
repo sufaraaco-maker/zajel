@@ -1,0 +1,10 @@
+<section class="section stats-block {{ b.block.section_class|default:'bg-primary' }}">
+  <div class="stats-head">
+    {% if b.block.subtitle %}<span class="eyebrow">{{ b.block.subtitle }}</span>{% endif %}
+    {% if b.block.title %}<h2>{{ b.block.title }}</h2>{% endif %}
+    {% if b.block.text %}<p>{{ b.block.text }}</p>{% endif %}
+  </div>
+  <div class="stats-grid">
+    {% for value, label in b.stats %}<div class="stat"><strong dir="ltr">{{ value|ar_digits }}</strong><span>{{ label }}</span></div>{% endfor %}
+  </div>
+</section>

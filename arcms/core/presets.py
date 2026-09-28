@@ -27,22 +27,38 @@ PRESETS = {
             ("kind", "مقالات", "opinion"),
             ("kind", "مدونات", "blog"),
             ("kind", "فيديو", "video"),
+            ("kind", "بودكاست", "podcast"),
             ("kind", "إنفوجراف", "infographic"),
             ("live", "مباشر", None),
         ],
+        # بترتيب واجهات شبكات الأخبار الفلسطينية الحديثة: واجهة وأبرز العناوين، موجز، أشرطة متحركة،
+        # تقارير ومختارات بخلفية، ترويج للقناة، فيديو وقصير، أرقام، بودكاست، منصات، الأكثر قراءة، النشرة.
         "blocks": [
-            ("hero", "", {"count": 5, "layout": "feature"}),
+            ("hero", "أبرز العناوين", {"count": 6, "layout": "list"}),
+            ("brief", "موجز الأخبار", {"count": 8, "subtitle": "استمع"}),
             ("live", "", {}),
+            ("latest", "أخبار", {"count": 10, "layout": "carousel"}),
             ("columns", "", {"categories": ["القدس", "الضفة الغربية", "غزة"], "count": 4}),
-            ("kind", "تقارير", {"article_kind": "report", "layout": "feature", "count": 5}),
-            ("opinion", "مقالات", {"count": 4}),
-            ("video", "فيديو", {"count": 4}),
-            ("category", "", {"category": "الأسرى", "layout": "grid", "count": 6}),
-            ("kind", "ترجمات عبرية", {"article_kind": "translation", "layout": "grid", "count": 6}),
-            ("most_read", "الأكثر قراءة", {"count": 6}),
+            ("category", "متابعات القدس", {"category": "القدس", "layout": "overlay", "count": 8}),
+            ("kind", "تقارير", {"article_kind": "report", "layout": "feature", "count": 5, "background": "muted"}),
+            ("opinion", "مدونات", {"article_kind": "blog", "layout": "carousel", "count": 8}),
+            ("kind", "ترجمات عبرية", {"article_kind": "translation", "layout": "carousel", "count": 8}),
+            ("picks", "مختارات المحررين", {"layout": "feature", "count": 5, "background": "muted"}),
+            ("promo", "تابعونا على قناتنا في تيليجرام", {
+                "subtitle": "عاجل أولاً بأول", "text": "الخبر لحظة وقوعه، والصور والفيديو من الميدان، في قناة واحدة.",
+                "button_label": "انضم إلى القناة", "background": "primary",
+            }),
+            ("video", "فيديو", {"count": 5, "background": "dark"}),
+            ("video", "قصير", {"article_kind": "short", "layout": "reels", "count": 10, "background": "dark"}),
+            ("stats", "حضورٌ يصنع الفارق في تغطية الحدث", {
+                "subtitle": "بالأرقام", "background": "primary",
+                "items": "84493+ | خبر منشور\n15+ | سنة من التغطية\n7+ | منصات رقمية\n10+ مليون | متابع",
+            }),
+            ("kind", "بودكاست", {"article_kind": "podcast", "layout": "carousel", "count": 8}),
+            ("platforms", "تابعنا على", {"items": "telegram | \nwhatsapp | \nx | \nfacebook | \ninstagram | \nyoutube | "}),
+            ("most_read", "الأكثر قراءة", {"count": 10}),
             ("kind", "إنفوجراف", {"article_kind": "infographic", "layout": "strip", "count": 4}),
-            ("kind", "مدونات", {"article_kind": "blog", "layout": "grid", "count": 3}),
-            ("newsletter", "النشرة اليومية", {}),
+            ("newsletter", "ابقَ على اطلاع بأحدث الأخبار", {"subtitle": "النشرة اليومية", "background": "primary"}),
         ],
     },
     "general": {
@@ -90,3 +106,44 @@ PAGES = [
     ("شروط الاستخدام", "terms", False, "<p>يجوز الاقتباس من موادنا مع ذكر المصدر ورابط المادة.</p>"),
     ("أعلن معنا", "advertise", True, "<p>للإعلان على الموقع، راسلنا عبر النموذج أدناه.</p>"),
 ]
+
+
+# مظاهر جاهزة: تغيّر الألوان والخطوط وشكل الترويسة والزوايا فقط، لا الهوية ولا المحتوى.
+THEMES = {
+    "modern-blue": {
+        "label": "أزرق حديث",
+        "primary_color": "#1463d8", "accent_color": "#0b1f3a", "header_dark": False,
+        "header_style": "compact", "corner_style": "round", "font_headings": "plex", "font_body": "plex",
+    },
+    "classic-red": {
+        "label": "أحمر كلاسيكي",
+        "primary_color": "#b0101c", "accent_color": "#111418", "header_dark": False,
+        "header_style": "classic", "corner_style": "soft", "font_headings": "plex", "font_body": "naskh",
+    },
+    "olive-green": {
+        "label": "أخضر زيتوني",
+        "primary_color": "#1c6b3a", "accent_color": "#10231a", "header_dark": False,
+        "header_style": "compact", "corner_style": "soft", "font_headings": "kufi", "font_body": "naskh",
+    },
+    "night": {
+        "label": "ليلي",
+        "primary_color": "#d4a017", "accent_color": "#0f1113", "header_dark": True,
+        "header_style": "classic", "corner_style": "sharp", "font_headings": "kufi", "font_body": "plex",
+    },
+    "maroon": {
+        "label": "عنّابي رصين",
+        "primary_color": "#7a1f2b", "accent_color": "#1d1a1b", "header_dark": False,
+        "header_style": "compact", "corner_style": "sharp", "font_headings": "naskh", "font_body": "naskh",
+    },
+}
+
+
+def apply_theme(site, key: str) -> bool:
+    theme = THEMES.get(key)
+    if not theme:
+        return False
+    for field, value in theme.items():
+        if field != "label":
+            setattr(site, field, value)
+    site.save()
+    return True

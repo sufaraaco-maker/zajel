@@ -12,7 +12,7 @@
     </div>
   </div>
 </div>
-<header class="site-header{% if site.header_dark %} dark{% endif %}">
+<header class="site-header{% if site.header_dark %} dark{% endif %}{% if site.header_style == 'compact' %} compact{% endif %}">
   <div class="container header-row">
     <a class="brand" href="/" aria-label="{{ site.name }} - الرئيسية">
       {% if site.logo %}
@@ -22,7 +22,16 @@
         <span><span class="brand-name">{{ site.name }}</span><br><span class="brand-tagline">{{ site.tagline }}</span></span>
       {% endif %}
     </a>
+    {% if site.header_style == 'compact' %}
+    <nav class="inline-nav" aria-label="الأقسام">
+      <ul>
+        {% for item in menus.main|slice:":8" %}<li{% if item.highlight %} class="hl"{% endif %}><a href="{{ item.url_cached }}"{% if item.new_tab %} target="_blank" rel="noopener"{% endif %}{% if request.path == item.url_cached %} aria-current="page"{% endif %}>{{ item.label }}</a>{% if item.children_cached %}<ul class="sub">{% for child in item.children_cached %}<li><a href="{{ child.url_cached }}">{{ child.label }}</a></li>{% endfor %}</ul>{% endif %}</li>{% endfor %}
+        {% if menus.main|length > 8 %}<li class="more"><a href="#" aria-haspopup="true">المزيد {{ "chevron"|icon:12 }}</a><ul class="sub">{% for item in menus.main|slice:"8:" %}<li><a href="{{ item.url_cached }}"{% if item.new_tab %} target="_blank" rel="noopener"{% endif %}>{{ item.label }}</a></li>{% endfor %}</ul></li>{% endif %}
+      </ul>
+    </nav>
+    {% endif %}
     <div class="header-tools">
+      {% if site.header_cta_label and site.safe_cta_url %}<a class="btn header-cta" href="{{ site.safe_cta_url }}">{{ site.header_cta_label }}</a>{% endif %}
       <form class="search-form" action="{% url 'public:search' %}" method="get" role="search">
         <label class="sr-only" for="q">ابحث في الموقع</label>
         <input id="q" type="search" name="q" placeholder="ابحث في الأخبار…" value="{{ q|default:'' }}">
@@ -35,10 +44,11 @@
     </div>
   </div>
 </header>
-<nav class="main-nav" aria-label="الأقسام">
+<nav class="main-nav{% if site.header_style == 'compact' %} mobile-only{% endif %}" aria-label="الأقسام">
   <div class="container">
     <ul>
       <li><a class="home-link" href="/" aria-label="الرئيسية" {% if is_home %}aria-current="page"{% endif %}>{{ "home"|icon:18 }}</a></li>
+      {% if site.header_cta_label and site.safe_cta_url %}<li class="hl cta-mobile"><a href="{{ site.safe_cta_url }}">{{ site.header_cta_label }}</a></li>{% endif %}
       {% for item in menus.main %}
       <li{% if item.highlight %} class="hl"{% endif %}>
         <a href="{{ item.url_cached }}"{% if item.new_tab %} target="_blank" rel="noopener"{% endif %}{% if request.path == item.url_cached %} aria-current="page"{% endif %}>{{ item.label }}</a>

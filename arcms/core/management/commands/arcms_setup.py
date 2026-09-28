@@ -8,7 +8,7 @@ from arcms.accounts.roles import Role
 from arcms.audit.services import acting_as
 from arcms.content.models import Category, Page
 from arcms.core.models import HomeBlock, MenuItem, SiteSettings
-from arcms.core.presets import PAGES, PRESETS
+from arcms.core.presets import PAGES, PRESETS, THEMES, apply_theme
 from arcms.distribution.models import Channel, ChannelConfig
 
 
@@ -23,6 +23,7 @@ class Command(BaseCommand):
         parser.add_argument("--admin-email", default="")
         parser.add_argument("--admin-password", help="للأتمتة فقط؛ يُفضَّل تركه ليُسأل عنه")
         parser.add_argument("--force", action="store_true", help="أعد إنشاء القوائم والكتل حتى لو وُجدت")
+        parser.add_argument("--theme", help="مظهر جاهز: " + "، ".join(THEMES))
 
     @transaction.atomic
     def handle(self, *args, **opts):
@@ -34,6 +35,8 @@ class Command(BaseCommand):
                 site.name = opts["site_name"]
                 site.short_name = opts["short_name"] or opts["site_name"].split()[0]
             site.save()
+            if opts.get("theme"):
+                apply_theme(site, opts["theme"])
 
             cats = {}
             for order, (name, color) in enumerate(preset["categories"]):
@@ -87,6 +90,12 @@ class Command(BaseCommand):
                         layout=cfg.get("layout", HomeBlock.Layout.GRID),
                         article_kind=cfg.get("article_kind", ""),
                         category=cats.get(cfg.get("category")),
+                        background=cfg.get("background", ""),
+                        subtitle=cfg.get("subtitle", ""),
+                        text=cfg.get("text", ""),
+                        link=cfg.get("link", ""),
+                        button_label=cfg.get("button_label", ""),
+                        items=cfg.get("items", ""),
                     )
                     if cfg.get("categories"):
                         block.categories.set([cats[c] for c in cfg["categories"]])

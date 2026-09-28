@@ -43,14 +43,20 @@ from .forms import ChannelConfigForm, HomeBlockForm, SiteSettingsForm, WhatsAppS
 
 @requires(Cap.SETTINGS)
 def site_settings(request):
+    from arcms.core.presets import THEMES, apply_theme
+
     obj = SiteSettings.load()
     obj = SiteSettings.objects.get(pk=obj.pk)
+    if request.method == "POST" and request.POST.get("apply_theme"):
+        if apply_theme(obj, request.POST["apply_theme"]):
+            messages.success(request, f"طُبّق مظهر «{THEMES[request.POST['apply_theme']]['label']}». عدّل ما شئت من الألوان أدناه.")
+        return redirect("studio:settings")
     form = SiteSettingsForm(request.POST or None, instance=obj)
     if request.method == "POST" and form.is_valid():
         form.save()
         messages.success(request, "حُفظت إعدادات الموقع.")
         return redirect("studio:settings")
-    return render(request, "studio/settings.html", {"form": form})
+    return render(request, "studio/settings.html", {"form": form, "themes": THEMES})
 
 
 # --- بنّاء الصفحة الرئيسية ---
@@ -74,7 +80,8 @@ def homepage_block(request, pk: int | None = None):
         form.save()
         messages.success(request, "حُفظت الكتلة.")
         return redirect("studio:homepage")
-    return render(request, "studio/homepage_block.html", {"form": form, "block": block})
+    return render(request, "studio/homepage_block.html",
+                  {"form": form, "block": block, "field_kinds": HomeBlockForm.FIELD_KINDS})
 
 
 @requires(Cap.HOMEPAGE)

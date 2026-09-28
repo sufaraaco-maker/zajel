@@ -1,0 +1,18 @@
+<section class="section {{ b.block.section_class }}">
+  <div class="brief">
+    <div class="brief-audio">
+      <span class="eyebrow">{{ "headphones"|icon:16 }} {{ b.block.subtitle|default:"استمع" }}</span>
+      <h2>{{ b.title }}</h2>
+      {% if b.audio %}
+        <p>{{ b.audio.title }}</p>
+        <audio controls preload="none" src="{{ b.audio.audio.url }}"></audio>
+        <a class="small-link" href="{{ b.audio.get_absolute_url }}">كل الحلقات ←</a>
+      {% else %}
+        <p>{{ b.block.text|default:"أبرز ما جرى في سطور، يُحدَّث على مدار اليوم." }}</p>
+      {% endif %}
+    </div>
+    <ol class="brief-list">
+      {% for x in b.briefs %}<li><time datetime="{{ x.time|isoformat }}">{{ x.time|ar_time }}</time>{% if x.url %}<a href="{{ x.url }}">{{ x.text }}</a>{% else %}<span>{{ x.text }}</span>{% endif %}</li>{% endfor %}
+    </ol>
+  </div>
+</section>

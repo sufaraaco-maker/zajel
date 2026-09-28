@@ -179,7 +179,7 @@ def article_edit(request, pk: int | None = None):
             initial["authors"] = [author]
         if kind == ArticleKind.VIDEO:
             initial.update(send_telegram=True)
-    form = ArticleForm(request.POST or None, instance=article, user=user, initial=initial)
+    form = ArticleForm(request.POST or None, request.FILES or None, instance=article, user=user, initial=initial)
     if not editable:
         for field in form.fields.values():
             field.disabled = True
@@ -218,6 +218,11 @@ def article_edit(request, pk: int | None = None):
                     messages.error(request, str(exc))
             else:
                 messages.success(request, "حُفظت المادة.")
+            removed, warning = getattr(form, "audio_report", ([], ""))
+            if removed:
+                messages.info(request, "نُزع من الملف الصوتي: " + "، ".join(removed) + ".")
+            if warning:
+                messages.warning(request, warning)
             return redirect("studio:article_edit", pk=obj.pk)
         messages.error(request, "راجع الحقول المعلَّمة.")
 

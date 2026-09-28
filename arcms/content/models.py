@@ -248,6 +248,8 @@ class ArticleKind(models.TextChoices):
     INFOGRAPHIC = "infographic", "إنفوجراف"
     GALLERY = "gallery", "معرض صور"
     CARTOON = "cartoon", "كاريكاتير"
+    PODCAST = "podcast", "بودكاست"
+    SHORT = "short", "فيديو قصير"
 
 
 KIND_PLURALS = {
@@ -262,6 +264,8 @@ KIND_PLURALS = {
     "infographic": "إنفوجراف",
     "gallery": "صور",
     "cartoon": "كاريكاتير",
+    "podcast": "بودكاست",
+    "short": "فيديو قصير",
 }
 
 
@@ -317,6 +321,10 @@ class Article(models.Model):
     image_caption = models.CharField("تعليق الصورة", max_length=400, blank=True)
     hide_featured_image = models.BooleanField("إخفاء الصورة في صفحة المادة", default=False)
     video_url = models.URLField("رابط الفيديو", blank=True, help_text="يوتيوب أو فيميو أو فيسبوك")
+    audio = models.FileField(
+        "الملف الصوتي", upload_to="audio/%Y/%m/", blank=True, max_length=200,
+        help_text="MP3 أو M4A أو OGG حتى 60 ميغابايت. يُشغَّل من خادمكم دون أي منصة خارجية.",
+    )
     gallery = models.ManyToManyField(MediaAsset, through="GalleryItem", blank=True, related_name="galleries")
 
     source = models.CharField("المصدر", max_length=150, blank=True)
