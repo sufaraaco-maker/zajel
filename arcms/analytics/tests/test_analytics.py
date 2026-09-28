@@ -39,11 +39,23 @@ class CollectorTests(ArcmsTestCase):
         self.assertNotIn("203.0.113.9", h1)
         view = record_view(ip="203.0.113.9", user_agent=MOBILE_UA, path="/", referrer="")
         self.assertFalse(any("203.0.113" in str(getattr(view, f.attname)) for f in PageView._meta.fields))
-        DailySalt.objects.all().delete()
-        from django.core.cache import cache
+        from datetime import timedelta
+        from unittest import mock
 
-        cache.clear()
-        self.assertNotEqual(h1, visitor_hash("203.0.113.9", MOBILE_UA))
+        from django.core.cache import cache
+        from django.utils import timezone
+
+        from arcms.analytics import collector
+        from arcms.analytics.tasks import purge
+
+        tomorrow = timezone.localdate() + timedelta(days=1)
+        with mock.patch("arcms.analytics.collector.timezone.localdate", return_value=tomorrow):
+            self.assertNotEqual(h1, visitor_hash("203.0.113.9", MOBILE_UA))
+            self.assertEqual(list(collector._salts), [tomorrow])  # لا يبقى في الذاكرة ملح يوم مضى
+            cache.set(f"arcms:salt:{timezone.localdate():%Y-%m-%d}", "legacy", 3600)  # بقايا إصدار سابق
+            purge()
+        self.assertEqual(list(DailySalt.objects.values_list("day", flat=True)), [tomorrow])
+        self.assertIsNone(cache.get(f"arcms:salt:{timezone.localdate():%Y-%m-%d}"))
 
     def test_beacon_endpoint_and_view_count(self):
         article = make_article("خبر")

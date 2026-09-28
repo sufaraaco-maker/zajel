@@ -84,6 +84,24 @@ def generate_recovery_codes(n: int = 10) -> list[str]:
     return codes
 
 
+def _clean_code(code: str) -> str:
+    return "".join(ch for ch in code.upper() if ch.isalnum())
+
+
 def hash_recovery_code(code: str) -> str:
-    clean = "".join(ch for ch in code.upper() if ch.isalnum())
-    return hashlib.sha256(clean.encode()).hexdigest()
+    """تجزئة بطيئة بملح لكل رمز، فلا تُكسر رموز الاسترداد جماعياً إن تسرّبت القاعدة."""
+    salt = secrets.token_bytes(16)
+    digest = hashlib.scrypt(_clean_code(code).encode(), salt=salt, n=2**14, r=8, p=1, dklen=32)
+    return f"s1${salt.hex()}${digest.hex()}"
+
+
+def recovery_code_matches(code: str, stored: str) -> bool:
+    clean = _clean_code(code).encode()
+    if stored.startswith("s1$"):
+        try:
+            _, salt, digest = stored.split("$")
+            candidate = hashlib.scrypt(clean, salt=bytes.fromhex(salt), n=2**14, r=8, p=1, dklen=32)
+        except ValueError:
+            return False
+        return hmac.compare_digest(candidate.hex(), digest)
+    return hmac.compare_digest(hashlib.sha256(clean).hexdigest(), stored)  # صيغة الإصدارات الأولى

@@ -132,6 +132,8 @@ def push_send(subscription, payload: dict) -> None:
 
     if not settings.ARCMS_VAPID_PRIVATE_KEY:
         raise PermanentError("مفاتيح VAPID غير مضبوطة (ARCMS_VAPID_PRIVATE_KEY).")
+    if not push_endpoint_allowed(subscription.endpoint) or not push_keys_valid(subscription.p256dh, subscription.auth):
+        raise SubscriptionGone()  # اشتراك مشوّه (أو سابق للتحقق): يُعطَّل ولا يُرسل إليه
     try:
         webpush(
             subscription_info={
@@ -146,9 +148,56 @@ def push_send(subscription, payload: dict) -> None:
         )
     except WebPushException as exc:
         status = getattr(exc.response, "status_code", None)
-        if status in (404, 410):
+        if status in (404, 410, 400, 403, 413):
             raise SubscriptionGone() from exc
         raise RetryableError(str(exc)[:200]) from exc
+    except requests.RequestException as exc:
+        raise RetryableError(str(exc)[:200]) from exc
+    except Exception as exc:  # أي خطأ غير متوقع يُحتسب فشلاً لهذا الاشتراك وحده ولا يُسقط الإرسال للبقية
+        log.warning("push failed for subscription %s: %s", subscription.pk, type(exc).__name__)
+        raise RetryableError(type(exc).__name__) from exc
+
+
+# خدمات الإشعارات الفعلية في المتصفحات. لا نقبل عنوان اشتراك خارجها، فلا يصبح
+# الخادم أداة لطلب عناوين داخلية أو بطيئة عمداً.
+PUSH_SERVICE_HOSTS = (
+    "fcm.googleapis.com",
+    "android.googleapis.com",
+    "updates.push.services.mozilla.com",
+    "push.services.mozilla.com",
+    "push.apple.com",
+    "notify.windows.com",
+)
+
+
+def push_endpoint_allowed(endpoint: str) -> bool:
+    from urllib.parse import urlsplit
+
+    try:
+        parts = urlsplit(endpoint)
+    except ValueError:
+        return False
+    host = (parts.hostname or "").lower()
+    if parts.scheme != "https" or not host or parts.port not in (None, 443):
+        return False
+    allowed = PUSH_SERVICE_HOSTS + tuple(getattr(settings, "ARCMS_PUSH_EXTRA_HOSTS", ()))
+    return any(host == h or host.endswith("." + h) for h in allowed)
+
+
+def push_keys_valid(p256dh: str, auth: str) -> bool:
+    import base64
+    import binascii
+
+    def decode(value: str) -> bytes | None:
+        if not isinstance(value, str) or not value or len(value) > 200:
+            return None
+        try:
+            return base64.urlsafe_b64decode(value + "=" * (-len(value) % 4))
+        except (binascii.Error, ValueError):
+            return None
+
+    key, secret = decode(p256dh), decode(auth)
+    return key is not None and len(key) == 65 and key[0] == 4 and secret is not None and len(secret) == 16
 
 
 # --- صياغة الرسائل ---

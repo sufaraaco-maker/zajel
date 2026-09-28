@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from django.db import connection, transaction
+from django.utils import timezone
 from django.utils.html import strip_tags
 
 from arcms.arabic.analyzer import ParsedQuery, index_text, parse_query
@@ -193,7 +194,8 @@ def search_articles(
         return SearchResult(q, [], 0)
     qs = queryset if queryset is not None else Article.objects.all()
     if public:
-        qs = qs.filter(status=Status.PUBLISHED)
+        # المؤجَّل (تاريخ نشر في المستقبل) لا يظهر في البحث كما لا يظهر في صفحته.
+        qs = qs.filter(status=Status.PUBLISHED, published_at__lte=timezone.now())
     if since:
         qs = qs.filter(published_at__gte=since)
     if until:

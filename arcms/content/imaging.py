@@ -31,7 +31,8 @@ try:  # صور iPhone بصيغة HEIC تحمل الموقع افتراضياً
 except ImportError:  # pragma: no cover
     pillow_heif = None
 
-Image.MAX_IMAGE_PIXELS = 60_000_000  # حماية من «قنابل» الصور
+Image.MAX_IMAGE_PIXELS = 60_000_000  # حد Pillow (يرفض فوق ضعفه)؛ ونحن نرفض قبل الفك فوق MAX_PIXELS
+MAX_PIXELS = 40_000_000  # نحو 7700×5200: أكبر من أي كاميرا هاتف، وأصغر من «قنابل» الصور المضغوطة
 
 MAX_UPLOAD_BYTES = 25 * 1024 * 1024
 ALLOWED_FORMATS = {"JPEG", "PNG", "WEBP", "GIF", "HEIF", "HEIC", "TIFF", "MPO", "BMP"}
@@ -144,12 +145,15 @@ def strip_and_normalize(data: bytes) -> CleanImage:
         fmt = (img.format or "").upper()
         if fmt not in ALLOWED_FORMATS:
             raise ImageRejected(f"صيغة غير مدعومة: {fmt or 'غير معروفة'}")
+        if img.width * img.height > MAX_PIXELS:
+            # يُفحص من الترويسة قبل فك البكسلات: ملف صغير قد يتمدد إلى غيغابايتات في الذاكرة.
+            raise ImageRejected("أبعاد الصورة أكبر من المسموح.")
         img.load()
     except (UnidentifiedImageError, OSError, Image.DecompressionBombError) as exc:
         raise ImageRejected("الملف ليس صورة صالحة أو أنه تالف.") from exc
 
     removed = inspect_metadata(img)
-    if getattr(img, "n_frames", 1) > 1:
+    if getattr(img, "is_animated", False):
         img.seek(0)  # الصور المتحركة: نحتفظ بالإطار الأول فقط
     img = ImageOps.exif_transpose(img) or img
     img = _to_srgb(img)

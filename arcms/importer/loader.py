@@ -123,7 +123,12 @@ class Loader:
         article.source = rec.source[:150]
         article.category = self.category(rec.categories[0] if rec.categories else self.default_category)
         article.legacy_url = rec.legacy_url[:500]
-        if rec.status == "published":
+        if rec.status == "published" and rec.published_at and rec.published_at > timezone.now():
+            # مادة مؤجلة في النظام القديم: تبقى مجدولة لموعدها، ولا تُوزَّع لأنها من الأرشيف.
+            article.status = Status.SCHEDULED
+            article.scheduled_at = rec.published_at
+            article.distributed_at = article.distributed_at or timezone.now()
+        elif rec.status == "published":
             when = rec.published_at or timezone.now()
             article.status = Status.PUBLISHED
             article.published_at = when

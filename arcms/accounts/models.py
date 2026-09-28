@@ -123,11 +123,11 @@ class User(AbstractUser):
         return True
 
     def use_recovery_code(self, code: str) -> bool:
-        digest = totp.hash_recovery_code(code)
-        if digest in (self.recovery_codes or []):
-            self.recovery_codes = [c for c in self.recovery_codes if c != digest]
-            self.save(update_fields=["recovery_codes"])
-            return True
+        for stored in self.recovery_codes or []:
+            if totp.recovery_code_matches(code, stored):
+                self.recovery_codes = [c for c in self.recovery_codes if c != stored]
+                self.save(update_fields=["recovery_codes"])
+                return True
         return False
 
     def reset_2fa(self) -> None:
@@ -154,6 +154,8 @@ class LoginAttempt(models.Model):
 
     @classmethod
     def is_locked(cls, username: str, ip: str | None = None) -> bool:
+        """القفل لكل (حساب، عنوان): من يخطئ مراراً من عنوان لا يُقفل صاحب الحساب في عنوان آخر.
+        ويبقى حد أعلى بكثير للحساب من كل العناوين معاً، ضد التخمين الموزّع."""
         since = timezone.now() - timedelta(minutes=settings.ARCMS_LOGIN_LOCK_MINUTES)
         recent = cls.objects.filter(created_at__gte=since)
         by_user = recent.filter(username__iexact=username)
@@ -161,7 +163,12 @@ class LoginAttempt(models.Model):
         failures = by_user.filter(success=False)
         if last_ok:
             failures = failures.filter(created_at__gt=last_ok.created_at)
-        if failures.count() >= settings.ARCMS_LOGIN_MAX_FAILURES:
+        limit = settings.ARCMS_LOGIN_MAX_FAILURES
+        if ip and failures.filter(ip=ip).count() >= limit:
+            return True
+        if not ip and failures.count() >= limit:
+            return True
+        if failures.count() >= limit * 10:
             return True
         if ip:
             # حدّ أعلى لكل عنوان IP لمنع تجربة أسماء كثيرة من المصدر نفسه.

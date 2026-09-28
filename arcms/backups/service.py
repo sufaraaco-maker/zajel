@@ -201,7 +201,12 @@ def restore_backup(path: Path, *, private_key: str | None = None, passphrase: st
             raise BackupError(
                 f"النسخة من قاعدة {manifest.get('database')} والخادم يعمل على {connection.vendor}."
             )
-        db_file = workdir / manifest["db_file"]
+        name = str(manifest.get("db_file", ""))
+        if not name or name != Path(name).name or name.startswith("."):
+            raise BackupError("اسم ملف القاعدة في بيان النسخة غير صالح.")
+        db_file = workdir / name
+        if not db_file.is_file():
+            raise BackupError("ملف القاعدة غير موجود في النسخة.")
         db = _db()
         if connection.vendor == "postgresql":
             connection.close()

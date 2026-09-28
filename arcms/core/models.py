@@ -222,7 +222,9 @@ class MenuItem(models.Model):
                 return reverse("public:live_list")
         except Exception:  # noqa: BLE001 - رابط مكسور لا يُسقط الصفحة
             return "#"
-        return self.url or "#"
+        from arcms.core.utils import is_safe_link
+
+        return self.url if is_safe_link(self.url) else "#"
 
 
 class HomeBlock(models.Model):

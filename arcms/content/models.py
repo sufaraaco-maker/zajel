@@ -533,7 +533,9 @@ class BreakingNews(models.Model):
     def get_url(self) -> str:
         if self.article_id:
             return self.article.get_absolute_url()
-        return self.link or ""
+        from arcms.core.utils import is_safe_link
+
+        return self.link if is_safe_link(self.link) else ""
 
     @classmethod
     def current(cls, hours: int = 12):

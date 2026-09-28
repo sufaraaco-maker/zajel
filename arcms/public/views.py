@@ -20,6 +20,7 @@ from django.views.decorators.cache import cache_control
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
+from arcms.accounts.middleware import session_fully_verified
 from arcms.analytics.collector import record_view
 from arcms.arabic.highlight import snippet
 from arcms.content import search as search_mod
@@ -121,7 +122,7 @@ def article_detail(request, pk: int, slug: str = ""):
     )
     preview = False
     if not article.is_live:
-        if request.user.is_authenticated and can_view(request.user, article):
+        if session_fully_verified(request) and can_view(request.user, article):
             preview = True
         else:
             raise Http404
@@ -213,7 +214,10 @@ def category_detail(request, slug: str):
 
 def tag_detail(request, slug: str):
     tag = get_object_or_404(Tag, slug=slug)
-    page = _paginate(request, published().filter(tags=tag))
+    items = published().filter(tags=tag)
+    if not items.exists():
+        raise Http404  # وسم على مسودات فقط لا يكشف وجوده لأحد من خارج الغرفة
+    page = _paginate(request, items)
     return render(request, "public/listing.html", _common({"heading": f"#{tag.name}", "page": page, "most_read": most_read(5)}))
 
 
@@ -427,12 +431,16 @@ def push_subscribe(request):
         keys = data["keys"]
     except (ValueError, KeyError, TypeError):
         return JsonResponse({"ok": False}, status=400)
-    if not str(endpoint).startswith("https://"):
+    from arcms.distribution.channels import push_endpoint_allowed, push_keys_valid
+
+    if not isinstance(keys, dict) or not push_endpoint_allowed(str(endpoint)) or not push_keys_valid(
+        keys.get("p256dh"), keys.get("auth")
+    ):
         return JsonResponse({"ok": False}, status=400)
     if _limited("push", client_ip(request)):
         return JsonResponse({"ok": False}, status=429)
     PushSubscription.objects.update_or_create(
-        endpoint=endpoint[:700], defaults={"p256dh": keys.get("p256dh", "")[:200], "auth": keys.get("auth", "")[:100], "is_active": True}
+        endpoint=endpoint[:700], defaults={"p256dh": keys["p256dh"], "auth": keys["auth"], "is_active": True}
     )
     return JsonResponse({"ok": True})
 
@@ -474,12 +482,15 @@ def beacon(request):
         except (TypeError, ValueError):
             return None
 
+    article_id = as_int(data.get("a"))
+    if article_id and not Article.objects.published().filter(pk=article_id).exists():
+        article_id = None  # لا تُحتسب مشاهدة لمسودة، ولا يظهر عنوانها في لوحة الجمهور
     record_view(
         ip=client_ip(request),
         user_agent=request.META.get("HTTP_USER_AGENT", ""),
         path=str(data.get("p", ""))[:300],
         referrer=str(data.get("r", ""))[:500],
-        article_id=as_int(data.get("a")),
+        article_id=article_id,
         category_id=as_int(data.get("c")),
         utm_source=str(data.get("u", ""))[:40],
     )

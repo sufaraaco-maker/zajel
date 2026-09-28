@@ -58,9 +58,12 @@ class NewsletterAbuseTests(ArcmsTestCase):
 @mock.patch.dict("arcms.public.views.RATE_LIMITS", SMALL_LIMITS)
 class EndpointAbuseTests(ArcmsTestCase):
     def test_push_subscribe_throttled(self):
+        from arcms.distribution.tests.test_distribution import push_keys
+
+        keys = push_keys()
         codes = []
         for n in range(22):
-            body = json.dumps({"endpoint": f"https://push.example/{n}", "keys": {"p256dh": "k", "auth": "a"}})
+            body = json.dumps({"endpoint": f"https://fcm.googleapis.com/fcm/send/{n}", "keys": keys})
             codes.append(self.client.post(reverse("public:push_subscribe"), body, content_type="application/json").status_code)
         self.assertEqual(codes.count(429), 2)
         self.assertEqual(PushSubscription.objects.count(), 20)

@@ -43,7 +43,12 @@ class SecurityHeadersMiddleware:
             response["Cache-Control"] = "no-store"
             response["X-Robots-Tag"] = "noindex, nofollow"
         elif not path.startswith(("/static/", "/media/")):
-            response.setdefault("Content-Security-Policy", RELAXED_PUBLIC if _third_party_enabled() else STRICT_PUBLIC)
+            user = getattr(request, "user", None)
+            staff = bool(user is not None and user.is_authenticated)
+            # جلسة من الطاقم لا تشغّل شيفرة طرف ثالث أبداً: سكربت إعلان يعمل بصلاحيات المحرر
+            # يستطيع قراءة المسودات أو التصرف في غرفة التحرير باسمه.
+            relaxed = not staff and _third_party_enabled()
+            response.setdefault("Content-Security-Policy", RELAXED_PUBLIC if relaxed else STRICT_PUBLIC)
         response.setdefault("Permissions-Policy", PERMISSIONS)
         response.setdefault("X-Content-Type-Options", "nosniff")
         if not settings.DEBUG:

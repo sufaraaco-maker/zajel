@@ -8,7 +8,6 @@ import secrets
 from urllib.parse import urlparse
 
 from django.conf import settings
-from django.core.cache import cache
 from django.db import IntegrityError
 from django.utils import timezone
 
@@ -26,10 +25,14 @@ SOCIAL_HOSTS = ("facebook.", "fb.", "t.co", "twitter.", "x.com", "instagram.", "
 MESSAGING_HOSTS = ("t.me", "telegram.", "web.whatsapp.", "wa.me", "whatsapp.", "signal.")
 
 
+# الملح في ذاكرة العملية فقط، لا في الذاكرة المؤقتة المشتركة: هذه قد تكون جدولاً في
+# القاعدة يبقى فيه الملح بعد حذفه من DailySalt، فيدخل النسخ الاحتياطية.
+_salts: dict = {}
+
+
 def daily_salt(day=None) -> str:
     day = day or timezone.localdate()
-    key = f"arcms:salt:{day.isoformat()}"
-    salt = cache.get(key)
+    salt = _salts.get(day)
     if salt:
         return salt
     obj = DailySalt.objects.filter(day=day).first()
@@ -38,7 +41,8 @@ def daily_salt(day=None) -> str:
             obj = DailySalt.objects.create(day=day, salt=secrets.token_hex(32))
         except IntegrityError:
             obj = DailySalt.objects.get(day=day)
-    cache.set(key, obj.salt, 3600)
+    _salts.clear()  # لا يبقى في الذاكرة إلا ملح اليوم
+    _salts[day] = obj.salt
     return obj.salt
 
 

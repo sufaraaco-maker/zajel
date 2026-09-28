@@ -74,5 +74,9 @@ def purge():
     today = timezone.localdate()
     # ملح الأمس وما قبله يُحذف: البصمات القديمة تصبح غير قابلة للربط بأي عنوان.
     DailySalt.objects.filter(day__lt=today).delete()
+    # بقايا الإصدارات السابقة التي كانت تحفظ الملح في الذاكرة المؤقتة (قد تكون جدولاً في القاعدة)
+    from django.core.cache import cache
+
+    cache.delete_many([f"arcms:salt:{today - timedelta(days=n):%Y-%m-%d}" for n in range(0, 40)])
     cutoff = timezone.now() - timedelta(days=settings.ARCMS_ANALYTICS_RAW_DAYS)
     PageView.objects.filter(ts__lt=cutoff).delete()

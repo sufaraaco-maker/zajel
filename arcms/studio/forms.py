@@ -3,6 +3,7 @@ from __future__ import annotations
 from django import forms
 from django.utils import timezone
 
+from arcms.accounts.roles import Cap
 from arcms.content.models import (
     Article,
     ArticleKind,
@@ -80,7 +81,7 @@ class ArticleForm(forms.ModelForm):
                 cats = cats.filter(pk__in=desks)
         self.fields["category"].queryset = cats
         self.fields["category"].required = False
-        self.fields["extra_categories"].queryset = Category.objects.filter(is_active=True)
+        self.fields["extra_categories"].queryset = cats
         self.fields["featured_image"].queryset = MediaAsset.objects.all()
         if self.instance.pk:
             self.fields["tag_names"].initial = "، ".join(self.instance.tags.values_list("name", flat=True))
@@ -122,6 +123,15 @@ class ArticleForm(forms.ModelForm):
             )
 
 
+def _clean_link(value: str) -> str:
+    from arcms.core.utils import is_safe_link
+
+    value = (value or "").strip()
+    if value and not is_safe_link(value):
+        raise forms.ValidationError("الرابط يجب أن يبدأ بـ https:// أو http:// أو / (مسار داخل الموقع).")
+    return value
+
+
 class BreakingForm(forms.ModelForm):
     class Meta:
         model = BreakingNews
@@ -131,6 +141,14 @@ class BreakingForm(forms.ModelForm):
             "article": forms.HiddenInput(),
             "expires_at": DateTimeLocal(),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # العاجل يُعرض للقراء ويُرسل للقنوات: لا يُربط إلا بمادة منشورة، وإلا كشف رابطُه عنوانَ مسودة.
+        self.fields["article"].queryset = Article.objects.published()
+
+    def clean_link(self):
+        return _clean_link(self.cleaned_data.get("link"))
 
 
 class LiveCoverageForm(forms.ModelForm):
@@ -206,6 +224,9 @@ class MenuItemForm(forms.ModelForm):
         self.fields["kind"] = forms.ChoiceField(label="نوع المادة", choices=[("", "—")] + list(ArticleKind.choices), required=False)
         self.fields["parent"].queryset = MenuItem.objects.filter(parent__isnull=True)
 
+    def clean_url(self):
+        return _clean_link(self.cleaned_data.get("url"))
+
 
 class HomeBlockForm(forms.ModelForm):
     class Meta:
@@ -214,11 +235,22 @@ class HomeBlockForm(forms.ModelForm):
                   "html", "dark", "order", "is_active"]
         widgets = {"html": forms.Textarea(attrs={"rows": 4, "dir": "ltr"}), "categories": forms.SelectMultiple(attrs={"size": 6})}
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
+        _lock_raw_html(self, user)
         self.fields["article_kind"] = forms.ChoiceField(
             label="نوع المادة", choices=[("", "—")] + list(ArticleKind.choices), required=False
         )
+
+
+RAW_HTML_HELP = "الشيفرة الخام يضيفها مدير النظام وحده: سكربت من طرف ثالث يعمل على نطاق الموقع نفسه."
+
+
+def _lock_raw_html(form, user) -> None:
+    """حقل الشيفرة الخام لمدير النظام فقط؛ لغيره يبقى ما فيه كما هو ولا يُعدَّل."""
+    if user is not None and not user.can(Cap.SETTINGS) and "html" in form.fields:
+        form.fields["html"].disabled = True
+        form.fields["html"].help_text = RAW_HTML_HELP
 
 
 class AdSlotForm(forms.ModelForm):
@@ -231,6 +263,10 @@ class AdSlotForm(forms.ModelForm):
             "starts_at": DateTimeLocal(),
             "ends_at": DateTimeLocal(),
         }
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        _lock_raw_html(self, user)
 
 
 class SiteSettingsForm(forms.ModelForm):

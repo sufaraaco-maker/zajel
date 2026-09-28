@@ -116,6 +116,23 @@ class WhatsAppTests(ArcmsTestCase):
         self.assertEqual(Delivery.objects.get().recipients, 2)
 
 
+def push_keys() -> dict:
+    import base64
+    import os
+
+    from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.asymmetric import ec
+
+    point = ec.generate_private_key(ec.SECP256R1()).public_key().public_bytes(
+        serialization.Encoding.X962, serialization.PublicFormat.UncompressedPoint
+    )
+
+    def b64(b):
+        return base64.urlsafe_b64encode(b).decode().rstrip("=")
+
+    return {"p256dh": b64(point), "auth": b64(os.urandom(16))}
+
+
 @override_settings(ARCMS_VAPID_PRIVATE_KEY="x", ARCMS_VAPID_PUBLIC_KEY="y")
 class PushTests(ArcmsTestCase):
     def test_gone_subscriptions_deactivated(self):
@@ -139,16 +156,47 @@ class PushTests(ArcmsTestCase):
         self.assertEqual(Delivery.objects.get().recipients, 1)
 
     def test_subscribe_endpoint(self):
-        resp = self.client.post(
-            reverse("public:push_subscribe"),
-            data='{"endpoint": "https://push.example/z", "keys": {"p256dh": "p", "auth": "a"}}',
-            content_type="application/json",
-        )
-        self.assertEqual(resp.status_code, 200)
-        self.assertTrue(PushSubscription.objects.filter(endpoint="https://push.example/z").exists())
-        resp = self.client.post(reverse("public:push_subscribe"), data='{"endpoint": "http://insecure"}',
+        good = push_keys()
+        url = reverse("public:push_subscribe")
+        resp = self.client.post(url, {"endpoint": "https://fcm.googleapis.com/fcm/send/z", "keys": good},
                                 content_type="application/json")
-        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue(PushSubscription.objects.filter(endpoint="https://fcm.googleapis.com/fcm/send/z").exists())
+        bad = [
+            {"endpoint": "http://insecure"},
+            {"endpoint": "https://10.0.0.5/internal", "keys": good},  # لا طلبات إلى عناوين داخلية
+            {"endpoint": "https://fcm.googleapis.com.evil.example/x", "keys": good},
+            {"endpoint": "https://fcm.googleapis.com:8443/x", "keys": good},
+            {"endpoint": "https://updates.push.services.mozilla.com/wpush/v2/x", "keys": {"p256dh": "!!!", "auth": "!!!"}},
+            {"endpoint": "https://updates.push.services.mozilla.com/wpush/v2/x", "keys": {"p256dh": "", "auth": ""}},
+            {"endpoint": "https://web.push.apple.com/x", "keys": "nope"},
+        ]
+        for body in bad:
+            self.assertEqual(self.client.post(url, body, content_type="application/json").status_code, 400, body)
+        self.assertEqual(PushSubscription.objects.count(), 1)
+
+    def test_malformed_subscription_does_not_break_delivery(self):
+        """اشتراك مشوّه (من قبل التحقق) يُعطَّل، ويصل الإشعار لغيره مرة واحدة."""
+        import base64
+
+        from cryptography.hazmat.primitives.asymmetric import ec
+
+        raw = ec.generate_private_key(ec.SECP256R1()).private_numbers().private_value.to_bytes(32, "big")
+        pem = base64.urlsafe_b64encode(raw).decode().rstrip("=")  # بصيغة arcms_keys
+        enable(Channel.PUSH)
+        broken = PushSubscription.objects.create(endpoint="https://fcm.googleapis.com/fcm/send/a", p256dh="!!!", auth="!!!")
+        ok = PushSubscription.objects.create(endpoint="https://fcm.googleapis.com/fcm/send/b", **push_keys())
+        article = make_article("عاجل", is_breaking=True, send_telegram=False)
+        on_article_published(article.pk)
+        with override_settings(ARCMS_VAPID_PRIVATE_KEY=pem), \
+                mock.patch("pywebpush.requests.post", return_value=fake_response(201, {})) as post:
+            run_pending()
+        self.assertEqual(post.call_count, 1)
+        broken.refresh_from_db()
+        ok.refresh_from_db()
+        self.assertFalse(broken.is_active)
+        self.assertTrue(ok.is_active)
+        self.assertEqual(Delivery.objects.get().recipients, 1)
 
 
 @override_settings(SITE_URL="https://news.example.org")

@@ -185,7 +185,8 @@ def read_jsonl(path: Path) -> Iterator[Record]:
                 excerpt=str(d.get("excerpt") or ""),
                 subtitle=str(d.get("subtitle") or ""),
                 published_at=_parse_dt(str(d.get("published_at") or "")),
-                status="draft" if d.get("status") == "draft" else "published",
+                # ما ليس منشوراً صراحةً (خاص، قيد الانتظار، محذوف…) يدخل مسودة لا منشوراً.
+                status="published" if str(d.get("status") or "published").lower() in ("publish", "published") else "draft",
                 kind=str(d.get("kind") or ""),
                 categories=[str(c) for c in cats],
                 tags=[str(t) for t in d.get("tags") or []],

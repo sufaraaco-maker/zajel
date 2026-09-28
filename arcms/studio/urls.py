@@ -61,7 +61,10 @@ menus = Crud(
 ads = Crud(
     model=AdSlot, form=AdSlotForm, cap=Cap.HOMEPAGE, name="ads", title="المساحات الإعلانية", singular="الإعلان",
     columns=[("name", "الاسم"), ("get_placement_display", "المكان"), ("is_active", "مفعّل"), ("ends_at", "ينتهي")],
-    help_text="الإعلان بصورة ورابط لا يحمّل أي سكربت خارجي. شيفرات شبكات الإعلان تخفف حماية الخصوصية للقرّاء.",
+    help_text="الإعلان بصورة ورابط لا يحمّل أي سكربت خارجي. شيفرات شبكات الإعلان تخفف حماية الخصوصية للقرّاء، "
+              "ولا يضيفها إلا مدير النظام.",
+    queryset=lambda: AdSlot.objects.order_by("placement", "name"),
+    form_takes_user=True,
 )
 
 urlpatterns = [

@@ -69,7 +69,7 @@ def homepage_block(request, pk: int | None = None):
     if block is None:
         initial["kind"] = request.GET.get("kind", HomeBlock.Kind.CATEGORY)
         initial["order"] = (HomeBlock.objects.aggregate(m=Max("order"))["m"] or 0) + 10
-    form = HomeBlockForm(request.POST or None, instance=block, initial=initial)
+    form = HomeBlockForm(request.POST or None, instance=block, initial=initial, user=request.user)
     if request.method == "POST" and form.is_valid():
         form.save()
         messages.success(request, "حُفظت الكتلة.")

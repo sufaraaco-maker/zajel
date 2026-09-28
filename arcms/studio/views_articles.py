@@ -17,7 +17,7 @@ from django.utils import timezone
 from django.utils.html import strip_tags
 from django.views.decorators.http import require_POST
 
-from arcms.accounts.roles import Cap
+from arcms.accounts.roles import Cap, Role
 from arcms.audit.models import Action
 from arcms.audit.services import record
 from arcms.content import search as search_mod
@@ -186,6 +186,7 @@ def article_edit(request, pk: int | None = None):
 
     if request.method == "POST" and editable:
         action = request.POST.get("action", "save")
+        before = _content_fingerprint(article) if article is not None else None
         if form.is_valid():
             with transaction.atomic():
                 obj = form.save(commit=False)
@@ -195,6 +196,10 @@ def article_edit(request, pk: int | None = None):
                 obj.last_edited_by = user
                 if obj.status == Status.PUBLISHED and not creating:
                     obj.content_updated_at = timezone.now()
+                if _needs_new_review(obj, user, before):
+                    # «العينان الأربع»: ما اعتمده الزميل هو ما يُنشر. تعديل الكاتب بعد الاعتماد يعيدها للمراجعة.
+                    obj.status, obj.reviewed_by, obj.scheduled_at = Status.IN_REVIEW, None, None
+                    messages.warning(request, "عدّلت المادة بعد اعتمادها، فعادت إلى المراجعة.")
                 obj.save()
                 form.save_m2m()
                 form.save_tags(obj)
@@ -232,6 +237,24 @@ def article_edit(request, pk: int | None = None):
         "now_local": timezone.localtime().strftime("%Y-%m-%dT%H:%M"),
     }
     return render(request, "studio/article_edit.html", ctx)
+
+
+_REVIEWED_FIELDS = ("kicker", "title", "subtitle", "excerpt", "dateline", "body", "category_id", "featured_image_id",
+                    "image_caption", "video_url", "correction")
+
+
+def _content_fingerprint(article: Article) -> tuple:
+    return tuple(getattr(article, f) for f in _REVIEWED_FIELDS)
+
+
+def _needs_new_review(obj: Article, user, before: tuple | None) -> bool:
+    from arcms.core.models import SiteSettings
+
+    if before is None or obj.status not in (Status.APPROVED, Status.SCHEDULED) or obj.created_by_id != user.pk:
+        return False
+    if user.role in (Role.CHIEF, Role.ADMIN) or user.is_superuser or not SiteSettings.load().require_review:
+        return False
+    return _content_fingerprint(obj) != before
 
 
 def _article_stats(article: Article) -> dict:

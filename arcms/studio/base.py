@@ -43,7 +43,7 @@ class Crud:
     def __init__(self, *, model, form, cap, name: str, title: str, singular: str, columns: list[tuple[str, str]],
                  queryset=None, search_field: str | None = None, template_list="studio/crud_list.html",
                  template_form="studio/crud_form.html", deletable=True, public_url: bool = True, help_text: str = "",
-                 list_extra=None, form_extra=None):
+                 list_extra=None, form_extra=None, form_takes_user: bool = False):
         self.model = model
         self.form = form
         self.cap = cap
@@ -61,6 +61,7 @@ class Crud:
         # دوال اختيارية تضيف سياقاً للقائمة أو النموذج: (request) و(request, obj).
         self.list_extra = list_extra
         self.form_extra = form_extra
+        self.form_takes_user = form_takes_user
 
     def qs(self):
         return self.queryset() if callable(self.queryset) else self.model.objects.all()
@@ -98,7 +99,8 @@ class Crud:
         @requires(crud.cap)
         def form_view(request, pk=None):
             obj = get_object_or_404(crud.model, pk=pk) if pk else None
-            form = crud.form(request.POST or None, request.FILES or None, instance=obj)
+            kwargs = {"user": request.user} if crud.form_takes_user else {}
+            form = crud.form(request.POST or None, request.FILES or None, instance=obj, **kwargs)
             if request.method == "POST" and form.is_valid():
                 saved = form.save()
                 messages.success(request, f"حُفظ {crud.singular} «{saved}».")

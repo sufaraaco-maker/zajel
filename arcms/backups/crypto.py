@@ -158,6 +158,8 @@ class DecryptingReader(io.RawIOBase):
             self.header = MAGIC + bytes([version, mode]) + eph_pub + salt + prefix
         elif mode == MODE_PASSPHRASE:
             n_log2 = src.read(1)[0]
+            if not 1 <= n_log2 <= 20:  # ملف مصنوع قد يطلب كلفة تستهلك ذاكرة الخادم كلها
+                raise BackupCryptoError("معامل اشتقاق المفتاح في الترويسة خارج الحدود المقبولة.")
             salt = src.read(16)
             prefix = src.read(7)
             if not passphrase:

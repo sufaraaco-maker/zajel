@@ -11,6 +11,16 @@ SESSION_VERIFIED = "arcms_2fa_ok"
 _EXEMPT_PREFIXES = ("/static/", "/media/")
 
 
+def session_fully_verified(request) -> bool:
+    """جلسة أكملت التحقق الثنائي (إن لزمها) ولا تنتظر تغيير كلمة مرور مؤقتة."""
+    user = getattr(request, "user", None)
+    if user is None or not user.is_authenticated:
+        return False
+    if user.has_2fa:
+        return bool(request.session.get(SESSION_VERIFIED))
+    return not user.requires_2fa and not user.must_change_password
+
+
 class TwoFactorMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response

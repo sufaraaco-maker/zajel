@@ -95,6 +95,12 @@ def subscribers(request):
     return render(request, "studio/subscribers.html", {"page": paginate(request, qs, 50), "q": q, "state": state, "counts": counts})
 
 
+def _csv_safe(value: str) -> str:
+    """خلية تبدأ بـ = أو + أو - أو @ قد ينفّذها برنامج الجداول صيغةً."""
+    value = value or ""
+    return "'" + value if value[:1] in ("=", "+", "-", "@", "\t", "\r") else value
+
+
 @requires(Cap.DIST_MANAGE)
 def subscribers_export(request):
     rows = NewsletterSubscriber.objects.filter(confirmed_at__isnull=False, unsubscribed_at__isnull=True).order_by("created_at")
@@ -105,7 +111,7 @@ def subscribers_export(request):
     writer.writerow(["email", "confirmed_at", "source"])
     count = 0
     for sub in rows.iterator():
-        writer.writerow([sub.email, sub.confirmed_at.isoformat(), sub.source])
+        writer.writerow([_csv_safe(sub.email), sub.confirmed_at.isoformat(), _csv_safe(sub.source)])
         count += 1
     record(Action.SECURITY, message=f"تصدير قائمة مشتركي النشرة ({count} بريد)", object_type="distribution.newslettersubscriber")
     return response

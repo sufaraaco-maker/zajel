@@ -209,6 +209,10 @@ ARCMS_WHATSAPP_API_VERSION = env.get("ARCMS_WHATSAPP_API_VERSION", "v21.0")
 ARCMS_VAPID_PUBLIC_KEY = env.get("ARCMS_VAPID_PUBLIC_KEY", "")
 ARCMS_VAPID_PRIVATE_KEY = env.get("ARCMS_VAPID_PRIVATE_KEY", "")
 ARCMS_VAPID_SUBJECT = env.get("ARCMS_VAPID_SUBJECT", f"mailto:{DEFAULT_FROM_EMAIL}")
+# عناوين الوكلاء العكسيين الموثوقة لترويسة X-Real-IP (افتراضياً: المحلي والشبكات الخاصة).
+ARCMS_TRUSTED_PROXIES = tuple(n.strip() for n in env.get("ARCMS_TRUSTED_PROXIES", "").split(",") if n.strip())
+# خدمات إشعارات إضافية مسموح بها (مفصولة بفواصل) فوق خدمات المتصفحات المعروفة.
+ARCMS_PUSH_EXTRA_HOSTS = tuple(h.strip().lower() for h in env.get("ARCMS_PUSH_EXTRA_HOSTS", "").split(",") if h.strip())
 ARCMS_HTTP_TIMEOUT = env.get_int("ARCMS_HTTP_TIMEOUT", 15)
 
 # --- النسخ الاحتياطي المشفّر ---

@@ -38,7 +38,7 @@ def can_view(user, article: Article) -> bool:
         return False
     if article.created_by_id == user.pk:
         return True
-    if user.can(Cap.ARTICLE_EDIT_ANY) or user.can(Cap.ARTICLE_PUBLISH):
+    if (user.can(Cap.ARTICLE_EDIT_ANY) or user.can(Cap.ARTICLE_PUBLISH)) and in_scope(user, article):
         return True
     return user.can(Cap.DIST_SEND) and article.status == Status.PUBLISHED
 
