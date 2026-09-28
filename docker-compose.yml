@@ -64,8 +64,10 @@ services:
       - "443:443"
     environment:
       ARCMS_DOMAIN: ${ARCMS_DOMAIN:?اضبط ARCMS_DOMAIN في ملف .env}
+      ARCMS_TIPS_HOST: ${ARCMS_TIPS_HOST:-}
     volumes:
       - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./deploy/caddy-sites:/etc/caddy/sites:ro
       - media:/data/media:ro
       - caddy_data:/data
       - caddy_config:/config

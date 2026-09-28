@@ -1,0 +1,28 @@
+{% load static arabic %}<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="same-origin">
+<title>{% block title %}{{ site.name }}{% endblock %}</title>
+<meta name="description" content="{% block description %}{{ site.description }}{% endblock %}">
+<meta name="theme-color" content="{{ site.primary_color }}">
+<link rel="stylesheet" href="{% static 'css/fonts.css' %}">
+<link rel="stylesheet" href="{% static 'css/public.css' %}">
+<style>
+:root{--primary:{{ site.primary_color }};--accent:{{ site.accent_color }}}
+</style>
+<script src="{% static 'js/theme-init.js' %}"></script>
+</head>
+{# صفحات المصادر بلا قوائم ولا شريط عاجل ولا سكربت الموقع ولا قياس: أقل ما يمكن تحميله. #}
+<body class="tips-body">
+<header class="tips-header">
+  <div class="container">
+    <a class="tips-brand" href="{{ main_site_url }}/" rel="noreferrer">{{ "shield"|icon:22 }} <span>{{ site.name }}</span></a>
+    <span class="tips-tag">صندوق المعلومات الآمن</span>
+  </div>
+</header>
+<main id="main"><div class="container">{% block content %}{% endblock %}</div></main>
+<footer class="tips-footer"><div class="container">{{ site.name }}{% if site.copyright_text %} · {{ site.copyright_text }}{% endif %}</div></footer>
+</body>
+</html>

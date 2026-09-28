@@ -28,6 +28,17 @@ SITE_URL = (env.get("ARCMS_SITE_URL", "http://localhost:8000") or "").rstrip("/"
 ALLOWED_HOSTS = env.get_list("ARCMS_ALLOWED_HOSTS", "localhost,127.0.0.1,testserver")
 CSRF_TRUSTED_ORIGINS = env.get_list("ARCMS_CSRF_TRUSTED_ORIGINS", SITE_URL)
 
+# نطاق مستقل لصندوق المعلومات (مثل tips.example.org أو عنوان ‎.onion‎): لا يشارك الموقع
+# الرئيسي أصله، فلا يصل إليه سكربت إعلان أو شيفرة مضافة في صفحات الموقع.
+ARCMS_TIPS_HOST = env.get("ARCMS_TIPS_HOST", "").strip().lower().rstrip("/")
+ARCMS_TIPS_ORIGIN = ""
+if ARCMS_TIPS_HOST:
+    ARCMS_TIPS_ORIGIN = ("http://" if ARCMS_TIPS_HOST.endswith(".onion") else "https://") + ARCMS_TIPS_HOST
+    if ARCMS_TIPS_HOST not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(ARCMS_TIPS_HOST)
+    if ARCMS_TIPS_ORIGIN not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(ARCMS_TIPS_ORIGIN)
+
 INSTALLED_APPS = [
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -53,6 +64,7 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "arcms.core.middleware.SecurityHeadersMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
+    "arcms.tips.middleware.TipsHostMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",

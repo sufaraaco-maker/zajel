@@ -417,3 +417,11 @@ mark { background: color-mix(in srgb, var(--primary) 18%, transparent); color: i
 .tips-thread h2 { font-size: 1.1rem; }
 .tips-reply { background: var(--surface); border-inline-start: 3px solid var(--primary); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 10px; }
 @media (max-width: 760px) { .tips-grid { grid-template-columns: 1fr; } }
+.tips-body { display: flex; flex-direction: column; min-height: 100vh; }
+.tips-body main { flex: 1; padding-block: 28px; }
+.tips-header { border-bottom: 3px solid var(--primary); background: var(--bg); }
+.tips-header .container { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 60px; flex-wrap: wrap; }
+.tips-brand { display: inline-flex; align-items: center; gap: 8px; font: 700 1.25rem var(--font-head); color: var(--text); text-decoration: none; }
+.tips-brand svg { color: var(--primary); }
+.tips-tag { font-family: var(--font-ui); font-size: .9rem; color: var(--muted); }
+.tips-footer { border-top: 1px solid var(--line); padding: 14px 0; font-family: var(--font-ui); font-size: .85rem; color: var(--muted); }

@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+from django.conf import settings
 from django.http import Http404
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
@@ -29,13 +30,14 @@ LIMITS = {"submit": (6, 3600), "follow": (30, 3600)}
 
 def _limited(scope: str, request) -> bool:
     limit, window = LIMITS[scope]
+    if request.get_host().split(":")[0].endswith(".onion"):
+        # كل زوار Tor يصلون من المصدر نفسه، فالحد هنا للصندوق كله لا لزائر واحد.
+        limit *= 20
     return exceeded("tips-" + scope, client_ip(request), limit=limit, window=window)
 
 
 def _render(request, template: str, ctx: dict, status: int = 200, *, index: bool = False):
-    from arcms.public.views import ticker
-
-    ctx = {"ticker": ticker(), "private_page": True, **ctx}
+    ctx = {"private_page": True, "main_site_url": settings.SITE_URL, **ctx}
     response = render(request, template, ctx, status=status)
     response["Content-Security-Policy"] = PRIVATE_CSP
     response["Cache-Control"] = "no-store"

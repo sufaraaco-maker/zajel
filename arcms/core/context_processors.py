@@ -30,9 +30,16 @@ def _menus():
     return menus
 
 
+def _tips_url() -> str:
+    from django.conf import settings
+    from django.urls import reverse
+
+    return (settings.ARCMS_TIPS_ORIGIN + "/tips/") if settings.ARCMS_TIPS_ORIGIN else reverse("public:tips")
+
+
 def site(request):
     settings_obj = SiteSettings.load()
-    ctx = {"site": settings_obj, "now": timezone.now()}
+    ctx = {"site": settings_obj, "now": timezone.now(), "tips_url": _tips_url()}
     path = request.path
     if not path.startswith(("/studio", "/accounts")):
         ctx["menus"] = _menus()

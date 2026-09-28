@@ -1,0 +1,19 @@
+# صندوق المعلومات عبر Tor (عنوان ‎.onion‎). التشفير هنا من Tor نفسه، فلا شهادة HTTPS.
+# 1) على الخادم: ثبّت tor وأضف إلى /etc/tor/torrc ثم أعد تشغيله:
+#      HiddenServiceDir /var/lib/tor/arcms-tips/
+#      HiddenServicePort 80 127.0.0.1:8090
+#    العنوان في /var/lib/tor/arcms-tips/hostname
+# 2) اضبط في .env:  ARCMS_TIPS_HOST=<العنوان>.onion
+# 3) أضف إلى خدمة caddy في docker-compose.yml المنفذ "127.0.0.1:8090:8090"
+# 4) انسخ هذا الملف إلى onion.caddy ثم: docker compose up -d
+http://{$ARCMS_TIPS_HOST}:8090 {
+	request_body {
+		max_size 60MB
+	}
+	reverse_proxy web:8000 {
+		# كل الزوار يصلون من Tor نفسه؛ لا عنوان حقيقي لأحد. والاتصال مشفّر طرفاً لطرف عبر Tor.
+		header_up X-Real-IP 127.0.0.1
+		header_up X-Forwarded-Proto https
+	}
+	header -Server
+}

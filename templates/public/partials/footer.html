@@ -7,7 +7,7 @@
       <div class="social">
         {% for key, label, url in site.social_links %}<a href="{{ url }}" target="_blank" rel="noopener" aria-label="{{ label }}">{{ key|icon:18 }}</a>{% endfor %}
       </div>
-      {% if site.tips_note or site.tips_enabled %}<div class="tips">{{ "shield"|icon:18 }}<span>{{ site.tips_note }}{% if site.tips_enabled %} <a href="{% url 'public:tips' %}">أرسل معلومة بأمان ←</a>{% endif %}</span></div>{% endif %}
+      {% if site.tips_note or site.tips_enabled %}<div class="tips">{{ "shield"|icon:18 }}<span>{{ site.tips_note }}{% if site.tips_enabled %} <a href="{{ tips_url }}">أرسل معلومة بأمان ←</a>{% endif %}</span></div>{% endif %}
     </div>
     <div>
       <h3>الأقسام</h3>

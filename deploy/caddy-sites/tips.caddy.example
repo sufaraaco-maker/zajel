@@ -1,0 +1,15 @@
+# صندوق المعلومات على نطاق مستقل (docs/SECURITY.md).
+# 1) اضبط في .env:  ARCMS_TIPS_HOST=tips.news.example.org  (وسجّل النطاق في DNS نحو الخادم)
+# 2) انسخ هذا الملف إلى tips.caddy في المجلد نفسه، ثم: docker compose up -d
+{$ARCMS_TIPS_HOST} {
+	request_body {
+		max_size 60MB
+	}
+	reverse_proxy web:8000 {
+		header_up X-Real-IP {remote_host}
+	}
+	header {
+		-Server
+		Strict-Transport-Security "max-age=31536000"
+	}
+}

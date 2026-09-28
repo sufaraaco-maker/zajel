@@ -24,3 +24,6 @@
 		Strict-Transport-Security "max-age=31536000"
 	}
 }
+
+# مواقع إضافية اختيارية (مثل صندوق المعلومات على نطاق مستقل): ملفات ‎*.caddy‎ في deploy/caddy-sites
+import /etc/caddy/sites/*.caddy

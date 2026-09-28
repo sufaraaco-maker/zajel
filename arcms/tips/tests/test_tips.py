@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest import mock
 
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
 from PIL import Image
@@ -220,3 +221,24 @@ class StudioTipsTests(ArcmsTestCase):
         self.assertFalse(Tip.objects.filter(pk=old_closed.pk).exists())
         self.assertTrue(Tip.objects.filter(pk=old_open.pk).exists())
         self.assertTrue(AuditEntry.objects.filter(message__contains="حذف تلقائي").exists())
+
+
+@override_settings(ARCMS_TIPS_HOST="tips.news.example", ARCMS_TIPS_ORIGIN="https://tips.news.example",
+                   ALLOWED_HOSTS=["testserver", "tips.news.example"])
+class TipsHostTests(ArcmsTestCase):
+    def test_main_host_redirects_to_tips_host(self):
+        resp = self.client.get(reverse("public:tips_follow"))
+        self.assertEqual(resp.status_code, 302)
+        self.assertEqual(resp["Location"], "https://tips.news.example/tips/follow/")
+        self.assertIn('href="https://tips.news.example/tips/"', self.client.get("/").content.decode())
+
+    def test_tips_host_serves_only_tips(self):
+        host = {"HTTP_HOST": "tips.news.example"}
+        self.assertEqual(self.client.get("/", **host)["Location"], "/tips/")
+        resp = self.client.get(reverse("public:tips"), **host)
+        self.assertContains(resp, "أرسل معلومة بأمان")
+        self.assertNotContains(resp, "public.js")
+        for path in ("/studio/", "/accounts/login/", "/latest/", "/search?q=x", "/media/x.jpg"):
+            self.assertEqual(self.client.get(path, **host).status_code, 404, path)
+        resp = self.client.post(reverse("public:tips"), {"body": BODY}, **host)
+        self.assertContains(resp, "رمزك السري")
