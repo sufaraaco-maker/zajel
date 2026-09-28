@@ -18,7 +18,22 @@ FONT_CHOICES = (
     ("plex", "IBM Plex Sans Arabic (عصري)"),
     ("kufi", "Noto Kufi Arabic (كوفي عريض)"),
     ("naskh", "Noto Naskh Arabic (نسخ صحفي)"),
+    ("cairo", "Cairo (هندسي حديث)"),
+    ("tajawal", "Tajawal (خفيف واضح)"),
+    ("almarai", "Almarai (بسيط للشاشات)"),
+    ("amiri", "Amiri (نسخ كلاسيكي للمقالات)"),
 )
+
+# الخط واحتياطاته. كلها مستضافة على الخادم (static/fonts) بترخيص SIL OFL.
+FONT_STACKS = {
+    "plex": '"IBM Plex Sans Arabic","Segoe UI",Tahoma,sans-serif',
+    "kufi": '"Noto Kufi Arabic","Segoe UI",Tahoma,sans-serif',
+    "naskh": '"Noto Naskh Arabic","Traditional Arabic",serif',
+    "cairo": 'Cairo,"Segoe UI",Tahoma,sans-serif',
+    "tajawal": 'Tajawal,"Segoe UI",Tahoma,sans-serif',
+    "almarai": 'Almarai,"Segoe UI",Tahoma,sans-serif',
+    "amiri": 'Amiri,"Traditional Arabic",serif',
+}
 
 
 class SiteSettings(models.Model):
@@ -164,6 +179,19 @@ class SiteSettings(models.Model):
             hijri=self.show_hijri,
             hijri_adjust=self.hijri_adjust,
         )
+
+    @property
+    def heading_font(self) -> str:
+        return FONT_STACKS.get(self.font_headings, FONT_STACKS["plex"])
+
+    @property
+    def heading_font_file(self) -> str:
+        files = {"plex": "ibm-plex-sans-arabic", "kufi": "noto-kufi-arabic", "naskh": "noto-naskh-arabic"}
+        return f"fonts/{files.get(self.font_headings, self.font_headings)}-arabic-700-normal.woff2"
+
+    @property
+    def body_font(self) -> str:
+        return FONT_STACKS.get(self.font_body, FONT_STACKS["naskh"])
 
     def safe_cta_url(self) -> str:
         from arcms.core.utils import is_safe_link

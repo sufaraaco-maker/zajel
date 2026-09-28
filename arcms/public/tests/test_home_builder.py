@@ -183,3 +183,21 @@ class PresetTests(ArcmsTestCase):
         self.assertEqual(SiteSettings.objects.get(pk=1).header_style, "compact")
         make_article("خبر")
         self.assertEqual(self.client.get("/").status_code, 200)
+
+
+class FontTests(ArcmsTestCase):
+    def test_bundled_fonts_selectable(self):
+        from django.contrib.staticfiles import finders
+
+        site = SiteSettings.load()
+        site.font_headings, site.font_body = "cairo", "amiri"
+        site.save()
+        html = self.client.get("/").content.decode()
+        self.assertIn("--font-head:Cairo,", html)
+        self.assertIn("--font-body:Amiri,", html)
+        self.assertIn("fonts/cairo-arabic-700-normal.woff2", html)
+        from arcms.core.models import FONT_CHOICES
+
+        for key, _ in FONT_CHOICES:
+            site.font_headings = key
+            self.assertTrue(finders.find(site.heading_font_file), key)

@@ -140,6 +140,11 @@ THEMES = {
         "primary_color": "#d4a017", "accent_color": "#0f1113", "header_dark": True,
         "header_style": "classic", "corner_style": "sharp", "font_headings": "kufi", "font_body": "plex",
     },
+    "sky-cairo": {
+        "label": "سماوي بخط القاهرة",
+        "primary_color": "#0077b6", "accent_color": "#03263b", "header_dark": False,
+        "header_style": "compact", "corner_style": "round", "font_headings": "cairo", "font_body": "tajawal",
+    },
     "maroon": {
         "label": "عنّابي رصين",
         "primary_color": "#7a1f2b", "accent_color": "#1d1a1b", "header_dark": False,

@@ -21,13 +21,13 @@
 <link rel="icon" href="{% if site.logo %}{{ site.logo.thumb }}{% else %}{% static 'img/icon-192.png' %}{% endif %}">
 <link rel="alternate" type="application/rss+xml" title="{{ site.name }}" href="{% url 'public:feed' %}">
 {% block feeds %}{% endblock %}
-<link rel="preload" href="{% static 'fonts/ibm-plex-sans-arabic-arabic-700-normal.woff2' %}" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="{% static site.heading_font_file %}" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="{% static 'css/fonts.css' %}">
 <link rel="stylesheet" href="{% static 'css/public.css' %}">
 <style>
 :root{--primary:{{ site.primary_color }};--accent:{{ site.accent_color }};--radius:{% if site.corner_style == 'sharp' %}2px{% elif site.corner_style == 'round' %}14px{% else %}6px{% endif %};
---font-head:{% if site.font_headings == 'kufi' %}"Noto Kufi Arabic"{% elif site.font_headings == 'naskh' %}"Noto Naskh Arabic"{% else %}"IBM Plex Sans Arabic"{% endif %},"Segoe UI",Tahoma,sans-serif;
---font-body:{% if site.font_body == 'kufi' %}"Noto Kufi Arabic"{% elif site.font_body == 'plex' %}"IBM Plex Sans Arabic"{% else %}"Noto Naskh Arabic"{% endif %},"Segoe UI",Tahoma,serif}
+--font-head:{{ site.heading_font|safe }};
+--font-body:{{ site.body_font|safe }}}
 </style>
 <script src="{% static 'js/theme-init.js' %}"></script>
 {% block head %}{% endblock %}
