@@ -122,6 +122,36 @@ def verify_chain(limit: int | None = None) -> tuple[bool, int, AuditEntry | None
     return True, count, None
 
 
+# --- مراسي السلسلة خارج الخادم ---
+#
+# من يملك الكتابة في القاعدة يستطيع إعادة حساب السلسلة كلها أو حذف ذيلها. «المرساة»
+# رقم آخر قيد وتجزئته، تُرسل يومياً بالبريد إلى المدققين فتحفظ خارج الخادم؛ وأي إعادة
+# كتابة لما قبلها تغيّر تجزئتها فتُكشف بمقارنتها.
+
+
+def current_anchor() -> str:
+    last = AuditEntry.objects.order_by("-id").only("id", "hash").first()
+    return f"{last.pk}:{last.hash}" if last else ""
+
+
+def check_anchor(anchor: str) -> tuple[bool, str]:
+    """يتحقق من أن القيد المثبَّت ما زال في السجل بالتجزئة نفسها وأن السلسلة سليمة."""
+    raw = (anchor or "").strip().lstrip("#")
+    entry_id, _, digest = raw.partition(":")
+    if not entry_id.isdigit() or len(digest) != 64:
+        return False, "صيغة المرساة غير صحيحة؛ المتوقع: الرقم:التجزئة"
+    entry = AuditEntry.objects.filter(pk=int(entry_id)).first()
+    if entry is None:
+        return False, f"القيد #{entry_id} غير موجود: حُذف جزء من السجل."
+    if entry.hash != digest.lower():
+        return False, f"تجزئة القيد #{entry_id} تغيّرت: أُعيدت كتابة السجل حتى هذا القيد."
+    ok, _count, broken = verify_chain()
+    if not ok:
+        return False, f"السلسلة مكسورة عند القيد #{broken.pk}."
+    later = AuditEntry.objects.filter(pk__gt=entry.pk).count()
+    return True, f"المرساة مطابقة، والسلسلة سليمة، وبعدها {later} قيداً."
+
+
 # --- تسجيل التغييرات على النماذج تلقائياً ---
 
 _registry: dict[type, dict] = {}

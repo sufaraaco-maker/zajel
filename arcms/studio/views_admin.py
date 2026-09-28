@@ -385,6 +385,9 @@ def audit(request):
         qs = qs.filter(Q(object_repr__icontains=q) | Q(message__icontains=q) | Q(object_id=q))
     page = paginate(request, qs, 50)
     chain_ok, chain_count, broken = verify_chain()
+    from arcms.audit.services import check_anchor, current_anchor
+
+    anchor_result = check_anchor(request.GET["anchor"]) if request.GET.get("anchor") else None
     return render(
         request,
         "studio/audit.html",
@@ -396,6 +399,9 @@ def audit(request):
             "chain_ok": chain_ok,
             "chain_count": chain_count,
             "broken": broken,
+            "anchor": current_anchor(),
+            "anchor_result": anchor_result,
+            "anchor_input": request.GET.get("anchor", ""),
         },
     )
 

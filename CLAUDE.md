@@ -38,7 +38,7 @@ python manage.py runserver
 ## الاختبارات والفحص
 
 ```bash
-python manage.py test          # 257 اختباراً
+python manage.py test          # 261 اختباراً
 ruff check arcms config
 ```
 

@@ -4,6 +4,13 @@
 <div class="page-title"><div><h1>سجل التدقيق</h1><p>كل تغيير ودخول ونشر وتوزيع، بقيود متسلسلة بالتجزئة لا تُعدَّل ولا تُحذف.</p></div></div>
 {% if chain_ok %}<div class="chain ok">{{ "shield"|icon:20 }} <div><strong>السلسلة سليمة.</strong> فُحص {{ chain_count }} قيداً؛ لم يُعدَّل أو يُحذف أي قيد منذ البداية.</div></div>
 {% else %}<div class="chain bad">{{ "alert"|icon:20 }} <div><strong>السلسلة مكسورة عند القيد #{{ broken.pk }}.</strong> يعني هذا تعديلاً مباشراً في قاعدة البيانات خارج التطبيق. احفظ نسخة من القاعدة الآن وحقّق.</div></div>{% endif %}
+<details class="panel anchor-panel"{% if anchor_result %} open{% endif %}>
+  <summary><strong>مرساة السجل</strong> — دليل سلامة يُحفظ خارج الخادم</summary>
+  <p class="small">مرساة اليوم (تُرسل بالبريد صباح كل يوم إلى من يملك صلاحية التدقيق): <code dir="ltr" class="anchor-code">{{ anchor|default:"—" }}</code></p>
+  <p class="small muted">من يملك الكتابة في قاعدة البيانات قد يعيد حساب السلسلة كلها. مرساة محفوظة خارج الخادم تكشف ذلك: الصقها هنا بعد أيام أو أشهر، فإن تغيّر أي قيد قبلها ظهر فوراً.</p>
+  <form method="get" class="filters"><input type="text" name="anchor" value="{{ anchor_input }}" dir="ltr" placeholder="1234:9f86d0…" style="min-width:320px"><button class="btn">تحقّق</button></form>
+  {% if anchor_result %}<div class="alert {% if anchor_result.0 %}success{% else %}error{% endif %}" style="margin-top:10px">{{ anchor_result.1 }}</div>{% endif %}
+</details>
 <form class="filters" method="get" style="margin-top:14px">
   <select name="action"><option value="">كل الأحداث</option>{% for v, l in actions %}<option value="{{ v }}"{% if f.action == v %} selected{% endif %}>{{ l }}</option>{% endfor %}</select>
   <select name="actor"><option value="">كل المستخدمين</option>{% for u in actors %}<option value="{{ u.pk }}"{% if f.actor == u.pk|stringformat:"s" %} selected{% endif %}>{{ u }}</option>{% endfor %}</select>

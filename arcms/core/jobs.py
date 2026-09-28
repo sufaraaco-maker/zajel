@@ -147,6 +147,7 @@ def load_task_modules() -> None:
         "arcms.importer.tasks",
         "arcms.tips.tasks",
         "arcms.accounts.notify",
+        "arcms.audit.tasks",
     ):
         import_module(mod)
 

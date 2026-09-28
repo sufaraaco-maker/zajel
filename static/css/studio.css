@@ -323,3 +323,6 @@ code { background: #f1f1ee; padding: 1px 6px; border-radius: 4px; font-size: .88
 .setup-steps { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
 .setup-form fieldset { margin-bottom: 16px; }
 label.theme-card:has(input:checked) { border-color: var(--t-primary, var(--primary)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--t-primary, var(--primary)) 25%, transparent); }
+.anchor-panel { margin-top: 14px; }
+.anchor-panel summary { cursor: pointer; }
+.anchor-code { word-break: break-all; font-size: .8rem; }
