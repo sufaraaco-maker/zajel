@@ -132,6 +132,8 @@ docker compose exec web python manage.py arcms_reindex
 
 ## 6. القنوات ببيانات الاعتماد الفعلية (اليوم 8)
 
+إن كانت للمؤسسة صفحة فيسبوك وحساب إكس: ضع رمز الصفحة (Page Access Token بصلاحية `pages_manage_posts`) ومفاتيح تطبيق إكس (قراءة وكتابة) في ملف البيئة، ثم «اختبار الاتصال» من التوزيع، وانشر مادة تجريبية وتأكد من ظهورها بالرابط المختصر.
+
 ```bash
 docker compose exec web python manage.py arcms_check --live
 ```

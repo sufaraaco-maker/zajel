@@ -17,6 +17,8 @@ class Channel(models.TextChoices):
     WHATSAPP = "whatsapp", "واتساب"
     PUSH = "push", "إشعارات المتصفح"
     NEWSLETTER = "newsletter", "النشرة البريدية"
+    FACEBOOK = "facebook", "صفحة فيسبوك"
+    X = "x", "إكس"
 
 
 class ChannelConfig(models.Model):

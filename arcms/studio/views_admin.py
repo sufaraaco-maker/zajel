@@ -222,6 +222,9 @@ def distribution(request):
         "secrets": {
             "telegram": bool(settings.ARCMS_TELEGRAM_BOT_TOKEN),
             "whatsapp": bool(settings.ARCMS_WHATSAPP_TOKEN and settings.ARCMS_WHATSAPP_PHONE_NUMBER_ID),
+            "facebook": bool(settings.ARCMS_FACEBOOK_PAGE_ID and settings.ARCMS_FACEBOOK_PAGE_TOKEN),
+            "x": bool(settings.ARCMS_X_API_KEY and settings.ARCMS_X_API_SECRET and settings.ARCMS_X_ACCESS_TOKEN
+                      and settings.ARCMS_X_ACCESS_SECRET),
             "push": bool(settings.ARCMS_VAPID_PRIVATE_KEY and settings.ARCMS_VAPID_PUBLIC_KEY),
             "newsletter": "console" not in settings.EMAIL_BACKEND,
         },
@@ -255,6 +258,10 @@ def channel_test(request, channel: str):
             for chat in config.chat_ids():
                 channels.telegram_send(chat, f"✅ رسالة اختبار من غرفة التحرير ({request.user})", silent=True)
             messages.success(request, f"البوت {name} يعمل، وأُرسلت رسالة اختبار إلى {len(config.chat_ids())} قناة.")
+        elif channel == Channel.FACEBOOK:
+            messages.success(request, f"رمز الصفحة صالح: {channels.facebook_check()}. (لا يُنشر شيء في الاختبار.)")
+        elif channel == Channel.X:
+            messages.success(request, f"مفاتيح الحساب صالحة: {channels.x_check()}. (لا يُنشر شيء في الاختبار.)")
         elif channel == Channel.NEWSLETTER:
             from django.core.mail import send_mail
 

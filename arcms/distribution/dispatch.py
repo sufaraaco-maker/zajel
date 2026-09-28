@@ -30,6 +30,8 @@ def on_article_published(article_id: int, force: bool = False, only: set[str] | 
         Channel.TELEGRAM: article.send_telegram,
         Channel.WHATSAPP: article.send_whatsapp,
         Channel.PUSH: article.send_push or article.is_breaking,
+        Channel.FACEBOOK: article.send_facebook,
+        Channel.X: article.send_x,
     }
     for channel, wanted in flags.items():
         if only is not None and channel not in only:
@@ -47,6 +49,8 @@ def on_article_published(article_id: int, force: bool = False, only: set[str] | 
 
             if SiteSettings.load().push_enabled:
                 created.append(_queue(channel, article=article, target="كل المشتركين"))
+        elif channel in (Channel.FACEBOOK, Channel.X):
+            created.append(_queue(channel, article=article, target="حساب المؤسسة"))
         else:
             created.append(_queue(channel, article=article, target="كل المشتركين"))
     if created or not article.distributed_at:
@@ -76,6 +80,8 @@ def on_breaking_created(breaking_id: int) -> list[Delivery]:
         created.append(_queue(Channel.PUSH, breaking=item, target="كل المشتركين"))
     if item.send_whatsapp and ChannelConfig.get(Channel.WHATSAPP).enabled:
         created.append(_queue(Channel.WHATSAPP, breaking=item, target="كل المشتركين"))
+    if item.send_x and ChannelConfig.get(Channel.X).enabled:
+        created.append(_queue(Channel.X, breaking=item, target="حساب المؤسسة"))
     if created:
         record(Action.DISTRIBUTE, item, message="عاجل أُرسل إلى القنوات")
     return created

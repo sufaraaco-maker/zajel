@@ -200,6 +200,154 @@ def push_keys_valid(p256dh: str, auth: str) -> bool:
     return key is not None and len(key) == 65 and key[0] == 4 and secret is not None and len(secret) == 16
 
 
+# --- صفحة فيسبوك (Graph API) ---
+
+_FB_RETRY_CODES = {1, 2, 4, 17, 32, 341, 368, 613, 80001}
+
+
+def _facebook_error(resp) -> Exception:
+    try:
+        err = resp.json().get("error", {})
+    except ValueError:
+        err = {}
+    code = err.get("code")
+    message = str(err.get("message") or f"HTTP {resp.status_code}")[:200]
+    if code in _FB_RETRY_CODES or resp.status_code >= 500:
+        return RetryableError(f"فيسبوك: {message}")
+    return PermanentError(f"فيسبوك رفض النشر ({code}): {message}")
+
+
+def _facebook_url(path: str) -> str:
+    return f"https://graph.facebook.com/{settings.ARCMS_FACEBOOK_API_VERSION}/{path}"
+
+
+def facebook_post(message: str, link: str) -> str:
+    if not (settings.ARCMS_FACEBOOK_PAGE_ID and settings.ARCMS_FACEBOOK_PAGE_TOKEN):
+        raise PermanentError("بيانات صفحة فيسبوك غير مضبوطة (ARCMS_FACEBOOK_PAGE_ID وARCMS_FACEBOOK_PAGE_TOKEN).")
+    try:
+        resp = requests.post(
+            _facebook_url(f"{settings.ARCMS_FACEBOOK_PAGE_ID}/feed"),
+            data={"message": message, "link": link, "access_token": settings.ARCMS_FACEBOOK_PAGE_TOKEN},
+            timeout=_timeout(),
+        )
+    except requests.RequestException as exc:
+        raise RetryableError(f"فيسبوك: {type(exc).__name__}") from exc
+    if resp.status_code != 200:
+        raise _facebook_error(resp)
+    return str(resp.json().get("id", ""))
+
+
+def facebook_check() -> str:
+    """يتحقق من الرمز ويعيد اسم الصفحة، دون نشر شيء."""
+    if not (settings.ARCMS_FACEBOOK_PAGE_ID and settings.ARCMS_FACEBOOK_PAGE_TOKEN):
+        raise PermanentError("بيانات صفحة فيسبوك غير مضبوطة.")
+    resp = requests.get(
+        _facebook_url(settings.ARCMS_FACEBOOK_PAGE_ID),
+        params={"fields": "name", "access_token": settings.ARCMS_FACEBOOK_PAGE_TOKEN},
+        timeout=_timeout(),
+    )
+    if resp.status_code != 200:
+        raise _facebook_error(resp)
+    return str(resp.json().get("name", ""))
+
+
+# --- إكس (X API v2 بتوقيع OAuth 1.0a لحساب المؤسسة) ---
+
+X_API = "https://api.x.com/2"
+
+
+def _pct(value) -> str:
+    from urllib.parse import quote
+
+    return quote(str(value), safe="~-._")
+
+
+def oauth1_header(method: str, url: str, *, consumer_key: str, consumer_secret: str, token: str, token_secret: str,
+                  extra_params: dict | None = None, nonce: str | None = None, timestamp: str | None = None) -> str:
+    """ترويسة Authorization بتوقيع HMAC-SHA1 (RFC 5849). extra_params لمعاملات النموذج المشمولة بالتوقيع."""
+    import base64
+    import hashlib
+    import hmac
+    import secrets
+    import time
+
+    oauth = {
+        "oauth_consumer_key": consumer_key,
+        "oauth_nonce": nonce or secrets.token_hex(16),
+        "oauth_signature_method": "HMAC-SHA1",
+        "oauth_timestamp": timestamp or str(int(time.time())),
+        "oauth_token": token,
+        "oauth_version": "1.0",
+    }
+    params = {**oauth, **(extra_params or {})}
+    param_str = "&".join(f"{k}={v}" for k, v in sorted((_pct(k), _pct(v)) for k, v in params.items()))
+    base = "&".join([method.upper(), _pct(url), _pct(param_str)])
+    key = f"{_pct(consumer_secret)}&{_pct(token_secret)}"
+    oauth["oauth_signature"] = base64.b64encode(hmac.new(key.encode(), base.encode(), hashlib.sha1).digest()).decode()
+    return "OAuth " + ", ".join(f'{_pct(k)}="{_pct(v)}"' for k, v in sorted(oauth.items()))
+
+
+def _x_credentials() -> dict:
+    creds = {
+        "consumer_key": settings.ARCMS_X_API_KEY,
+        "consumer_secret": settings.ARCMS_X_API_SECRET,
+        "token": settings.ARCMS_X_ACCESS_TOKEN,
+        "token_secret": settings.ARCMS_X_ACCESS_SECRET,
+    }
+    if not all(creds.values()):
+        raise PermanentError("مفاتيح حساب إكس غير مضبوطة (ARCMS_X_API_KEY/SECRET وARCMS_X_ACCESS_TOKEN/SECRET).")
+    return creds
+
+
+def _x_error(resp) -> Exception:
+    try:
+        data = resp.json()
+        detail = str(data.get("detail") or data.get("title") or data)[:200]
+    except ValueError:
+        detail = f"HTTP {resp.status_code}"
+    if resp.status_code == 429 or resp.status_code >= 500:
+        return RetryableError(f"إكس: {detail}")
+    return PermanentError(f"إكس رفض النشر ({resp.status_code}): {detail}")
+
+
+def x_post(text: str) -> str:
+    url = f"{X_API}/tweets"
+    headers = {"Authorization": oauth1_header("POST", url, **_x_credentials()), "Content-Type": "application/json"}
+    try:
+        resp = requests.post(url, data=json.dumps({"text": text}, ensure_ascii=False).encode("utf-8"),
+                             headers=headers, timeout=_timeout())
+    except requests.RequestException as exc:
+        raise RetryableError(f"إكس: {type(exc).__name__}") from exc
+    if resp.status_code not in (200, 201):
+        raise _x_error(resp)
+    return str(resp.json().get("data", {}).get("id", ""))
+
+
+def x_check() -> str:
+    url = f"{X_API}/users/me"
+    resp = requests.get(url, headers={"Authorization": oauth1_header("GET", url, **_x_credentials())}, timeout=_timeout())
+    if resp.status_code != 200:
+        raise _x_error(resp)
+    return "@" + str(resp.json().get("data", {}).get("username", ""))
+
+
+X_LIMIT = 280
+X_URL_LENGTH = 23  # كل رابط يُحسب 23 حرفاً مهما طال
+
+
+def social_text(*, title: str, summary: str, url: str, kicker: str = "", limit: int | None = None) -> str:
+    """نص عادي (بلا HTML) للمنصات الاجتماعية، يُقصّ ليتسع للرابط ضمن حد الأحرف إن وُجد."""
+    head = f"{kicker} | " if kicker else ""
+    body = f"{head}{title}"
+    if summary and limit is None:
+        body += f"\n\n{summary}"
+    if limit:
+        room = limit - X_URL_LENGTH - 2
+        if len(body) > room:
+            body = body[: room - 1].rstrip() + "…"
+    return f"{body}\n\n{url}"
+
+
 # --- صياغة الرسائل ---
 
 

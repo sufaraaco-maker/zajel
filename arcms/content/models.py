@@ -359,6 +359,8 @@ class Article(models.Model):
     send_telegram = models.BooleanField("تيليجرام", default=True)
     send_whatsapp = models.BooleanField("واتساب", default=False)
     send_push = models.BooleanField("إشعار فوري", default=False)
+    send_facebook = models.BooleanField("صفحة فيسبوك", default=True)
+    send_x = models.BooleanField("إكس", default=True)
     in_newsletter = models.BooleanField("في النشرة اليومية", default=True)
 
     created_by = models.ForeignKey(
@@ -540,6 +542,7 @@ class BreakingNews(models.Model):
     send_telegram = models.BooleanField("تيليجرام", default=True)
     send_push = models.BooleanField("إشعار فوري", default=True)
     send_whatsapp = models.BooleanField("واتساب", default=False)
+    send_x = models.BooleanField("إكس", default=False)
 
     class Meta:
         ordering = ["-created_at"]

@@ -53,7 +53,7 @@ class ArticleForm(forms.ModelForm):
             "source", "source_url", "source_notes", "correction",
             "is_breaking", "is_featured", "is_exclusive", "priority", "featured_until",
             "allow_indexing", "seo_title", "seo_description",
-            "send_telegram", "send_whatsapp", "send_push", "in_newsletter",
+            "send_telegram", "send_whatsapp", "send_push", "send_facebook", "send_x", "in_newsletter",
         ]
         widgets = {
             "kind": forms.RadioSelect,
@@ -152,7 +152,7 @@ def _clean_link(value: str) -> str:
 class BreakingForm(forms.ModelForm):
     class Meta:
         model = BreakingNews
-        fields = ["text", "article", "link", "expires_at", "send_telegram", "send_push", "send_whatsapp"]
+        fields = ["text", "article", "link", "expires_at", "send_telegram", "send_push", "send_whatsapp", "send_x"]
         widgets = {
             "text": forms.Textarea(attrs={"rows": 2, "maxlength": 280, "autofocus": True}),
             "article": forms.HiddenInput(),

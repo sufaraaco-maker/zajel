@@ -11,7 +11,7 @@
 <div class="cols cols-2">
   {% for c in configs %}
   <section class="panel">
-    <h2>{% if c.channel == "telegram" %}{{ "telegram"|icon:18 }}{% elif c.channel == "whatsapp" %}{{ "whatsapp"|icon:18 }}{% elif c.channel == "push" %}{{ "bell"|icon:18 }}{% else %}{{ "mail"|icon:18 }}{% endif %} {{ c.get_channel_display }}
+    <h2>{% if c.channel == "telegram" %}{{ "telegram"|icon:18 }}{% elif c.channel == "whatsapp" %}{{ "whatsapp"|icon:18 }}{% elif c.channel == "push" %}{{ "bell"|icon:18 }}{% elif c.channel == "facebook" %}{{ "facebook"|icon:18 }}{% elif c.channel == "x" %}{{ "x"|icon:18 }}{% else %}{{ "mail"|icon:18 }}{% endif %} {{ c.get_channel_display }}
       {% if c.enabled %}<span class="pill ok">مفعّلة</span>{% else %}<span class="pill">معطّلة</span>{% endif %}
       {% with ok=secrets|get_item:c.channel %}{% if not ok %}<span class="pill warn" title="تُضبط في ملف البيئة على الخادم">بيانات الاعتماد ناقصة</span>{% endif %}{% endwith %}
     </h2>
@@ -19,7 +19,7 @@
     {% if c.channel == "telegram" and c.chat_ids %}<p class="small">القنوات: <bdi dir="ltr">{{ c.telegram_chat_ids }}</bdi></p>{% endif %}
     <div class="btn-row">
       {% if "distribution.manage" in user_caps %}<a class="btn sm" href="{% url 'studio:channel_edit' c.channel %}">الإعدادات</a>{% endif %}
-      {% if c.channel == "telegram" or c.channel == "newsletter" %}{% if "distribution.manage" in user_caps %}<form method="post" action="{% url 'studio:channel_test' c.channel %}">{% csrf_token %}<button class="btn sm">اختبار الاتصال</button></form>{% endif %}{% endif %}
+      {% if c.channel == "telegram" or c.channel == "newsletter" or c.channel == "facebook" or c.channel == "x" %}{% if "distribution.manage" in user_caps %}<form method="post" action="{% url 'studio:channel_test' c.channel %}">{% csrf_token %}<button class="btn sm">اختبار الاتصال</button></form>{% endif %}{% endif %}
       {% if c.channel == "newsletter" and "distribution.manage" in user_caps %}
         <a class="btn sm" href="{% url 'studio:newsletter_preview' %}" target="_blank">معاينة نشرة اليوم</a>
         <form method="post" action="{% url 'studio:newsletter_send' %}" data-confirm="إرسال نشرة اليوم الآن لكل المشتركين؟">{% csrf_token %}<button class="btn sm">إرسال الآن</button></form>

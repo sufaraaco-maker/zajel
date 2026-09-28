@@ -80,6 +80,31 @@ def send_telegram(payload):
     return _run(payload["delivery"], go)
 
 
+@handler("dist.facebook")
+def send_facebook(payload):
+    def go(delivery: Delivery):
+        c = _content(delivery)
+        post_id = channels.facebook_post(
+            channels.social_text(title=c["title"], summary=c["summary"], url=c["url"], kicker=c["kicker"]), c["url"]
+        )
+        _finish(delivery, Delivery.Status.SENT, external_id=post_id, recipients=1, error="")
+        return {"post_id": post_id}
+
+    return _run(payload["delivery"], go)
+
+
+@handler("dist.x")
+def send_x(payload):
+    def go(delivery: Delivery):
+        c = _content(delivery)
+        text = channels.social_text(title=c["title"], summary="", url=c["url"], kicker=c["kicker"], limit=channels.X_LIMIT)
+        post_id = channels.x_post(text)
+        _finish(delivery, Delivery.Status.SENT, external_id=post_id, recipients=1, error="")
+        return {"post_id": post_id}
+
+    return _run(payload["delivery"], go)
+
+
 @handler("dist.whatsapp")
 def send_whatsapp(payload):
     def go(delivery: Delivery):

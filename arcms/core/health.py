@@ -160,6 +160,13 @@ def run_checks(live: bool = False) -> list[Check]:
     wa = ChannelConfig.get(Channel.WHATSAPP)
     if wa.enabled and not (settings.ARCMS_WHATSAPP_TOKEN and settings.ARCMS_WHATSAPP_PHONE_NUMBER_ID and wa.whatsapp_template):
         add(Check("واتساب", "fail", "القناة مفعّلة وبياناتها ناقصة (الرمز، رقم الهاتف، القالب)."))
+    fb = ChannelConfig.get(Channel.FACEBOOK)
+    if fb.enabled and not (settings.ARCMS_FACEBOOK_PAGE_ID and settings.ARCMS_FACEBOOK_PAGE_TOKEN):
+        add(Check("فيسبوك", "fail", "القناة مفعّلة بلا معرّف الصفحة أو رمزها (ARCMS_FACEBOOK_PAGE_*)."))
+    xc = ChannelConfig.get(Channel.X)
+    if xc.enabled and not all((settings.ARCMS_X_API_KEY, settings.ARCMS_X_API_SECRET, settings.ARCMS_X_ACCESS_TOKEN,
+                               settings.ARCMS_X_ACCESS_SECRET)):
+        add(Check("إكس", "fail", "القناة مفعّلة ومفاتيحها ناقصة (ARCMS_X_*)."))
     push = ChannelConfig.get(Channel.PUSH)
     if push.enabled and not (settings.ARCMS_VAPID_PUBLIC_KEY and settings.ARCMS_VAPID_PRIVATE_KEY):
         add(Check("الإشعارات", "fail", "الإشعارات مفعّلة بلا مفاتيح VAPID.", "manage.py arcms_keys يولّدها."))
