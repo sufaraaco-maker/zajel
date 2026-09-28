@@ -201,3 +201,32 @@ class FontTests(ArcmsTestCase):
         for key, _ in FONT_CHOICES:
             site.font_headings = key
             self.assertTrue(finders.find(site.heading_font_file), key)
+
+
+class CategoryPageTests(ArcmsTestCase):
+    def test_layouts_and_cover(self):
+        from arcms.content.imaging import store_image
+        from arcms.core.testing import image_bytes
+
+        cat = make_category("رياضة")
+        for i in range(7):
+            make_article(f"مادة رياضية {i}", category=cat)
+        url = cat.get_absolute_url()
+        self.assertContains(self.client.get(url), "with-sidebar")
+        cover, _ = store_image(image_bytes())
+        cat.cover, cat.page_layout = cover, "magazine"
+        cat.save()
+        html = self.client.get(url).content.decode()
+        self.assertIn("has-cover", html)
+        self.assertIn(cover.large, html)
+        self.assertIn("card overlay", html)
+        self.assertNotIn("with-sidebar", html)
+        cat.page_layout = "grid"
+        cat.save()
+        self.assertContains(self.client.get(url), "grid grid-3")
+
+    def test_studio_category_form_has_cover_and_layout(self):
+        login(self.client, make_user("chief", Role.CHIEF))
+        resp = self.client.get(reverse("studio:categories_new"))
+        self.assertContains(resp, "page_layout")
+        self.assertContains(resp, "data-image-field")

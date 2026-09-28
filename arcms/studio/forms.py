@@ -188,12 +188,21 @@ class LiveEntryForm(forms.ModelForm):
 class CategoryForm(forms.ModelForm):
     class Meta:
         model = Category
-        fields = ["name", "slug", "parent", "description", "color", "order", "is_active", "desk_members"]
+        fields = ["name", "slug", "parent", "description", "color", "cover", "page_layout", "order", "is_active",
+                  "desk_members"]
         widgets = {
             "color": forms.TextInput(attrs={"type": "color"}),
+            "cover": forms.HiddenInput(),
             "description": forms.Textarea(attrs={"rows": 2}),
             "desk_members": forms.SelectMultiple(attrs={"size": 8}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["page_layout"].required = False
+
+    def clean_page_layout(self):
+        return self.cleaned_data.get("page_layout") or "feed"
 
 
 class TagForm(forms.ModelForm):

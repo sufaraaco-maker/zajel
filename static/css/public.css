@@ -632,3 +632,12 @@ mark { background: color-mix(in srgb, var(--primary) 18%, transparent); color: i
   .header-row { gap: 10px; }
   .brand { min-width: 0; }
 }
+
+/* صفحة القسم بغلاف */
+.page-head.has-cover { position: relative; min-height: 220px; display: flex; align-items: flex-end; border: 0; border-radius: calc(var(--radius) * 1.6); overflow: hidden; padding: 0; background: var(--accent); }
+.page-head.has-cover .page-cover { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.page-head.has-cover::after { content: ""; position: absolute; inset: 0; background: var(--overlay); }
+.page-head.has-cover .page-head-text { position: relative; z-index: 1; padding: 26px; color: #fff; }
+.page-head.has-cover h1 { color: #fff; }
+.page-head.has-cover p { color: rgba(255,255,255,.88); }
+.page-head.has-cover .subnav a { color: #fff; border-color: rgba(255,255,255,.4); }

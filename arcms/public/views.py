@@ -191,7 +191,7 @@ def short_link(request, pk: int):
 
 
 def category_detail(request, slug: str):
-    category = get_object_or_404(Category, slug=slug, is_active=True)
+    category = get_object_or_404(Category.objects.select_related("cover"), slug=slug, is_active=True)
     qs = published().filter(Q(category_id__in=category.family_ids()) | Q(extra_categories=category)).distinct()
     page = _paginate(request, qs)
     return render(
@@ -202,6 +202,8 @@ def category_detail(request, slug: str):
                 "heading": category.name,
                 "description": category.description,
                 "accent": category.color,
+                "cover": category.cover,
+                "layout": category.page_layout,
                 "page": page,
                 "subcategories": category.children.filter(is_active=True),
                 "feed_url": reverse("public:feed_category", args=[category.slug]),

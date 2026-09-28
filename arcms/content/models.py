@@ -37,6 +37,17 @@ class Category(models.Model):
     )
     description = models.TextField("الوصف", blank=True)
     color = models.CharField("لون القسم", max_length=7, blank=True)
+    cover = models.ForeignKey(
+        "MediaAsset", verbose_name="صورة الغلاف", null=True, blank=True, on_delete=models.SET_NULL, related_name="+",
+        help_text="تظهر خلف عنوان صفحة القسم.",
+    )
+    page_layout = models.CharField(
+        "شكل صفحة القسم",
+        max_length=10,
+        choices=[("feed", "مادة كبيرة ثم قائمة، مع عمود جانبي"), ("grid", "شبكة بطاقات بعرض الصفحة"),
+                 ("magazine", "مجلة: مادة كبيرة بالعنوان على الصورة ثم شبكة")],
+        default="feed",
+    )
     order = models.PositiveSmallIntegerField("الترتيب", default=0)
     is_active = models.BooleanField("مفعّل", default=True)
     desk_members = models.ManyToManyField(
