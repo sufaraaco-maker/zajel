@@ -1,0 +1,21 @@
+# تثبيت دون Docker: خادم الويب. انسخ إلى /etc/systemd/system/ ثم: systemctl enable --now arcms-web
+[Unit]
+Description=arcms web (gunicorn)
+After=network.target postgresql.service
+
+[Service]
+User=arcms
+Group=arcms
+WorkingDirectory=/opt/arcms
+EnvironmentFile=/opt/arcms/.env
+ExecStartPre=/opt/arcms/.venv/bin/python manage.py migrate --noinput
+ExecStart=/opt/arcms/.venv/bin/gunicorn config.wsgi:application --bind 127.0.0.1:8000 --workers 3 --threads 4 --timeout 90 --no-control-socket --access-logfile - --access-logformat '%(t)s "%(r)s" %(s)s %(b)s %(L)ss'
+Restart=always
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/opt/arcms/var /srv/arcms
+
+[Install]
+WantedBy=multi-user.target

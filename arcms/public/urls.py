@@ -1,8 +1,6 @@
 from django.contrib.sitemaps.views import index as sitemap_index
 from django.contrib.sitemaps.views import sitemap
-from django.templatetags.static import static
 from django.urls import path, re_path
-from django.views.generic import RedirectView
 
 from . import feeds, sitemaps, views
 
@@ -39,7 +37,7 @@ urlpatterns = [
     path("sitemap-<section>.xml", sitemap, {"sitemaps": sitemaps.SITEMAPS}, name="sitemap_section"),
     path("news-sitemap.xml", sitemaps.news_sitemap, name="news_sitemap"),
     path("robots.txt", views.robots_txt),
-    path("favicon.ico", RedirectView.as_view(url=static("img/icon-192.png"), permanent=False)),
+    path("favicon.ico", views.favicon),
     path("manifest.webmanifest", views.web_manifest, name="manifest"),
     path("sw.js", views.service_worker, name="sw"),
 ]

@@ -1,0 +1,13 @@
+.git
+.venv
+var
+media
+backups
+staticfiles
+**/__pycache__
+*.pyc
+.env
+.env.*
+!.env.example
+*.arcbak
+*.key

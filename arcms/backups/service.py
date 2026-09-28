@@ -221,7 +221,9 @@ def restore_backup(path: Path, *, private_key: str | None = None, passphrase: st
         media_src = workdir / "media"
         if restore_media and media_src.exists():
             media_root = Path(settings.MEDIA_ROOT)
-            if media_root.exists():
-                shutil.rmtree(media_root)
-            shutil.copytree(media_src, media_root)
+            media_root.mkdir(parents=True, exist_ok=True)
+            # نفرّغ المحتوى لا المجلد نفسه: قد يكون نقطة تركيب (volume) لا تُحذف.
+            for child in media_root.iterdir():
+                shutil.rmtree(child) if child.is_dir() else child.unlink()
+            shutil.copytree(media_src, media_root, dirs_exist_ok=True)
     return manifest

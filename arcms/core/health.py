@@ -47,6 +47,15 @@ def run_checks(live: bool = False) -> list[Check]:
         add(Check("التشفير", "fail", "ARCMS_FIELD_KEY غير مضبوط."))
     else:
         add(Check("التشفير", "ok", "مفتاح تشفير الحقول الحساسة مضبوط."))
+    try:
+        from arcms.accounts.models import User
+
+        sample = User.objects.exclude(totp_secret="").only("totp_secret").first()
+        if sample is not None and sample.totp_secret.startswith("⚠"):
+            add(Check("التشفير", "fail", "تعذّر فك البيانات المشفّرة بالمفتاح الحالي.",
+                      "ARCMS_FIELD_KEY لا يطابق المفتاح الذي شُفّرت به البيانات. أعد المفتاح الصحيح (أو أضفه بعد فاصلة)."))
+    except Exception:  # noqa: BLE001 - قبل إنشاء الجداول
+        pass
 
     # --- قاعدة البيانات والبحث ---
     try:
@@ -57,6 +66,16 @@ def run_checks(live: bool = False) -> list[Check]:
         return out
     if connection.vendor != "postgresql":
         add(Check("قاعدة البيانات", "warn", "تعمل على SQLite.", "للأرشيف الكبير وعدة محررين استخدم PostgreSQL."))
+    else:
+        with connection.cursor() as cur:
+            cur.execute("SELECT to_tsvector('simple', 'اختبار')::text, pg_encoding_to_char(encoding) "
+                        "FROM pg_database WHERE datname = current_database()")
+            vector, encoding = cur.fetchone()
+        if "اختبار" not in (vector or "") or encoding != "UTF8":
+            add(Check("البحث", "fail", f"قاعدة البيانات لا تفهرس العربية (الترميز {encoding}).",
+                      "أنشئ القاعدة بترميز UTF8 وlocale ‎C.UTF-8‎ ثم أعد الفهرسة."))
+        else:
+            add(Check("البحث", "ok", "PostgreSQL يفهرس النص العربي (UTF8)."))
     from django.db.migrations.executor import MigrationExecutor
 
     executor = MigrationExecutor(connection)

@@ -124,12 +124,15 @@ class Command(BaseCommand):
         if not opts["no_traffic"]:
             self._traffic()
         call_command("arcms_reindex", verbosity=0)
-        path = settings.BASE_DIR / "var" / "demo-credentials.txt"
-        path.parent.mkdir(exist_ok=True)
         lines = [f"{u}\t{DEMO_PASSWORD}\tTOTP: {s}" for u, s in creds]
-        path.write_text("\n".join(lines) + "\n", encoding="utf-8")
         self.stdout.write(self.style.SUCCESS("اكتمل الموقع التجريبي."))
-        self.stdout.write(f"بيانات الدخول وأسرار التحقق الثنائي (للتجربة فقط): {path}")
+        path = settings.BASE_DIR / "var" / "demo-credentials.txt"
+        try:
+            path.parent.mkdir(exist_ok=True)
+            path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+            self.stdout.write(f"بيانات الدخول وأسرار التحقق الثنائي (للتجربة فقط): {path}")
+        except OSError:
+            self.stdout.write("بيانات الدخول وأسرار التحقق الثنائي (للتجربة فقط):")
         for line in lines:
             self.stdout.write("  " + line)
 

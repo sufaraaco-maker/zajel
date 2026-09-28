@@ -1,0 +1,35 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        database: [sqlite, postgres]
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: arcms
+          POSTGRES_PASSWORD: arcms
+          POSTGRES_DB: arcms
+          POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C.UTF-8"
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U arcms" --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -r requirements.txt ruff
+      - run: ruff check arcms config
+      - name: tests
+        env:
+          ARCMS_DATABASE_URL: ${{ matrix.database == 'postgres' && 'postgres://arcms:arcms@localhost:5432/arcms' || 'sqlite:///var/ci.sqlite3' }}
+        run: python manage.py test --noinput

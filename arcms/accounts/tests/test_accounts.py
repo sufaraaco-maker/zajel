@@ -28,6 +28,9 @@ class TotpTests(ArcmsTestCase):
         self.assertIsNone(totp.verify(self.SECRET, code, last_counter=counter, at=1000))  # لا إعادة استخدام
         self.assertIsNone(totp.verify(self.SECRET, "000000", at=1000))
 
+    def test_corrupted_secret_rejected_gracefully(self):
+        self.assertIsNone(totp.verify("⚠ تعذّر فك التشفير", "123456"))
+
     def test_arabic_indic_digits_accepted(self):
         code = totp.totp(self.SECRET, at=500)
         arabic = code.translate(str.maketrans("0123456789", "٠١٢٣٤٥٦٧٨٩"))

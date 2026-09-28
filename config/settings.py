@@ -16,8 +16,10 @@ TESTING = "test" in sys.argv[1:2] or env.get_bool("ARCMS_TESTING")
 
 DEBUG = env.get_bool("ARCMS_DEBUG", False)
 SECRET_KEY = env.get("ARCMS_SECRET_KEY") or ""
+# توليد المفاتيح لا يحتاج مفتاحاً سرياً بعد (هو الذي يولّده).
+_KEYGEN = any(cmd in sys.argv for cmd in ("arcms_keys", "arcms_backup_keygen"))
 if not SECRET_KEY:
-    if DEBUG or TESTING:
+    if DEBUG or TESTING or _KEYGEN:
         SECRET_KEY = "dev-insecure-key-change-me-" + "x" * 30
     else:
         raise ImproperlyConfigured("ARCMS_SECRET_KEY مطلوب في بيئة الإنتاج.")

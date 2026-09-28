@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import base64
+import binascii
 import hashlib
 import hmac
 import secrets
@@ -48,6 +49,11 @@ def verify(secret: str, code: str, last_counter: int | None = None, at: float | 
     code = "".join(ch for ch in (code or "") if ch.isdigit())
     code = code.translate(str.maketrans("٠١٢٣٤٥٦٧٨٩", "0123456789"))
     if len(code) != DIGITS or not secret:
+        return None
+    try:
+        _key(secret)
+    except (ValueError, binascii.Error):
+        # سر تالف أو لم يُفك تشفيره (مفتاح الحقول تغيّر): نرفض الرمز بدل أن نتعطل.
         return None
     now = current_counter(at)
     for counter in range(now - WINDOW, now + WINDOW + 1):

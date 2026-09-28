@@ -1,0 +1,80 @@
+# تشغيل arcms على خادم المؤسسة: قاعدة بيانات، ويب، عامل خلفي، وCaddy لشهادات HTTPS تلقائية.
+# الاستخدام: cp .env.example .env && (عدّل القيم) && docker compose up -d --build
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: arcms
+      POSTGRES_USER: arcms
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?اضبط POSTGRES_PASSWORD في ملف .env}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C.UTF-8"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U arcms -d arcms"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  web:
+    build: .
+    image: arcms:latest
+    restart: unless-stopped
+    command: web
+    env_file: .env
+    environment: &app_env
+      ARCMS_DATABASE_URL: postgres://arcms:${POSTGRES_PASSWORD}@db:5432/arcms
+      ARCMS_MEDIA_ROOT: /data/media
+      ARCMS_BACKUP_DIR: /data/backups
+      ARCMS_STATIC_ROOT: /app/staticfiles
+      ARCMS_BEHIND_PROXY: "1"
+    volumes:
+      - media:/data/media
+      - backups:/data/backups
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/robots.txt', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  worker:
+    image: arcms:latest
+    restart: unless-stopped
+    command: worker
+    env_file: .env
+    environment: *app_env
+    volumes:
+      - media:/data/media
+      - backups:/data/backups
+    depends_on:
+      db:
+        condition: service_healthy
+      web:
+        condition: service_started
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      ARCMS_DOMAIN: ${ARCMS_DOMAIN:?اضبط ARCMS_DOMAIN في ملف .env}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - media:/data/media:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+
+volumes:
+  pgdata:
+  media:
+  backups:
+  caddy_data:
+  caddy_config:

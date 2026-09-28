@@ -138,18 +138,18 @@ legend { font-weight: 700; padding: 0 6px; }
 
 /* المحرر */
 .editor-main .panel { padding: 22px 26px; }
-#editor { min-height: 460px; font-family: var(--font-body); font-size: 1.15rem; line-height: 2; }
-.ql-toolbar.ql-snow { border: 1px solid var(--line) !important; border-radius: 6px 6px 0 0; background: #fafaf8; position: sticky; top: 57px; z-index: 5; direction: rtl; }
-.ql-container.ql-snow { border: 1px solid var(--line) !important; border-top: 0 !important; border-radius: 0 0 6px 6px; font-family: var(--font-body) !important; font-size: 1.15rem !important; }
-.ql-editor { direction: rtl; text-align: right; line-height: 2; min-height: 440px; padding: 18px 20px; }
-.ql-editor.ql-blank::before { right: 20px; left: auto; font-style: normal; color: #9aa0a6; }
-.ql-editor blockquote { border-right: 4px solid var(--primary); border-left: 0; padding-right: 16px; margin-right: 0; }
-.ql-editor ol, .ql-editor ul { padding-right: 1.5em; padding-left: 0; }
-.ql-editor li[data-list] { padding-right: 1.5em; padding-left: 0; }
-.ql-editor li > .ql-ui:before { margin-left: .3em; margin-right: -1.5em; text-align: left; }
-.ql-editor .embed { background: #111; color: #fff; padding: 14px; border-radius: 6px; text-align: center; font-family: var(--font); }
-.ql-snow .ql-picker-label { padding-right: 18px; padding-left: 2px; }
-.ql-snow .ql-picker:not(.ql-color-picker):not(.ql-icon-picker) svg { left: 0; right: auto; }
+.content #editor { min-height: 460px; font-family: var(--font-body); font-size: 1.15rem; line-height: 2; }
+.content .ql-toolbar.ql-snow { border: 1px solid var(--line) !important; border-radius: 6px 6px 0 0; background: #fafaf8; position: sticky; top: 57px; z-index: 5; direction: rtl; }
+.content .ql-container.ql-snow { border: 1px solid var(--line) !important; border-top: 0 !important; border-radius: 0 0 6px 6px; font-family: var(--font-body) !important; font-size: 1.15rem !important; }
+.content .ql-editor { direction: rtl; text-align: right; line-height: 2; min-height: 440px; padding: 18px 20px; }
+.content .ql-editor.ql-blank::before { right: 20px; left: auto; font-style: normal; color: #9aa0a6; }
+.content .ql-editor blockquote { border-right: 4px solid var(--primary); border-left: 0; padding-right: 16px; margin-right: 0; }
+.content .ql-editor ol, .content .ql-editor ul { padding-right: 1.5em; padding-left: 0; }
+.content .ql-editor li[data-list] { padding-right: 1.5em; padding-left: 0; }
+.content .ql-editor li > .ql-ui:before { margin-left: .3em; margin-right: -1.5em; text-align: left; }
+.content .ql-editor .embed { background: #111; color: #fff; padding: 14px; border-radius: 6px; text-align: center; font-family: var(--font); }
+.content .ql-snow .ql-picker-label { padding-right: 18px; padding-left: 2px; }
+.content .ql-snow .ql-picker:not(.ql-color-picker):not(.ql-icon-picker) svg { left: 0; right: auto; }
 .editor-status { display: flex; justify-content: space-between; color: var(--muted); font-size: .8rem; margin-top: 8px; }
 .lock-banner { background: var(--warn-bg); color: var(--warn); border-radius: 6px; padding: 10px 14px; margin-bottom: 12px; display: flex; gap: 10px; align-items: center; }
 .featured-box { border: 2px dashed var(--line); border-radius: 6px; min-height: 140px; display: grid; place-items: center; text-align: center; color: var(--muted); cursor: pointer; overflow: hidden; position: relative; background: #fafaf8; }
@@ -277,15 +277,15 @@ dialog.modal::backdrop { background: rgba(10,12,14,.55); }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 code { background: #f1f1ee; padding: 1px 6px; border-radius: 4px; font-size: .88em; }
 .avatar { width: 32px; height: 32px; border-radius: 50%; background: #f1f1ee; display: inline-grid; place-items: center; color: var(--muted); }
-.ql-editor p { margin-bottom: .8em; }
-.ql-snow .ql-picker.ql-header { width: 120px; }
-.ql-snow .ql-picker.ql-header .ql-picker-label::before, .ql-snow .ql-picker.ql-header .ql-picker-item::before { content: "فقرة"; }
-.ql-snow .ql-picker.ql-header .ql-picker-label[data-value="2"]::before, .ql-snow .ql-picker.ql-header .ql-picker-item[data-value="2"]::before { content: "عنوان رئيسي"; }
-.ql-snow .ql-picker.ql-header .ql-picker-label[data-value="3"]::before, .ql-snow .ql-picker.ql-header .ql-picker-item[data-value="3"]::before { content: "عنوان فرعي"; }
-.ql-snow .ql-tooltip { direction: rtl; }
-.ql-snow .ql-tooltip::before { content: "زيارة الرابط:"; }
-.ql-snow .ql-tooltip[data-mode="link"]::before { content: "أدخل الرابط:"; }
-.ql-snow .ql-tooltip[data-mode="video"]::before { content: "رابط الفيديو (يوتيوب/فيميو):"; }
-.ql-snow .ql-tooltip a.ql-action::after { content: "تعديل"; }
-.ql-snow .ql-tooltip.ql-editing a.ql-action::after { content: "حفظ"; }
-.ql-snow .ql-tooltip a.ql-remove::before { content: "إزالة"; }
+.content .ql-editor p { margin-bottom: .8em; }
+.content .ql-snow .ql-picker.ql-header { width: 120px; }
+.content .ql-snow .ql-picker.ql-header .ql-picker-label::before, .content .ql-snow .ql-picker.ql-header .ql-picker-item::before { content: "فقرة"; }
+.content .ql-snow .ql-picker.ql-header .ql-picker-label[data-value="2"]::before, .content .ql-snow .ql-picker.ql-header .ql-picker-item[data-value="2"]::before { content: "عنوان رئيسي"; }
+.content .ql-snow .ql-picker.ql-header .ql-picker-label[data-value="3"]::before, .content .ql-snow .ql-picker.ql-header .ql-picker-item[data-value="3"]::before { content: "عنوان فرعي"; }
+.content .ql-snow .ql-tooltip { direction: rtl; }
+.content .ql-snow .ql-tooltip::before { content: "زيارة الرابط:"; }
+.content .ql-snow .ql-tooltip[data-mode="link"]::before { content: "أدخل الرابط:"; }
+.content .ql-snow .ql-tooltip[data-mode="video"]::before { content: "رابط الفيديو (يوتيوب/فيميو):"; }
+.content .ql-snow .ql-tooltip a.ql-action::after { content: "تعديل"; }
+.content .ql-snow .ql-tooltip.ql-editing a.ql-action::after { content: "حفظ"; }
+.content .ql-snow .ql-tooltip a.ql-remove::before { content: "إزالة"; }

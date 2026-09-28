@@ -156,14 +156,16 @@ def worker_loop(interval: int = 20, once: bool = False, stdout=None) -> None:
     while True:
         if not connection.in_atomic_block:  # داخل اختبار ضمن معاملة لا نغلق الاتصال
             close_old_connections()
+        busy = False
         try:
             WorkerHeartbeat.objects.update_or_create(name=name, defaults={"beat_at": timezone.now()})
             run_periodic(state)
             processed = run_pending(name)
             if stdout and processed:
                 stdout.write(f"نُفّذت {processed} مهمة")
+            busy = processed > 0 or Job.objects.filter(status=Job.Status.QUEUED, run_after__lte=timezone.now()).exists()
         except Exception:  # noqa: BLE001 - العامل لا يموت بسبب خطأ عابر في القاعدة
             log.exception("worker iteration failed")
         if once:
             return
-        time.sleep(interval if not Job.objects.filter(status=Job.Status.QUEUED, run_after__lte=timezone.now()).exists() else 0.5)
+        time.sleep(0.5 if busy else interval)

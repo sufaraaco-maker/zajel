@@ -1,0 +1,21 @@
+# العامل الخلفي: النشر المجدول والتوزيع والنشرة والنسخ الاحتياطي.
+[Unit]
+Description=arcms background worker
+After=network.target postgresql.service
+
+[Service]
+User=arcms
+Group=arcms
+WorkingDirectory=/opt/arcms
+EnvironmentFile=/opt/arcms/.env
+ExecStart=/opt/arcms/.venv/bin/python manage.py arcms_worker
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/opt/arcms/var /srv/arcms
+
+[Install]
+WantedBy=multi-user.target

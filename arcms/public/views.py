@@ -454,6 +454,13 @@ def beacon(request):
 # --- ملفات خاصة ---
 
 
+def favicon(request):
+    from django.templatetags.static import static
+
+    site = SiteSettings.load()
+    return redirect(site.logo.thumb if site.logo_id else static("img/icon-192.png"))
+
+
 def robots_txt(request):
     lines = [
         "User-agent: *",
