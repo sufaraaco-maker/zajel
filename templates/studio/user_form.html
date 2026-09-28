@@ -20,6 +20,7 @@
       <li><span class="grow">رموز الاسترداد المتبقية</span><strong>{{ obj.recovery_codes|length }}</strong></li>
       <li><span class="grow">آخر دخول</span>{{ obj.last_login|ar_datetime|default:"—" }}</li>
     </ul>
+    <form method="post" action="{% url 'studio:user_sessions_end' obj.pk %}" data-confirm="إنهاء كل جلسات هذا المستخدم المفتوحة على كل الأجهزة؟" style="margin-bottom:8px">{% csrf_token %}<button class="btn sm">إنهاء كل جلساته المفتوحة</button></form>
     {% if obj.has_2fa %}
     <form method="post" action="{% url 'studio:user_reset_2fa' obj.pk %}" data-confirm="إلغاء جهاز التحقق لهذا المستخدم؟ استخدمه فقط إن فقد هاتفه وتحققت من هويته شخصياً.">{% csrf_token %}<button class="btn danger sm">إعادة ضبط التحقق الثنائي (فقدان الهاتف)</button></form>
     {% endif %}

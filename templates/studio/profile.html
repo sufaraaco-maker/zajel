@@ -13,9 +13,10 @@
       <a class="btn" href="{% url 'accounts:password_change' %}">تغيير كلمة المرور</a>
       <a class="btn" href="{% url 'accounts:enroll' %}?reset=1">{% if user.has_2fa %}نقل التحقق إلى هاتف جديد{% else %}تفعيل التحقق الثنائي{% endif %}</a>
     </div>
+    <form method="post" action="{% url 'accounts:sessions_end' %}" style="margin-top:10px" data-confirm="إنهاء جلساتك على كل الأجهزة الأخرى؟ تبقى هذه الجلسة وحدها.">{% csrf_token %}<button class="btn sm" type="submit">إنهاء جلساتي على الأجهزة الأخرى</button></form>
     <h2 style="margin-top:18px">آخر عمليات الدخول</h2>
     <ul class="list small">{% for e in recent_logins %}<li><span class="pill {% if e.action == 'login' %}ok{% else %}fail{% endif %}">{{ e.get_action_display }}</span><span class="grow">{{ e.created_at|ar_datetime }}</span><span dir="ltr">{{ e.ip|default:"" }}</span></li>{% empty %}<li class="empty">لا سجلات.</li>{% endfor %}</ul>
-    <p class="small muted">إن رأيت دخولاً لا تعرفه فغيّر كلمة المرور فوراً وأبلغ مدير النظام.</p>
+    <p class="small muted">إن رأيت دخولاً لا تعرفه فغيّر كلمة المرور فوراً (فتُنهى الجلسات الأخرى) وأبلغ مدير النظام.</p>
   </section>
   <section class="panel">
     <h2>صلاحياتك</h2>

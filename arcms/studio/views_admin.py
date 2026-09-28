@@ -10,6 +10,7 @@ from pathlib import Path
 
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth import update_session_auth_hash
 from django.db.models import Count, Max, Q
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
@@ -125,6 +126,8 @@ def user_edit(request, pk: int | None = None):
             messages.error(request, "لا يمكنك تعطيل حسابك بنفسك.")
         else:
             user = form.save()
+            if user.pk == request.user.pk and form.cleaned_data.get("password"):
+                update_session_auth_hash(request, user)
             desks = request.POST.getlist("desks")
             user.desks.set(Category.objects.filter(pk__in=[d for d in desks if d.isdigit()]))
             messages.success(request, f"حُفظ المستخدم {user}.")
@@ -146,8 +149,18 @@ def user_edit(request, pk: int | None = None):
 def user_reset_2fa(request, pk: int):
     obj = get_object_or_404(User, pk=pk)
     obj.reset_2fa()
-    record(Action.TWO_FA, obj, message=f"أعاد {request.user} ضبط التحقق الثنائي")
-    messages.success(request, f"أُلغي جهاز التحقق لـ {obj}. سيُطلب منه تفعيل جهاز جديد عند دخوله.")
+    record(Action.TWO_FA, obj, message=f"أعاد {request.user} ضبط التحقق الثنائي وأنهى جلساته")
+    messages.success(request, f"أُلغي جهاز التحقق لـ {obj} وأُنهيت جلساته. سيُطلب منه تفعيل جهاز جديد عند دخوله.")
+    return redirect("studio:user_edit", pk=pk)
+
+
+@requires(Cap.USERS)
+@require_POST
+def user_sessions_end(request, pk: int):
+    obj = get_object_or_404(User, pk=pk)
+    obj.end_all_sessions(request)
+    record(Action.SECURITY, obj, message=f"أنهى {request.user} كل جلسات الحساب")
+    messages.success(request, f"أُنهيت كل جلسات {obj} المفتوحة.")
     return redirect("studio:user_edit", pk=pk)
 
 

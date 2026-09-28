@@ -6,6 +6,7 @@ from django.conf import settings
 from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
 from django.utils import timezone
+from django.utils.crypto import salted_hmac
 
 from arcms.core.fields import EncryptedTextField
 
@@ -32,6 +33,8 @@ class User(AbstractUser):
     must_change_password = models.BooleanField("يجب تغيير كلمة المرور", default=False)
     password_changed_at = models.DateTimeField(null=True, blank=True)
     last_seen_at = models.DateTimeField(null=True, blank=True)
+    # يدخل في بصمة الجلسة: زيادته تُنهي كل الجلسات المفتوحة للحساب على كل الأجهزة.
+    session_epoch = models.PositiveIntegerField(default=0, editable=False)
 
     objects = UserManager()
 
@@ -46,6 +49,22 @@ class User(AbstractUser):
     @property
     def name(self) -> str:
         return str(self)
+
+    # --- الجلسات ---
+    def _get_session_auth_hash(self, secret=None):
+        if not self.session_epoch:
+            return super()._get_session_auth_hash(secret=secret)
+        key_salt = "arcms.accounts.User.session_auth_hash"
+        return salted_hmac(key_salt, f"{self.password}:{self.session_epoch}", secret=secret, algorithm="sha256").hexdigest()
+
+    def end_all_sessions(self, request=None) -> None:
+        """يُبطل كل جلسات الحساب؛ ومع request تبقى الجلسة الحالية وحدها."""
+        type(self).objects.filter(pk=self.pk).update(session_epoch=models.F("session_epoch") + 1)
+        self.refresh_from_db(fields=["session_epoch"])
+        if request is not None and request.user.pk == self.pk:
+            from django.contrib.auth import update_session_auth_hash
+
+            update_session_auth_hash(request, self)
 
     # --- الصلاحيات ---
     @property
@@ -114,6 +133,8 @@ class User(AbstractUser):
         self.totp_last_counter = None
         self.recovery_codes = []
         self.save(update_fields=["totp_secret", "totp_confirmed_at", "totp_last_counter", "recovery_codes"])
+        # هاتف مفقود قد يكون في يد غيره: لا تبقى أي جلسة مفتوحة.
+        self.end_all_sessions()
 
 
 class LoginAttempt(models.Model):

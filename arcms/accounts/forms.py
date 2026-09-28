@@ -1,5 +1,5 @@
 from django import forms
-from django.contrib.auth.forms import SetPasswordForm
+from django.contrib.auth.forms import PasswordChangeForm
 
 from .models import User
 from .roles import Role
@@ -19,6 +19,12 @@ class OTPForm(forms.Form):
 
 
 class EnrollForm(forms.Form):
+    current = forms.CharField(
+        label="رمز الجهاز الحالي أو رمز استرداد",
+        max_length=16,
+        required=False,
+        widget=forms.TextInput(attrs={"autocomplete": "one-time-code"}),
+    )
     code = forms.CharField(
         label="الرمز الظاهر في التطبيق",
         max_length=8,
@@ -26,8 +32,14 @@ class EnrollForm(forms.Form):
     )
 
 
-class PasswordChange(SetPasswordForm):
-    pass
+class PasswordChange(PasswordChangeForm):
+    """تتطلب كلمة المرور الحالية: جلسة منسية مفتوحة لا تكفي للاستيلاء على الحساب."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["old_password"].label = "كلمة المرور الحالية"
+        self.fields["new_password1"].label = "كلمة المرور الجديدة"
+        self.fields["new_password2"].label = "تأكيد كلمة المرور الجديدة"
 
 
 class UserForm(forms.ModelForm):

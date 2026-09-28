@@ -96,6 +96,7 @@ urlpatterns = [
     path("users/new/", admin.user_edit, name="user_new"),
     path("users/<int:pk>/", admin.user_edit, name="user_edit"),
     path("users/<int:pk>/reset-2fa/", admin.user_reset_2fa, name="user_reset_2fa"),
+    path("users/<int:pk>/end-sessions/", admin.user_sessions_end, name="user_sessions_end"),
     path("me/", admin.profile, name="profile"),
     path("distribution/", admin.distribution, name="distribution"),
     path("distribution/<str:channel>/", admin.channel_edit, name="channel_edit"),

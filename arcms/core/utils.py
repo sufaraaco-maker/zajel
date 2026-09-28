@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ipaddress
+import json
 from urllib.parse import urlparse
 
 from django.conf import settings
@@ -38,3 +39,11 @@ def is_safe_redirect(url: str) -> bool:
         return False
     parsed = urlparse(url)
     return not parsed.netloc and not parsed.scheme and url.startswith("/") and not url.startswith("//")
+
+
+_SCRIPT_ESCAPES = {ord("<"): "\\u003c", ord(">"): "\\u003e", ord("&"): "\\u0026"}
+
+
+def json_script_safe(data) -> str:
+    """JSON يُضمَّن داخل <script> دون أن يغلقه نص مثل «</script>» في عنوان مادة."""
+    return json.dumps(data, ensure_ascii=False).translate(_SCRIPT_ESCAPES)

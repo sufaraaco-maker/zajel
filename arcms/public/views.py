@@ -15,6 +15,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.cache import cache_control
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
@@ -39,12 +40,28 @@ from arcms.content.sanitize import plain_text, render_embeds
 from arcms.content.signals import public_cache_version
 from arcms.content.workflow import can_view
 from arcms.core.models import AdSlot, SiteSettings
-from arcms.core.utils import absolute_url, client_ip
+from arcms.core.ratelimit import exceeded
+from arcms.core.utils import absolute_url, client_ip, json_script_safe
 from arcms.distribution.models import NewsletterSubscriber, PushSubscription
 
 from .blocks import build_blocks, most_read, published
 
 PAGE_SIZE = 18
+
+# (عدد، ثوانٍ) لكل مصدر. متساهلة عمداً: قرّاء كثيرون قد يخرجون من عنوان واحد
+# خلف شبكات الهاتف المحمول، والغرض صدّ الإغراق الآلي لا القارئ.
+RATE_LIMITS = {
+    "beacon": (600, 60),
+    "push": (60, 3600),
+    "newsletter-ip": (30, 3600),
+    "newsletter-mail": (3, 86400),
+    "contact": (10, 3600),
+}
+
+
+def _limited(scope: str, ident: str | None) -> bool:
+    limit, window = RATE_LIMITS[scope]
+    return exceeded(scope, ident, limit=limit, window=window)
 
 
 def _paginate(request, qs, size=PAGE_SIZE):
@@ -131,7 +148,7 @@ def article_detail(request, pk: int, slug: str = ""):
             "canonical": absolute_url(article.get_absolute_url()),
             "ad_inline": AdSlot.live_for("article_inline"),
             "ad_end": AdSlot.live_for("article_end"),
-            "json_ld": json.dumps(_news_article_ld(article), ensure_ascii=False),
+            "json_ld": json_script_safe(_news_article_ld(article)),
             "track_article": article.pk,
             "track_category": article.category_id or "",
         }
@@ -326,6 +343,8 @@ def page_detail(request, slug: str):
         body = request.POST.get("body", "").strip()[:5000]
         if request.POST.get("website"):  # فخ للبرامج الآلية
             sent = True
+        elif _limited("contact", client_ip(request)):
+            messages.error(request, "أرسلت رسائل كثيرة خلال وقت قصير. حاول بعد ساعة.")
         elif name and body:
             ContactMessage.objects.create(
                 name=name,
@@ -342,6 +361,14 @@ def page_detail(request, slug: str):
 # --- النشرة والإشعارات ---
 
 
+def _back(request) -> str:
+    """العودة إلى الصفحة السابقة إن كانت من الموقع نفسه فقط."""
+    ref = request.META.get("HTTP_REFERER", "")
+    if ref and url_has_allowed_host_and_scheme(ref, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
+        return ref
+    return "/"
+
+
 @require_POST
 def newsletter_subscribe(request):
     from django.core.exceptions import ValidationError
@@ -354,18 +381,22 @@ def newsletter_subscribe(request):
         validate_email(email)
     except ValidationError:
         messages.error(request, "البريد الإلكتروني غير صالح.")
-        return redirect(request.META.get("HTTP_REFERER") or "/")
+        return redirect(_back(request))
     if request.POST.get("website"):
         return redirect("/")
+    if _limited("newsletter-ip", client_ip(request)):
+        messages.error(request, "طلبات كثيرة من جهازك خلال وقت قصير. حاول لاحقاً.")
+        return redirect(_back(request))
     sub, created = NewsletterSubscriber.objects.get_or_create(email=email, defaults={"source": "site"})
     if sub.unsubscribed_at:
         sub.unsubscribed_at = None
         sub.confirmed_at = None
         sub.save()
-    if not sub.confirmed_at:
+    # لا تتحول صفحة الاشتراك إلى أداة لإغراق بريد أحد برسائل التأكيد.
+    if not sub.confirmed_at and not _limited("newsletter-mail", email):
         send_confirmation(sub)
     messages.success(request, "أرسلنا إليك رسالة لتأكيد الاشتراك. افتحها واضغط الرابط.")
-    return redirect(request.META.get("HTTP_REFERER") or "/")
+    return redirect(_back(request))
 
 
 def newsletter_confirm(request, token: str):
@@ -398,6 +429,8 @@ def push_subscribe(request):
         return JsonResponse({"ok": False}, status=400)
     if not str(endpoint).startswith("https://"):
         return JsonResponse({"ok": False}, status=400)
+    if _limited("push", client_ip(request)):
+        return JsonResponse({"ok": False}, status=429)
     PushSubscription.objects.update_or_create(
         endpoint=endpoint[:700], defaults={"p256dh": keys.get("p256dh", "")[:200], "auth": keys.get("auth", "")[:100], "is_active": True}
     )
@@ -428,6 +461,8 @@ def beacon(request):
         return HttpResponse(status=204)
     if len(request.body) > 2048:
         return HttpResponse(status=413)
+    if _limited("beacon", client_ip(request)):
+        return HttpResponse(status=204)  # لا يُحتسب ما زاد على المعقول من المصدر نفسه
     try:
         data = json.loads(request.body.decode("utf-8") or "{}")
     except ValueError:

@@ -1,7 +1,8 @@
 {% extends "accounts/base.html" %}
 {% block title %}تفعيل التحقق الثنائي{% endblock %}
 {% block content %}
-<h1>تفعيل التحقق الثنائي</h1>
+<h1>{% if replacing %}نقل التحقق إلى هاتف جديد{% else %}تفعيل التحقق الثنائي{% endif %}</h1>
+{% if replacing %}<div class="alert info">سيتوقف الجهاز الحالي عن العمل، وتُنهى جلساتك المفتوحة على الأجهزة الأخرى، وتُصدر رموز استرداد جديدة.</div>{% endif %}
 {% if forced %}<div class="alert info">رتبتك تتطلب التحقق الثنائي قبل الدخول إلى غرفة التحرير. يستغرق الأمر دقيقة.</div>{% endif %}
 <ol class="small" style="padding-inline-start:18px;margin:0 0 8px">
   <li>ثبّت تطبيق مصادقة على هاتفك: Aegis أو FreeOTP (مفتوحا المصدر)، أو Google Authenticator، أو 1Password.</li>
@@ -14,7 +15,8 @@
 {% if error %}<div class="alert error">{{ error }}</div>{% endif %}
 <form method="post">
   {% csrf_token %}
-  <div class="form-row"><label for="id_code">الرمز من التطبيق</label><input class="otp-input" type="text" name="code" id="id_code" inputmode="numeric" autocomplete="one-time-code" maxlength="8" required autofocus></div>
+  {% if replacing %}<div class="form-row"><label for="id_current">رمز الجهاز الحالي (أو رمز استرداد)</label><input class="otp-input" type="text" name="current" id="id_current" autocomplete="one-time-code" maxlength="16" required></div>{% endif %}
+  <div class="form-row"><label for="id_code">الرمز من التطبيق{% if replacing %} الجديد{% endif %}</label><input class="otp-input" type="text" name="code" id="id_code" inputmode="numeric" autocomplete="one-time-code" maxlength="8" required autofocus></div>
   <button class="btn primary block" type="submit">تأكيد وتفعيل</button>
 </form>
 <form method="post" action="{% url 'accounts:logout' %}" style="margin-top:10px">{% csrf_token %}<button class="btn sm" type="submit">خروج</button></form>

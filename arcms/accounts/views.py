@@ -122,11 +122,26 @@ def verify_view(request):
     return render(request, "accounts/verify.html", {"form": form, "error": error, "pending_user": user})
 
 
+def _check_current_factor(request, user: User, code: str) -> str:
+    """نقل التحقق إلى هاتف جديد يتطلب إثبات حيازة الجهاز الحالي (أو رمز استرداد)."""
+    ip = client_ip(request)
+    if LoginAttempt.is_locked(user.username, ip):
+        return "تعددت المحاولات الفاشلة. أُقفل التحقق مؤقتاً."
+    code = (code or "").strip()
+    if code and (user.verify_totp(code) or (len("".join(c for c in code if c.isalnum())) == 10 and user.use_recovery_code(code))):
+        return ""
+    LoginAttempt.objects.create(username=user.username, ip=ip, success=False, stage="otp")
+    record(Action.LOGIN_FAILED, user, message="رمز خاطئ عند محاولة نقل التحقق الثنائي", actor=_actor(request, user))
+    return "رمز الجهاز الحالي غير صحيح."
+
+
 @never_cache
 @login_required
+@sensitive_post_parameters("current", "code")
 def enroll_view(request):
     user: User = request.user
-    if user.has_2fa and request.method == "GET" and not request.GET.get("reset"):
+    replacing = user.has_2fa
+    if replacing and request.method == "GET" and not request.GET.get("reset"):
         return render(request, "accounts/enroll_done.html", {"codes": None})
     secret = request.session.get("arcms_enroll_secret")
     if not secret or request.method == "GET":
@@ -138,9 +153,11 @@ def enroll_view(request):
     error = ""
     if request.method == "POST" and form.is_valid():
         counter = totp.verify(secret, form.cleaned_data["code"])
-        if counter is None:
+        if replacing:
+            error = _check_current_factor(request, user, form.cleaned_data["current"])
+        if not error and counter is None:
             error = "الرمز غير صحيح. تأكد من ضبط وقت الهاتف تلقائياً وأعد المحاولة."
-        else:
+        if not error:
             codes = totp.generate_recovery_codes()
             user.totp_secret = secret
             user.totp_confirmed_at = timezone.now()
@@ -149,13 +166,21 @@ def enroll_view(request):
             user.save()
             request.session.pop("arcms_enroll_secret", None)
             request.session[SESSION_VERIFIED] = True
-            record(Action.TWO_FA, user, message="تفعيل التحقق الثنائي", actor=_actor(request, user))
+            if replacing:
+                # الجلسات المفتوحة على الجهاز القديم لا تبقى صالحة بعد نقله.
+                user.end_all_sessions(request)
+            record(
+                Action.TWO_FA, user,
+                message="نقل التحقق الثنائي إلى جهاز جديد" if replacing else "تفعيل التحقق الثنائي",
+                actor=_actor(request, user),
+            )
             return render(request, "accounts/enroll_done.html", {"codes": codes})
     grouped = " ".join(secret[i : i + 4] for i in range(0, len(secret), 4))
     return render(
         request,
         "accounts/enroll.html",
-        {"form": form, "qr_svg": qr_svg, "secret": grouped, "error": error, "forced": user.requires_2fa},
+        {"form": form, "qr_svg": qr_svg, "secret": grouped, "error": error, "forced": user.requires_2fa and not replacing,
+         "replacing": replacing},
     )
 
 
@@ -163,6 +188,7 @@ def enroll_view(request):
 @login_required
 @sensitive_post_parameters()
 def password_change_view(request):
+    # تتغير بصمة الجلسة مع كلمة المرور فتنتهي الجلسات الأخرى، وتبقى الحالية وحدها.
     form = PasswordChange(request.user, request.POST or None)
     if request.method == "POST" and form.is_valid():
         user = form.save()
@@ -174,6 +200,16 @@ def password_change_view(request):
         messages.success(request, "تم تغيير كلمة المرور.")
         return redirect(settings.LOGIN_REDIRECT_URL)
     return render(request, "accounts/password_change.html", {"form": form})
+
+
+@never_cache
+@login_required
+@require_POST
+def sessions_end_view(request):
+    request.user.end_all_sessions(request)
+    record(Action.SECURITY, request.user, message="إنهاء كل الجلسات الأخرى", actor=_actor(request, request.user))
+    messages.success(request, "أُنهيت جلساتك على كل الأجهزة الأخرى.")
+    return redirect("studio:profile")
 
 
 @require_POST
