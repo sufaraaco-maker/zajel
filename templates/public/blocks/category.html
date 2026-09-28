@@ -1,0 +1,15 @@
+<section class="section{% if b.block.dark %} dark{% endif %}"{% if b.block.category.color %} style="--primary: {{ b.block.category.color }}"{% endif %}>
+  {% include "public/blocks/_head.html" %}
+  {% if b.block.layout == 'feature' %}
+  <div class="feature">
+    {% include "public/partials/card.html" with a=b.items.0 variant="big" excerpt=True %}
+    <div class="feature-list">{% for a in b.items|slice:"1:" %}{% include "public/partials/card.html" with a=a variant="row" %}{% endfor %}</div>
+  </div>
+  {% elif b.block.layout == 'list' %}
+  <ul class="list-compact">{% for a in b.items %}<li><a href="{{ a.get_absolute_url }}">{{ a.title }}</a> <span class="meta">{{ a.published_at|ar_relative }}</span></li>{% endfor %}</ul>
+  {% elif b.block.layout == 'strip' %}
+  <div class="grid grid-4">{% for a in b.items|slice:":4" %}{% include "public/partials/card.html" with a=a %}{% endfor %}</div>
+  {% else %}
+  <div class="grid grid-3">{% for a in b.items %}{% include "public/partials/card.html" with a=a excerpt=forloop.first %}{% endfor %}</div>
+  {% endif %}
+</section>

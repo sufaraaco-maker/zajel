@@ -1,0 +1,3 @@
+{% extends "studio/base.html" %}
+{% block title %}غير مسموح{% endblock %}
+{% block content %}<div class="panel empty"><h1>{{ "lock"|icon:24 }} غير مسموح</h1><p>{{ message|default:"لا تملك صلاحية الوصول إلى هذه الصفحة." }}</p><a class="btn" href="{% url 'studio:home' %}">العودة</a></div>{% endblock %}

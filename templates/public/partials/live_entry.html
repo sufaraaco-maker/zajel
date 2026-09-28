@@ -1,0 +1,5 @@
+<li class="live-entry{% if e.is_important %} important{% endif %}{% if e.is_pinned %} pinned{% endif %}" data-entry-id="{{ e.pk }}" id="u{{ e.pk }}">
+  <time datetime="{{ e.created_at|isoformat }}">{{ e.created_at|ar_time }}</time>{% if e.is_pinned %} · <strong>مثبّت</strong>{% endif %}
+  <div class="body">{{ e.body|safe }}</div>
+  {% if e.image %}<figure class="figure"><img src="{{ e.image.card }}" alt="{{ e.image.alt_text }}" loading="lazy">{% if e.image.caption %}<figcaption>{{ e.image.caption }}</figcaption>{% endif %}</figure>{% endif %}
+</li>

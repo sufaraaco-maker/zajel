@@ -1,0 +1,11 @@
+<section class="section">
+  <div class="live-strip">
+    <div>
+      <span class="live-badge"><span class="pulse"></span>مباشر</span>
+      <h2><a href="{{ b.live.get_absolute_url }}">{{ b.live.title }}</a></h2>
+      <p class="meta">{{ b.live.summary|truncatewords:30 }}</p>
+      <a class="btn" href="{{ b.live.get_absolute_url }}">تابع التغطية</a>
+    </div>
+    <ul class="live-mini">{% for e in b.entries %}<li><time>{{ e.created_at|ar_time }}</time>{{ e.body|striptags|truncatewords:30 }}</li>{% endfor %}</ul>
+  </div>
+</section>

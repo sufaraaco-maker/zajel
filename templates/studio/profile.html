@@ -1,0 +1,26 @@
+{% extends "studio/base.html" %}
+{% block title %}حسابي{% endblock %}
+{% block content %}
+<div class="page-title"><div><h1>حسابي</h1><p>{{ user.get_role_display }}</p></div></div>
+<div class="cols cols-2">
+  <section class="panel">
+    <h2>{{ "shield"|icon:18 }} الأمان</h2>
+    <ul class="list">
+      <li><span class="grow">التحقق الثنائي</span>{% if user.has_2fa %}<span class="pill ok">مفعّل</span>{% else %}<span class="pill warn">غير مفعّل</span>{% endif %}</li>
+      <li><span class="grow">رموز الاسترداد المتبقية</span><strong>{{ user.recovery_codes|length }}</strong></li>
+    </ul>
+    <div class="btn-row" style="margin-top:10px">
+      <a class="btn" href="{% url 'accounts:password_change' %}">تغيير كلمة المرور</a>
+      <a class="btn" href="{% url 'accounts:enroll' %}?reset=1">{% if user.has_2fa %}نقل التحقق إلى هاتف جديد{% else %}تفعيل التحقق الثنائي{% endif %}</a>
+    </div>
+    <h2 style="margin-top:18px">آخر عمليات الدخول</h2>
+    <ul class="list small">{% for e in recent_logins %}<li><span class="pill {% if e.action == 'login' %}ok{% else %}fail{% endif %}">{{ e.get_action_display }}</span><span class="grow">{{ e.created_at|ar_datetime }}</span><span dir="ltr">{{ e.ip|default:"" }}</span></li>{% empty %}<li class="empty">لا سجلات.</li>{% endfor %}</ul>
+    <p class="small muted">إن رأيت دخولاً لا تعرفه فغيّر كلمة المرور فوراً وأبلغ مدير النظام.</p>
+  </section>
+  <section class="panel">
+    <h2>صلاحياتك</h2>
+    <div class="chips">{% for c in caps %}<span class="chip">{{ c }}</span>{% endfor %}</div>
+    {% if author %}<p class="small" style="margin-top:14px">سطر الكاتب: <a href="{{ author.get_absolute_url }}" target="_blank" rel="noopener">{{ author.name }}</a></p>{% endif %}
+  </section>
+</div>
+{% endblock %}

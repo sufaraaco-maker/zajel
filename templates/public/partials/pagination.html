@@ -1,0 +1,7 @@
+{% if page.has_other_pages %}
+<nav class="pagination" aria-label="الصفحات">
+  {% if page.has_previous %}<a href="?{% if q %}q={{ q|urlencode }}&{% endif %}page={{ page.previous_page_number }}">السابق</a>{% endif %}
+  <span class="current">{{ page.number|ar_digits }} من {{ page.paginator.num_pages|ar_digits }}</span>
+  {% if page.has_next %}<a href="?{% if q %}q={{ q|urlencode }}&{% endif %}page={{ page.next_page_number }}">التالي</a>{% endif %}
+</nav>
+{% endif %}

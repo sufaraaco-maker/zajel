@@ -1,0 +1,7 @@
+{% extends "public/base.html" %}
+{% block title %}الصفحة غير موجودة | {{ site.name }}{% endblock %}
+{% block content %}
+<div class="empty"><h1>الصفحة غير موجودة</h1><p>ربما نُقلت المادة أو تغيّر رابطها. جرّب البحث:</p>
+<form action="{% url 'public:search' %}" class="search-form" style="display:inline-flex;margin:10px auto"><input type="search" name="q" placeholder="ابحث…"><button>{{ "search"|icon:18 }}</button></form></div>
+{% if latest %}<section class="section"><div class="section-head"><h2 class="section-title">آخر الأخبار</h2></div><div class="grid grid-3">{% for a in latest %}{% include "public/partials/card.html" with a=a %}{% endfor %}</div></section>{% endif %}
+{% endblock %}

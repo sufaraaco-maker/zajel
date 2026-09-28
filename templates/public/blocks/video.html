@@ -1,0 +1,7 @@
+<section class="section dark">
+  {% include "public/blocks/_head.html" %}
+  <div class="video-grid">
+    {% include "public/partials/card.html" with a=b.items.0 variant="big" %}
+    <div class="side">{% for a in b.items|slice:"1:4" %}{% include "public/partials/card.html" with a=a variant="row" %}{% endfor %}</div>
+  </div>
+</section>

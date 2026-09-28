@@ -1,0 +1,41 @@
+{% extends "public/base.html" %}
+{% block title %}{% if q %}بحث: {{ q }}{% else %}البحث{% endif %} | {{ site.name }}{% endblock %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
+{% block content %}
+<div class="search-page with-sidebar">
+  <div>
+    <div class="page-head"><h1>البحث في الأرشيف</h1></div>
+    <form class="big" method="get" role="search">
+      <label class="sr-only" for="q2">كلمات البحث</label>
+      <input id="q2" type="search" name="q" value="{{ q }}" placeholder="اكتب كلمة أو أكثر…" autofocus>
+      <button class="btn" type="submit">{{ "search"|icon:18 }} ابحث</button>
+      <div class="filters" style="width:100%;margin:8px 0 0">
+        <select name="kind" aria-label="نوع المادة"><option value="">كل الأنواع</option>{% for v, l in kinds %}<option value="{{ v }}"{% if v == sel_kind %} selected{% endif %}>{{ l }}</option>{% endfor %}</select>
+        <select name="category" aria-label="القسم"><option value="">كل الأقسام</option>{% for c in categories %}<option value="{{ c.pk }}"{% if c.pk|stringformat:"s" == sel_category %} selected{% endif %}>{{ c.name }}</option>{% endfor %}</select>
+        <select name="period" aria-label="الفترة"><option value="">كل الأوقات</option><option value="1"{% if sel_period == "1" %} selected{% endif %}>آخر 24 ساعة</option><option value="7"{% if sel_period == "7" %} selected{% endif %}>آخر أسبوع</option><option value="30"{% if sel_period == "30" %} selected{% endif %}>آخر شهر</option><option value="365"{% if sel_period == "365" %} selected{% endif %}>آخر سنة</option></select>
+      </div>
+    </form>
+    <p class="search-hint">البحث يفهم العربية: «اعتقال» تجد «بالاعتقال» و«الاعتقالات»، ولا فرق بين «أ» و«ا» أو «ة» و«ه»، والتشكيل لا يؤثر. ضع العبارة بين «» للبحث عنها حرفياً.</p>
+    {% if q %}
+      <p class="meta" style="margin:14px 0">{% ar_count total "نتيجة واحدة" "نتيجتان" "نتائج" "نتيجة" as count_label %}{% if total %}{{ count_label }} لـ «{{ q }}»{% else %}لا نتائج لـ «{{ q }}». جرّب كلمات أقل أو أعمّ.{% endif %}</p>
+      <div class="list-feed">
+        {% for item in items %}
+        <article class="card row">
+          {% if item.article.featured_image %}<a href="{{ item.article.get_absolute_url }}" tabindex="-1" aria-hidden="true"><div class="thumb"><img src="{{ item.article.featured_image.thumb }}" alt="" loading="lazy"></div></a>{% endif %}
+          <div>
+            <h3><a href="{{ item.article.get_absolute_url }}">{{ item.title_html|safe }}</a></h3>
+            <p style="-webkit-line-clamp:3">{{ item.snippet|safe }}</p>
+            <div class="meta">{% if item.article.category %}<span class="cat">{{ item.article.category.name }}</span>{% endif %}<span>{{ item.article.get_kind_display }}</span><time>{{ item.article.published_at|ar_date_short }}</time></div>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+      <nav class="pagination">
+        {% if has_prev %}<a href="?q={{ q|urlencode }}&kind={{ sel_kind }}&category={{ sel_category }}&period={{ sel_period }}&page={{ page_number|add:-1 }}">السابق</a>{% endif %}
+        {% if has_next %}<a href="?q={{ q|urlencode }}&kind={{ sel_kind }}&category={{ sel_category }}&period={{ sel_period }}&page={{ page_number|add:1 }}">التالي</a>{% endif %}
+      </nav>
+    {% endif %}
+  </div>
+  {% include "public/partials/sidebar.html" %}
+</div>
+{% endblock %}

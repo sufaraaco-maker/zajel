@@ -1,0 +1,52 @@
+{% load static %}
+<div class="topbar">
+  <div class="container">
+    <div class="topbar-links">
+      <span class="masthead-date">{{ now|masthead_date }}</span>
+      {% for item in menus.top %}<a href="{{ item.url_cached }}"{% if item.new_tab %} target="_blank" rel="noopener"{% endif %}>{{ item.label }}</a>{% endfor %}
+      {% if site.alt_language_url %}<a href="{{ site.alt_language_url }}" lang="en" dir="ltr">{{ site.alt_language_label }}</a>{% endif %}
+    </div>
+    <div class="social">
+      {% for key, label, url in site.social_links %}<a href="{{ url }}" target="_blank" rel="noopener" aria-label="{{ label }}" title="{{ label }}">{{ key|icon:16 }}</a>{% endfor %}
+      <a href="{% url 'public:feed' %}" aria-label="RSS" title="خلاصة RSS">{{ "rss"|icon:16 }}</a>
+    </div>
+  </div>
+</div>
+<header class="site-header{% if site.header_dark %} dark{% endif %}">
+  <div class="container header-row">
+    <a class="brand" href="/" aria-label="{{ site.name }} - الرئيسية">
+      {% if site.logo %}
+        <img src="{{ site.logo.url }}" alt="{{ site.name }}" width="{{ site.logo.width }}" height="{{ site.logo.height }}">
+      {% else %}
+        <span class="brand-mark">{{ "pigeon"|icon:30 }}</span>
+        <span><span class="brand-name">{{ site.name }}</span><br><span class="brand-tagline">{{ site.tagline }}</span></span>
+      {% endif %}
+    </a>
+    <div class="header-tools">
+      <form class="search-form" action="{% url 'public:search' %}" method="get" role="search">
+        <label class="sr-only" for="q">ابحث في الموقع</label>
+        <input id="q" type="search" name="q" placeholder="ابحث في الأخبار…" value="{{ q|default:'' }}">
+        <button type="submit" aria-label="بحث">{{ "search"|icon:18 }}</button>
+      </form>
+      <button class="tool-btn" type="button" data-search-toggle aria-label="بحث">{{ "search"|icon:18 }}</button>
+      <button class="tool-btn" type="button" data-push hidden aria-label="إشعارات العاجل" title="فعّل إشعارات العاجل">{{ "bell"|icon:18 }}</button>
+      <button class="tool-btn" type="button" data-theme-toggle aria-label="الوضع الداكن">{{ "moon"|icon:18 }}</button>
+      <button class="tool-btn menu-toggle" type="button" data-menu-toggle aria-expanded="false" aria-label="القائمة">{{ "menu"|icon:20 }}</button>
+    </div>
+  </div>
+</header>
+<nav class="main-nav" aria-label="الأقسام">
+  <div class="container">
+    <ul>
+      <li><a class="home-link" href="/" aria-label="الرئيسية" {% if is_home %}aria-current="page"{% endif %}>{{ "home"|icon:18 }}</a></li>
+      {% for item in menus.main %}
+      <li{% if item.highlight %} class="hl"{% endif %}>
+        <a href="{{ item.url_cached }}"{% if item.new_tab %} target="_blank" rel="noopener"{% endif %}{% if request.path == item.url_cached %} aria-current="page"{% endif %}>{{ item.label }}</a>
+        {% if item.children_cached %}
+        <ul class="sub">{% for child in item.children_cached %}<li><a href="{{ child.url_cached }}">{{ child.label }}</a></li>{% endfor %}</ul>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</nav>

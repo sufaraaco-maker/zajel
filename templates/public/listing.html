@@ -1,0 +1,25 @@
+{% extends "public/base.html" %}
+{% block title %}{{ heading }} | {{ site.name }}{% endblock %}
+{% block description %}{{ description|default:heading }}{% endblock %}
+{% block feeds %}{% if feed_url %}<link rel="alternate" type="application/rss+xml" title="{{ heading }}" href="{{ feed_url }}">{% endif %}{% endblock %}
+{% block content %}
+<div class="page-head"{% if accent %} style="--primary: {{ accent }}"{% endif %}>
+  <h1>{{ heading }}</h1>
+  {% if description %}<p>{{ description }}</p>{% endif %}
+  {% if subcategories %}<div class="subnav">{% for c in subcategories %}<a href="{{ c.get_absolute_url }}">{{ c.name }}</a>{% endfor %}</div>{% endif %}
+</div>
+<div class="with-sidebar">
+  <div>
+    {% if page.number == 1 and page.object_list %}
+      {% with first=page.object_list.0 %}
+      <div class="section">{% include "public/partials/card.html" with a=first variant="big" excerpt=True %}</div>
+      {% endwith %}
+      <div class="list-feed">{% for a in page.object_list|slice:"1:" %}{% include "public/partials/card.html" with a=a variant="row" excerpt=True %}{% endfor %}</div>
+    {% else %}
+      <div class="list-feed">{% for a in page.object_list %}{% include "public/partials/card.html" with a=a variant="row" excerpt=True %}{% empty %}<p class="empty">لا مواد هنا بعد.</p>{% endfor %}</div>
+    {% endif %}
+    {% include "public/partials/pagination.html" %}
+  </div>
+  {% include "public/partials/sidebar.html" %}
+</div>
+{% endblock %}

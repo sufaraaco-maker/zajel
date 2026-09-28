@@ -1,0 +1,24 @@
+{% extends "studio/base.html" %}
+{% block title %}إعدادات الموقع{% endblock %}
+{% block content %}
+<div class="page-title"><div><h1>إعدادات الموقع</h1><p>الهوية والألوان والتواريخ والسياسات. الأسرار (رموز البوتات وكلمات مرور البريد) تُضبط في ملف البيئة على الخادم، لا هنا.</p></div></div>
+<form method="post" data-media-form>
+  {% csrf_token %}
+  {% if form.errors %}<div class="alert error">راجع الحقول المعلَّمة.</div>{% endif %}
+  {% for title, fields in form.sections %}
+  <fieldset>
+    <legend>{{ title }}</legend>
+    <div class="field-grid">
+      {% for field in fields %}
+        {% if field.name == "logo" or field.name == "logo_dark" or field.name == "default_share_image" %}
+          <div class="form-row"><span class="label">{{ field.label }}</span>{% include "studio/partials/image_field.html" %}</div>
+        {% else %}{% include "studio/partials/field.html" %}{% endif %}
+      {% endfor %}
+    </div>
+    {% if title == "التاريخ والأرقام" %}<p class="small muted">معاينة: {{ now|masthead_date }} · {{ now|ar_time }}</p>{% endif %}
+  </fieldset>
+  {% endfor %}
+  <button class="btn primary" type="submit">حفظ الإعدادات</button>
+</form>
+{% endblock %}
+{% block modals %}{% include "studio/partials/media_modal.html" %}{% endblock %}

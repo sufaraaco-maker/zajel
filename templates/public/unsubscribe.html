@@ -1,0 +1,9 @@
+{% extends "public/base.html" %}
+{% block title %}إلغاء الاشتراك | {{ site.name }}{% endblock %}
+{% block content %}
+<div class="empty">
+  <h1>إلغاء الاشتراك في النشرة</h1>
+  <p>سيتوقف إرسال النشرة اليومية إلى <bdi dir="ltr">{{ sub.email }}</bdi>.</p>
+  <form method="post">{% csrf_token %}<button class="btn" type="submit">تأكيد الإلغاء</button></form>
+</div>
+{% endblock %}

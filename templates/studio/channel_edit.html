@@ -1,0 +1,32 @@
+{% extends "studio/base.html" %}
+{% block title %}{{ config }}{% endblock %}
+{% block content %}
+<div class="page-title"><div><h1>إعدادات {{ config }}</h1><p><a href="{% url 'studio:distribution' %}">← التوزيع</a></p></div></div>
+<div class="cols cols-2">
+  <form method="post" class="panel">
+    {% csrf_token %}
+    {% for field in form %}{% include "studio/partials/field.html" %}{% endfor %}
+    <button class="btn primary">حفظ</button>
+  </form>
+  <section class="panel small">
+    <h2>{{ "lock"|icon:18 }} بيانات الاعتماد على الخادم</h2>
+    {% if config.channel == "telegram" %}
+      <p>1. أنشئ بوتاً عبر ‎@BotFather‎ وانسخ الرمز إلى <code>ARCMS_TELEGRAM_BOT_TOKEN</code> في ملف البيئة.</p>
+      <p>2. أضف البوت مشرفاً في قناتك بصلاحية النشر.</p>
+      <p>3. اكتب معرّف القناة هنا (‎@اسم_القناة‎ للعامة، أو ‎-100…‎ للخاصة) ثم «اختبار الاتصال».</p>
+      <p>القالب يقبل HTML المبسّط لتيليجرام (&lt;b&gt; &lt;i&gt; &lt;a&gt;).</p>
+    {% elif config.channel == "whatsapp" %}
+      <p>تستخدم المنصة WhatsApp Business Cloud API الرسمية من Meta:</p>
+      <p>1. ضع الرمز الدائم في <code>ARCMS_WHATSAPP_TOKEN</code> ومعرّف رقم الهاتف في <code>ARCMS_WHATSAPP_PHONE_NUMBER_ID</code>.</p>
+      <p>2. اعتمد قالب رسالة من فئة «Utility» أو «Marketing» بمتغيرين: <code dir="ltr">{% templatetag openvariable %}1{% templatetag closevariable %}</code> للعنوان و<code dir="ltr">{% templatetag openvariable %}2{% templatetag closevariable %}</code> للرابط، واكتب اسمه هنا.</p>
+      <p>3. لا تُرسل إلا لمن وافق صراحةً على الاستقبال (سياسة Meta).</p>
+    {% elif config.channel == "push" %}
+      <p>ولّد مفاتيح VAPID بالأمر <code>manage.py arcms_keys</code> وضعها في <code>ARCMS_VAPID_PUBLIC_KEY</code> و<code>ARCMS_VAPID_PRIVATE_KEY</code>.</p>
+      <p>يظهر زر الجرس في الموقع عند تفعيل القناة، ويُرسل الإشعار للمواد المعلَّمة «إشعار فوري» وكل عاجل.</p>
+    {% else %}
+      <p>اضبط خادم البريد في ملف البيئة: <code>ARCMS_SMTP_HOST</code> و<code>ARCMS_SMTP_USER</code> و<code>ARCMS_SMTP_PASSWORD</code> و<code>ARCMS_FROM_EMAIL</code>.</p>
+      <p>ساعة الإرسال وعدد المواد في «إعدادات الموقع». الاشتراك بتأكيد مزدوج، ولكل رسالة رابط إلغاء بنقرة واحدة.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

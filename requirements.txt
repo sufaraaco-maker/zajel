@@ -1,0 +1,13 @@
+Django>=5.2,<5.3
+psycopg[binary]>=3.2
+Pillow>=11
+nh3>=0.2.17
+cryptography>=43
+pywebpush>=2.0
+requests>=2.32
+segno>=1.6
+hijridate>=2.5
+argon2-cffi>=23.1
+gunicorn>=22
+whitenoise>=6.7
+redis>=5

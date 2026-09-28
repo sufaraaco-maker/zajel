@@ -1,0 +1,48 @@
+{% extends "studio/base.html" %}
+{% block title %}{{ live.title }}{% endblock %}
+{% block content %}
+<div class="page-title">
+  <div><h1>{% if live.is_live %}<span class="pill breaking">مباشر</span> {% endif %}{{ live.title }}</h1><p><a href="{% url 'studio:live_list' %}">← التغطيات</a></p></div>
+  <a class="btn" href="{{ live.get_absolute_url }}" target="_blank" rel="noopener">{{ "eye"|icon:16 }} عرض على الموقع</a>
+</div>
+<div class="editor-layout">
+  <div>
+    <form method="post" class="panel">
+      {% csrf_token %}
+      <h2>تحديث جديد</h2>
+      {% include "studio/partials/field.html" with field=form.body %}
+      <div class="form-row"><span class="label">صورة (اختياري)</span>{% include "studio/partials/image_field.html" with field=form.image %}</div>
+      <div class="checks-inline">{% include "studio/partials/field.html" with field=form.is_important %}{% if "live.manage" in user_caps %}{% include "studio/partials/field.html" with field=form.is_pinned %}{% endif %}</div>
+      <button class="btn primary">{{ "send"|icon:16 }} انشر التحديث</button>
+    </form>
+    <section class="panel">
+      <h2>التحديثات المنشورة ({{ entries|length }})</h2>
+      <ul class="list">
+        {% for e in entries %}
+        <li style="align-items:flex-start">
+          <div class="grow"><div class="sub"><strong>{{ e.created_at|ar_time }}</strong> · {{ e.author|default:"" }}{% if e.is_pinned %} · مثبّت{% endif %}{% if e.is_important %} · مهم{% endif %}</div>{{ e.body|safe }}</div>
+          {% if "live.manage" in user_caps %}
+          <form method="post" action="{% url 'studio:live_entry_action' live.pk e.pk %}" class="btn-row">{% csrf_token %}
+            <button class="btn sm" name="action" value="pin">{% if e.is_pinned %}إلغاء التثبيت{% else %}تثبيت{% endif %}</button>
+            <button class="btn sm danger" name="action" value="delete" data-confirm="حذف التحديث؟">حذف</button>
+          </form>
+          {% endif %}
+        </li>
+        {% empty %}<li class="empty">لا تحديثات بعد.</li>{% endfor %}
+      </ul>
+    </section>
+  </div>
+  {% if settings_form %}
+  <aside class="editor-side">
+    <form method="post" action="{% url 'studio:live_update' live.pk %}" class="panel">
+      {% csrf_token %}
+      <h2>إعدادات التغطية</h2>
+      {% for field in settings_form %}{% if field.name == "cover" %}<div class="form-row"><span class="label">{{ field.label }}</span>{% include "studio/partials/image_field.html" %}</div>{% else %}{% include "studio/partials/field.html" %}{% endif %}{% endfor %}
+      <button class="btn">حفظ</button>
+      <p class="small muted">إلغاء «جارية الآن» ينهي التغطية ويوقف التحديث التلقائي عند القرّاء.</p>
+    </form>
+  </aside>
+  {% endif %}
+</div>
+{% endblock %}
+{% block modals %}{% include "studio/partials/media_modal.html" %}{% endblock %}

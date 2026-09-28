@@ -1,0 +1,20 @@
+{% extends "studio/base.html" %}
+{% block title %}صورة{% endblock %}
+{% block content %}
+<div class="page-title"><div><h1>بيانات الصورة</h1><p><a href="{% url 'studio:media' %}">← مكتبة الوسائط</a></p></div></div>
+<div class="cols cols-2">
+  <div class="panel">
+    <img src="{{ asset.large }}" alt="" style="width:100%;border-radius:6px">
+    <p class="small muted">{{ asset.width }}×{{ asset.height }} · {{ asset.size|filesizeformat }} · رُفعت {{ asset.created_at|ar_datetime }} بواسطة {{ asset.uploaded_by|default:"الاستيراد" }}</p>
+    {% if asset.removed_metadata %}
+    <div class="alert success">{{ "shield"|icon:18 }}<div><strong>نُزع من الملف الأصلي عند الرفع:</strong><ul style="margin:4px 0 0">{% for m in asset.removed_metadata %}<li>{{ m }}</li>{% endfor %}</ul><span class="small">لم تُحفظ هذه البيانات في أي مكان.</span></div></div>
+    {% else %}<p class="small muted">{{ "shield"|icon:14 }} لم يحمل الملف الأصلي بيانات مخفية.</p>{% endif %}
+  </div>
+  <form method="post" class="panel">
+    {% csrf_token %}
+    {% for field in form %}{% include "studio/partials/field.html" %}{% endfor %}
+    <button class="btn primary">حفظ</button>
+  </form>
+</div>
+{% if "media.manage" in user_caps %}<form method="post" action="{% url 'studio:media_delete' asset.pk %}" data-confirm="حذف الصورة من الخادم نهائياً؟ ستختفي من كل مادة تستخدمها.">{% csrf_token %}<button class="btn danger sm">حذف الصورة</button></form>{% endif %}
+{% endblock %}

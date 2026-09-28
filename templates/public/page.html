@@ -1,0 +1,22 @@
+{% extends "public/base.html" %}
+{% block title %}{{ page_obj.title }} | {{ site.name }}{% endblock %}
+{% block content %}
+<article style="max-width:820px;margin-inline:auto">
+  <header class="page-head"><h1>{{ page_obj.title }}</h1></header>
+  <div class="article-body">{{ page_obj.body|safe }}</div>
+  {% if page_obj.show_contact_form %}
+    {% if sent %}<div class="messages"><li class="success">وصلت رسالتك. شكراً لك.</li></div>{% else %}
+    <form method="post" class="section" style="display:grid;gap:12px">
+      {% csrf_token %}
+      <p class="meta">{{ "shield"|icon:16 }} الرسائل تُحفظ مشفّرة على خوادمنا ولا تُشارك مع أي جهة. لا تكتب هنا ما قد يعرّضك للخطر؛ استخدم قنوات التواصل المشفّرة لذلك.</p>
+      <label>الاسم<input class="field" name="name" required maxlength="120"></label>
+      <label>البريد (اختياري)<input class="field" name="email" type="email" dir="ltr"></label>
+      <label>الموضوع<input class="field" name="subject" maxlength="200"></label>
+      <label>الرسالة<textarea class="field" name="body" rows="6" required></textarea></label>
+      <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <button class="btn" type="submit">{{ "send"|icon:16 }} أرسل</button>
+    </form>
+    {% endif %}
+  {% endif %}
+</article>
+{% endblock %}

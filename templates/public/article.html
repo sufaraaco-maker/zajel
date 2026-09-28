@@ -1,0 +1,95 @@
+{% extends "public/base.html" %}
+{% block title %}{{ article.seo_title|default:article.title }} | {{ site.name }}{% endblock %}
+{% block description %}{{ article.seo_description|default:article.summary|striptags|truncatechars:300 }}{% endblock %}
+{% block canonical %}<link rel="canonical" href="{{ canonical }}">{% endblock %}
+{% block robots %}{% if preview or not article.allow_indexing %}<meta name="robots" content="noindex">{% endif %}{% endblock %}
+{% block og %}
+<meta property="og:type" content="article">
+<meta property="og:title" content="{{ article.title }}">
+<meta property="og:description" content="{{ article.subtitle|default:article.summary|truncatechars:280 }}">
+<meta property="og:url" content="{{ canonical }}">
+{% if article.featured_image %}<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ article.featured_image.social }}"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">{% elif site.default_share_image %}<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ site.default_share_image.social }}">{% endif %}
+<meta property="article:published_time" content="{{ article.published_at|isoformat }}">
+{% if article.content_updated_at %}<meta property="article:modified_time" content="{{ article.content_updated_at|isoformat }}">{% endif %}
+{% if article.category %}<meta property="article:section" content="{{ article.category.name }}">{% endif %}
+{% endblock %}
+{% block head %}<script type="application/ld+json">{{ json_ld|safe }}</script>{% endblock %}
+{% block content %}
+<div class="with-sidebar">
+  <article>
+    {% if preview %}<div class="preview-banner">معاينة داخلية — هذه المادة {{ article.get_status_display }} ولا يراها الجمهور.</div>{% endif %}
+    <nav class="breadcrumb" aria-label="مسار الصفحة"><a href="/">الرئيسية</a>›{% if article.category %}<a href="{{ article.category.get_absolute_url }}">{{ article.category.name }}</a>›{% endif %}<span>{{ article.get_kind_display }}</span></nav>
+    <header class="article-head">
+      {% if article.is_breaking %}<span class="kicker">عاجل</span>{% elif article.display_kicker %}<span class="kicker">{{ article.display_kicker }}</span>{% endif %}
+      <h1>{{ article.title }}</h1>
+      {% if article.subtitle %}<p class="subtitle">{{ article.subtitle }}</p>{% endif %}
+      <div class="byline">
+        <div class="who">
+          {% for au in article.authors.all %}
+          <a class="author-chip" href="{{ au.get_absolute_url }}">
+            {% if au.photo %}<img class="avatar sm" src="{{ au.photo.thumb }}" alt="">{% else %}<span class="avatar sm">{{ au.name|slice:":1" }}</span>{% endif %}
+            <span><strong>{{ au.name }}</strong>{% if au.title %}<span>{{ au.title }}</span>{% endif %}</span>
+          </a>
+          {% empty %}<span class="author-chip"><span class="avatar sm">{{ site.short_name|slice:":1" }}</span><strong>{{ site.name }}</strong></span>
+          {% endfor %}
+          <div class="when">
+            <time datetime="{{ article.published_at|isoformat }}">{{ article.published_at|ar_datetime }}</time>
+            {% if article.was_updated %}<span>آخر تحديث: {{ article.content_updated_at|ar_relative }}</span>{% endif %}
+          </div>
+        </div>
+        <div class="article-tools">
+          {% include "public/partials/share.html" %}
+          <div class="share">
+            <button type="button" data-font="up" aria-label="تكبير الخط" title="تكبير الخط">{{ "text-up"|icon:18 }}</button>
+            <button type="button" data-font="down" aria-label="تصغير الخط" title="تصغير الخط">{{ "text-down"|icon:18 }}</button>
+            <button type="button" data-print aria-label="طباعة" title="طباعة">{{ "print"|icon:18 }}</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    {% if article.kind == "video" and article.video_embed %}
+      <div class="embed-video"><iframe src="{{ article.video_embed }}" title="{{ article.title }}" loading="lazy" allow="encrypted-media; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin"></iframe></div>
+    {% elif article.featured_image and not article.hide_featured_image %}
+      <figure class="figure">
+        <img src="{{ article.featured_image.large }}" srcset="{{ article.featured_image.srcset }}" sizes="(max-width: 1100px) 100vw, 800px" alt="{{ article.featured_image.alt_text }}" width="{{ article.featured_image.width }}" height="{{ article.featured_image.height }}" fetchpriority="high">
+        {% if article.image_caption or article.featured_image.caption or article.featured_image.credit %}
+        <figcaption>{{ article.image_caption|default:article.featured_image.caption }}{% if article.featured_image.credit %} <span class="credit">({{ article.featured_image.credit }})</span>{% endif %}</figcaption>
+        {% endif %}
+      </figure>
+    {% endif %}
+
+    <div class="article-body">
+      {% with parts=body_html|body_split:3 %}
+        {{ parts.0 }}
+        {% if ad_inline %}{% include "public/partials/ad.html" with ad=ad_inline %}{% endif %}
+        {{ parts.1 }}
+      {% endwith %}
+    </div>
+
+    {% if gallery %}
+    <div class="gallery-grid">
+      {% for g in gallery %}<figure><img src="{{ g.media.large }}" alt="{{ g.media.alt_text }}" loading="lazy"><figcaption>{{ g.caption|default:g.media.caption }}{% if g.media.credit %} ({{ g.media.credit }}){% endif %}</figcaption></figure>{% endfor %}
+    </div>
+    {% endif %}
+
+    {% if article.source %}<p class="source-line">المصدر: {% if article.source_url %}<a href="{{ article.source_url }}" target="_blank" rel="noopener nofollow">{{ article.source }}</a>{% else %}{{ article.source }}{% endif %}</p>{% endif %}
+    {% if article.correction %}<div class="correction"><strong>تصحيح:</strong> {{ article.correction|linebreaksbr }}</div>{% endif %}
+
+    {% if article.tags.all %}<div class="tags">{% for t in article.tags.all %}<a href="{{ t.get_absolute_url }}">#{{ t.name }}</a>{% endfor %}</div>{% endif %}
+    <div class="byline" style="border-bottom:0">
+      <span class="meta">شارك الخبر:</span>
+      {% include "public/partials/share.html" %}
+    </div>
+    {% if ad_end %}{% include "public/partials/ad.html" with ad=ad_end %}{% endif %}
+
+    {% if related %}
+    <section class="section related">
+      <div class="section-head"><h2 class="section-title">اقرأ أيضاً</h2></div>
+      <div class="grid grid-2">{% for a in related %}{% include "public/partials/card.html" with a=a variant="row" %}{% endfor %}</div>
+    </section>
+    {% endif %}
+  </article>
+  {% include "public/partials/sidebar.html" %}
+</div>
+{% endblock %}

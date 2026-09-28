@@ -1,0 +1,46 @@
+{% extends "studio/base.html" %}
+{% block title %}التوزيع{% endblock %}
+{% block content %}
+<div class="page-title"><div><h1>التوزيع التلقائي</h1><p>عند نشر مادة تُرسل تلقائياً حسب خياراتها وإعدادات كل قناة. آخر 7 أيام أدناه.</p></div></div>
+<div class="cols cols-4" style="margin-bottom:18px">
+  <div class="kpi"><div class="label">مشتركو النشرة المؤكَّدون</div><div class="value">{{ subscribers.newsletter|ar_compact }}</div><div class="delta">بانتظار التأكيد: {{ subscribers.newsletter_pending }}</div></div>
+  <div class="kpi"><div class="label">مشتركو الإشعارات</div><div class="value">{{ subscribers.push|ar_compact }}</div></div>
+  <div class="kpi"><div class="label">مشتركو واتساب</div><div class="value">{{ subscribers.whatsapp|ar_compact }}</div><div class="delta"><a href="{% url 'studio:whatsapp_subscribers' %}">إدارة الأرقام</a></div></div>
+  <div class="kpi"><div class="label">نشرات أُرسلت</div><div class="value">{{ issues|length }}</div></div>
+</div>
+<div class="cols cols-2">
+  {% for c in configs %}
+  <section class="panel">
+    <h2>{% if c.channel == "telegram" %}{{ "telegram"|icon:18 }}{% elif c.channel == "whatsapp" %}{{ "whatsapp"|icon:18 }}{% elif c.channel == "push" %}{{ "bell"|icon:18 }}{% else %}{{ "mail"|icon:18 }}{% endif %} {{ c.get_channel_display }}
+      {% if c.enabled %}<span class="pill ok">مفعّلة</span>{% else %}<span class="pill">معطّلة</span>{% endif %}
+      {% with ok=secrets|get_item:c.channel %}{% if not ok %}<span class="pill warn" title="تُضبط في ملف البيئة على الخادم">بيانات الاعتماد ناقصة</span>{% endif %}{% endwith %}
+    </h2>
+    {% with s=stats|get_item:c.channel %}<p class="small muted">آخر 7 أيام: {{ s.sent|default:0 }} ناجحة · {{ s.failed|default:0 }} فاشلة</p>{% endwith %}
+    {% if c.channel == "telegram" and c.chat_ids %}<p class="small">القنوات: <bdi dir="ltr">{{ c.telegram_chat_ids }}</bdi></p>{% endif %}
+    <div class="btn-row">
+      {% if "distribution.manage" in user_caps %}<a class="btn sm" href="{% url 'studio:channel_edit' c.channel %}">الإعدادات</a>{% endif %}
+      {% if c.channel == "telegram" or c.channel == "newsletter" %}{% if "distribution.manage" in user_caps %}<form method="post" action="{% url 'studio:channel_test' c.channel %}">{% csrf_token %}<button class="btn sm">اختبار الاتصال</button></form>{% endif %}{% endif %}
+      {% if c.channel == "newsletter" and "distribution.manage" in user_caps %}
+        <a class="btn sm" href="{% url 'studio:newsletter_preview' %}" target="_blank">معاينة نشرة اليوم</a>
+        <form method="post" action="{% url 'studio:newsletter_send' %}" data-confirm="إرسال نشرة اليوم الآن لكل المشتركين؟">{% csrf_token %}<button class="btn sm">إرسال الآن</button></form>
+      {% endif %}
+    </div>
+  </section>
+  {% endfor %}
+</div>
+<section class="panel">
+  <h2>سجل الإرسال</h2>
+  <div class="table-wrap"><table class="data">
+    <thead><tr><th>الوقت</th><th>القناة</th><th>المادة</th><th>الوجهة</th><th>الحالة</th><th class="num">المستلمون</th><th>الخطأ</th></tr></thead>
+    <tbody>{% for d in deliveries %}<tr>
+      <td class="small">{{ d.created_at|ar_datetime }}</td><td>{{ d.get_channel_display }}</td>
+      <td>{% if d.article %}<a href="{% url 'studio:article_edit' d.article.pk %}">{{ d.article.title|truncatechars:50 }}</a>{% elif d.breaking %}عاجل: {{ d.breaking.text|truncatechars:50 }}{% endif %}</td>
+      <td class="small"><bdi>{{ d.target }}</bdi></td><td><span class="pill {{ d.status }}">{{ d.get_status_display }}</span></td>
+      <td class="num">{{ d.recipients }}{% if d.failures %} / {{ d.failures }} فشل{% endif %}</td><td class="small" style="color:var(--bad)">{{ d.error|truncatechars:90 }}</td>
+    </tr>{% empty %}<tr><td colspan="7" class="empty">لم يُرسل شيء بعد.</td></tr>{% endfor %}</tbody>
+  </table></div>
+</section>
+{% if issues %}
+<section class="panel"><h2>النشرات اليومية</h2><ul class="list">{% for i in issues %}<li><span class="grow">{{ i.subject }}<div class="sub">{{ i.article_ids|length }} مادة</div></span>{% if i.sent_at %}<span class="pill ok">{{ i.sent_count }} مرسلة</span>{% if i.failed_count %}<span class="pill fail">{{ i.failed_count }} فشل</span>{% endif %}{% else %}<span class="pill">لم تُرسل</span>{% endif %}</li>{% endfor %}</ul></section>
+{% endif %}
+{% endblock %}

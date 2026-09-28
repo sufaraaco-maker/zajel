@@ -1,0 +1,41 @@
+{% extends "studio/base.html" %}
+{% block title %}الصفحة الرئيسية{% endblock %}
+{% block content %}
+<div class="page-title">
+  <div><h1>بنّاء الصفحة الرئيسية</h1><p>رتّب الكتل من الأعلى إلى الأسفل كما تظهر للقرّاء. التغييرات تظهر فوراً.</p></div>
+  <a class="btn" href="/" target="_blank" rel="noopener">{{ "eye"|icon:16 }} معاينة الرئيسية</a>
+</div>
+<div class="editor-layout">
+  <ul class="block-list">
+    {% for b in blocks %}
+    <li class="block-item{% if not b.is_active %} off{% endif %}">
+      <div class="grow">
+        <strong>{{ b.title|default:b.get_kind_display }}</strong>
+        <div class="kind">{{ b.get_kind_display }}{% if b.category %} · {{ b.category }}{% endif %}{% if b.dossier %} · {{ b.dossier }}{% endif %}{% if b.article_kind %} · {{ b.article_kind }}{% endif %} · {{ b.get_layout_display }} · {{ b.count }} مواد{% if b.dark %} · خلفية داكنة{% endif %}</div>
+      </div>
+      <form method="post" action="{% url 'studio:homepage_action' b.pk %}" class="btn-row">{% csrf_token %}
+        <button class="btn sm" name="action" value="up" title="للأعلى" {% if forloop.first %}disabled{% endif %}>↑</button>
+        <button class="btn sm" name="action" value="down" title="للأسفل" {% if forloop.last %}disabled{% endif %}>↓</button>
+        <button class="btn sm" name="action" value="toggle">{% if b.is_active %}إخفاء{% else %}إظهار{% endif %}</button>
+        <a class="btn sm" href="{% url 'studio:homepage_edit' b.pk %}">تعديل</a>
+        <button class="btn sm danger" name="action" value="delete" data-confirm="حذف الكتلة؟">حذف</button>
+      </form>
+    </li>
+    {% empty %}<li class="panel empty">لا كتل بعد. أضف «الواجهة» أولاً ثم الأقسام.</li>{% endfor %}
+  </ul>
+  <aside class="editor-side">
+    <section class="panel">
+      <h2>{{ "plus"|icon:18 }} أضف كتلة</h2>
+      <div class="kind-picker" style="grid-template-columns:1fr">
+        {% for v, l in kinds %}<a href="{% url 'studio:homepage_new' %}?kind={{ v }}">{{ l }}</a>{% endfor %}
+      </div>
+    </section>
+    <section class="panel small muted">
+      <h2>نصائح</h2>
+      <p>«الواجهة» تأخذ المواد المعلَّمة «في الواجهة» حسب الأولوية، وتكمل بالأحدث.</p>
+      <p>كتل الأقسام لا تكرر مواد ظهرت في كتل فوقها.</p>
+      <p>«أعمدة أقسام متجاورة» تضع 2-4 أقسام جنباً إلى جنب.</p>
+    </section>
+  </aside>
+</div>
+{% endblock %}

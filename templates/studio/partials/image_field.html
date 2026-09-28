@@ -1,0 +1,5 @@
+{# حقل صورة: معرّف مخفي مع معاينة وزر اختيار من المكتبة #}
+<div class="featured-box" data-image-field="{{ field.auto_id }}" data-initial="{{ field.value|default:'' }}" tabindex="0" role="button" aria-label="اختر صورة">
+  <span class="placeholder-text">{{ "image"|icon:28 }}<br>اختر صورة أو ارفع جديدة</span>
+</div>
+{{ field }}

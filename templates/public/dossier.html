@@ -1,0 +1,15 @@
+{% extends "public/base.html" %}
+{% block title %}{{ dossier.title }} | {{ site.name }}{% endblock %}
+{% block content %}
+<div class="dossier-banner section"{% if dossier.color %} style="--dossier: {{ dossier.color }}"{% endif %}>
+  {% if dossier.cover %}<img src="{{ dossier.cover.large }}" alt="">{% endif %}
+  <div class="info"><span class="kicker">ملف خاص</span><h1 style="font-family:var(--font-head);margin:6px 0">{{ dossier.title }}</h1><p>{{ dossier.description|linebreaksbr }}</p></div>
+</div>
+<div class="with-sidebar">
+  <div>
+    <div class="list-feed">{% for a in page.object_list %}{% include "public/partials/card.html" with a=a variant="row" excerpt=True show_category=True %}{% empty %}<p class="empty">لا مواد في هذا الملف بعد.</p>{% endfor %}</div>
+    {% include "public/partials/pagination.html" %}
+  </div>
+  {% include "public/partials/sidebar.html" %}
+</div>
+{% endblock %}

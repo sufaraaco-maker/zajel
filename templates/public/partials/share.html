@@ -1,0 +1,7 @@
+<div class="share" aria-label="مشاركة">
+  <a href="https://wa.me/?text={{ article.title|urlencode }}%20{{ share_url|urlencode }}" target="_blank" rel="noopener" aria-label="مشاركة عبر واتساب" title="واتساب">{{ "whatsapp"|icon:18 }}</a>
+  <a href="https://t.me/share/url?url={{ share_url|urlencode }}&text={{ article.title|urlencode }}" target="_blank" rel="noopener" aria-label="مشاركة عبر تيليجرام" title="تيليجرام">{{ "telegram"|icon:18 }}</a>
+  <a href="https://x.com/intent/post?url={{ share_url|urlencode }}&text={{ article.title|urlencode }}" target="_blank" rel="noopener" aria-label="مشاركة على إكس" title="إكس">{{ "x"|icon:16 }}</a>
+  <a href="https://www.facebook.com/sharer/sharer.php?u={{ share_url|urlencode }}" target="_blank" rel="noopener" aria-label="مشاركة على فيسبوك" title="فيسبوك">{{ "facebook"|icon:18 }}</a>
+  <button type="button" data-copy="{{ share_url }}" aria-label="نسخ الرابط المختصر" title="نسخ الرابط: {{ share_url }}">{{ "link"|icon:18 }}</button>
+</div>

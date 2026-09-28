@@ -1,0 +1,29 @@
+{% extends "studio/base.html" %}
+{% block title %}{% if obj %}تعديل {{ crud.singular }}{% else %}إضافة {{ crud.singular }}{% endif %}{% endblock %}
+{% block content %}
+<div class="page-title">
+  <div><h1>{% if obj %}{{ obj }}{% else %}{{ crud.singular }} جديد{% endif %}</h1><p><a href="{{ list_url }}">← {{ crud.title }}</a></p></div>
+</div>
+<form method="post" enctype="multipart/form-data" class="panel" style="max-width:820px" data-media-form>
+  {% csrf_token %}
+  {% if form.non_field_errors %}<div class="alert error">{{ form.non_field_errors }}</div>{% endif %}
+  {% for field in form %}
+    {% if field.name == "photo" or field.name == "cover" or field.name == "image" %}
+      <div class="form-row"><span class="label">{{ field.label }}</span>
+        {% include "studio/partials/image_field.html" with field=field %}
+      </div>
+    {% else %}{% include "studio/partials/field.html" %}{% endif %}
+  {% endfor %}
+  <div class="btn-row">
+    <button class="btn primary" type="submit">حفظ</button>
+    {% if not obj %}<button class="btn" type="submit" name="save_add" value="1">حفظ وإضافة آخر</button>{% endif %}
+    <a class="btn" href="{{ list_url }}">إلغاء</a>
+  </div>
+</form>
+{% if obj and crud.deletable %}
+<form method="post" action="{% url 'studio:'|add:crud.name|add:'_delete' obj.pk %}" data-confirm="حذف {{ crud.singular }} نهائياً؟">
+  {% csrf_token %}<button class="btn danger sm" type="submit">حذف {{ crud.singular }}</button>
+</form>
+{% endif %}
+{% endblock %}
+{% block modals %}{% include "studio/partials/media_modal.html" %}{% endblock %}

@@ -1,0 +1,13 @@
+{% extends "accounts/base.html" %}
+{% block title %}التحقق الثنائي مفعّل{% endblock %}
+{% block content %}
+<h1>{{ "shield"|icon:22 }} التحقق الثنائي مفعّل</h1>
+{% if codes %}
+<div class="alert warning">احفظ رموز الاسترداد هذه الآن في مكان آمن (مدير كلمات مرور أو ورقة في مكان مغلق). لن تظهر مرة أخرى. كل رمز يعمل مرة واحدة إن فقدت هاتفك.</div>
+<div class="codes">{% for c in codes %}<span>{{ c }}</span>{% endfor %}</div>
+{% else %}
+<p class="lead">حسابك محمي بالتحقق الثنائي.</p>
+<p class="small"><a href="?reset=1">نقل التحقق إلى هاتف جديد</a> (سيبطل الجهاز الحالي ورموز الاسترداد القديمة بعد التأكيد).</p>
+{% endif %}
+<a class="btn primary block" style="margin-top:16px" href="{% url 'studio:home' %}">إلى غرفة التحرير</a>
+{% endblock %}

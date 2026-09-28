@@ -1,0 +1,33 @@
+{% extends "studio/base.html" %}
+{% block title %}العاجل{% endblock %}
+{% block content %}
+<div class="page-title"><div><h1>{{ "bolt"|icon:22 }} الأخبار العاجلة</h1><p>يظهر العاجل فوراً في شريط الموقع، ويُرسل إلى القنوات المختارة خلال ثوانٍ.</p></div></div>
+<div class="cols cols-2">
+  <form method="post" class="panel">
+    {% csrf_token %}
+    <h2>عاجل جديد</h2>
+    {% include "studio/partials/field.html" with field=form.text %}
+    <div class="form-row rel"><label>ربطه بمادة منشورة (اختياري)</label>{{ form.article }}<input type="search" data-breaking-article placeholder="ابحث عن المادة…"></div>
+    {% include "studio/partials/field.html" with field=form.link %}
+    {% include "studio/partials/field.html" with field=form.expires_at %}
+    <div class="checks-inline">
+      {% include "studio/partials/field.html" with field=form.send_telegram %}
+      {% include "studio/partials/field.html" with field=form.send_push %}
+      {% include "studio/partials/field.html" with field=form.send_whatsapp %}
+    </div>
+    <button class="btn primary" type="submit">{{ "bolt"|icon:16 }} انشر العاجل</button>
+  </form>
+  <section class="panel">
+    <h2>السجل</h2>
+    <ul class="list">
+      {% for b in page %}
+      <li>
+        <div class="grow">{% if b.is_active %}<span class="pill breaking">ظاهر</span>{% else %}<span class="pill">مخفي</span>{% endif %} {{ b.text }}<div class="sub">{{ b.created_by|default:"" }} · {{ b.created_at|ar_datetime }}{% if b.article %} · مرتبط بـ «{{ b.article.title|truncatechars:40 }}»{% endif %}</div></div>
+        <form method="post" action="{% url 'studio:breaking_toggle' b.pk %}">{% csrf_token %}<button class="btn sm">{% if b.is_active %}إخفاء{% else %}إظهار{% endif %}</button></form>
+      </li>
+      {% empty %}<li class="empty">لا أخبار عاجلة بعد.</li>{% endfor %}
+    </ul>
+    {% include "studio/partials/pagination.html" %}
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,17 @@
+[project]
+name = "arcms"
+version = "1.0.0"
+description = "منصة نشر إخبارية عربية تعمل على خوادم المؤسسة وتملك بياناتها"
+requires-python = ">=3.11"
+
+[tool.ruff]
+line-length = 130
+target-version = "py311"
+extend-exclude = ["*/migrations/*", ".venv"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "B", "I"]
+ignore = ["E501", "B904", "B905", "E731", "RUF001", "RUF002", "RUF003"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["arcms", "config"]

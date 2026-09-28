@@ -1,0 +1,7 @@
+<form class="newsletter-form" method="post" action="{% url 'public:newsletter_subscribe' %}">
+  {% csrf_token %}
+  <label class="sr-only" for="nl-{{ nl_id|default:'f' }}">البريد الإلكتروني</label>
+  <input id="nl-{{ nl_id|default:'f' }}" type="email" name="email" required placeholder="بريدك الإلكتروني" dir="ltr">
+  <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+  <button class="btn" type="submit">اشترك</button>
+</form>

@@ -1,0 +1,4 @@
+<section class="section{% if b.block.dark %} dark{% endif %}">
+  {% include "public/blocks/_head.html" %}
+  <ol class="most-read grid-mode">{% for a in b.items %}<li><a href="{{ a.get_absolute_url }}">{{ a.title }}</a></li>{% endfor %}</ol>
+</section>

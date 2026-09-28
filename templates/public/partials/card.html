@@ -1,0 +1,20 @@
+{# بطاقة مادة. المتغيرات: a، variant (row|big)، excerpt، no_image #}
+<article class="card{% if variant == 'row' %} row{% elif variant == 'big' %} big{% endif %}">
+  {% if not no_image %}
+  <a href="{{ a.get_absolute_url }}" tabindex="-1" aria-hidden="true">
+    <div class="thumb{% if not a.featured_image %} placeholder{% endif %}">
+      {% if a.featured_image %}<img src="{% if variant == 'big' %}{{ a.featured_image.large }}{% else %}{{ a.featured_image.card }}{% endif %}" alt="{{ a.featured_image.alt_text }}" loading="lazy" width="800" height="450">{% else %}{{ "pigeon"|icon:36 }}{% endif %}
+      {% if a.kind == "video" %}<span class="badge">{{ "play"|icon:20 }}</span>{% elif a.kind == "gallery" %}<span class="badge">{{ "camera"|icon:18 }}</span>{% elif a.kind == "infographic" %}<span class="badge">{{ "chart"|icon:18 }}</span>{% endif %}
+    </div>
+  </a>
+  {% endif %}
+  <div>
+    {% if a.is_breaking %}<span class="kicker breaking-tag">عاجل</span>{% elif a.display_kicker %}<span class="kicker{% if variant == 'row' %} outline{% endif %}">{{ a.display_kicker }}</span>{% endif %}
+    <h3><a href="{{ a.get_absolute_url }}">{{ a.title }}</a></h3>
+    {% if excerpt %}<p>{{ a.summary }}</p>{% endif %}
+    <div class="meta">
+      {% if show_category and a.category %}<a class="cat" href="{{ a.category.get_absolute_url }}">{{ a.category.name }}</a>{% endif %}
+      <time datetime="{{ a.published_at|isoformat }}">{{ a.published_at|ar_relative }}</time>
+    </div>
+  </div>
+</article>

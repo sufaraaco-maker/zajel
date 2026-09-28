@@ -1,0 +1,29 @@
+{% extends "studio/base.html" %}
+{% block title %}مستخدم{% endblock %}
+{% block content %}
+<div class="page-title"><div><h1>{% if obj %}{{ obj }}{% else %}مستخدم جديد{% endif %}</h1><p><a href="{% url 'studio:users' %}">← المستخدمون</a></p></div></div>
+<div class="cols cols-2">
+  <form method="post" class="panel">
+    {% csrf_token %}
+    {% for field in form %}{% include "studio/partials/field.html" %}{% endfor %}
+    <div class="form-row"><span class="label">الأقسام المسندة</span>
+      <div class="checks-inline">{% for c in categories %}<label class="check"><input type="checkbox" name="desks" value="{{ c.pk }}"{% if c.pk in user_desks %} checked{% endif %}> {{ c.name }}</label>{% endfor %}</div>
+      <div class="help">للمراسل والمحرر ورئيس القسم: يعمل فقط على مواد هذه الأقسام. اتركها فارغة للعمل على كل الأقسام.</div>
+    </div>
+    <button class="btn primary">حفظ</button>
+  </form>
+  {% if obj %}
+  <section class="panel">
+    <h2>{{ "shield"|icon:18 }} الأمان</h2>
+    <ul class="list">
+      <li><span class="grow">التحقق الثنائي</span>{% if obj.has_2fa %}<span class="pill ok">مفعّل منذ {{ obj.totp_confirmed_at|ar_date_short }}</span>{% else %}<span class="pill warn">غير مفعّل</span>{% endif %}</li>
+      <li><span class="grow">رموز الاسترداد المتبقية</span><strong>{{ obj.recovery_codes|length }}</strong></li>
+      <li><span class="grow">آخر دخول</span>{{ obj.last_login|ar_datetime|default:"—" }}</li>
+    </ul>
+    {% if obj.has_2fa %}
+    <form method="post" action="{% url 'studio:user_reset_2fa' obj.pk %}" data-confirm="إلغاء جهاز التحقق لهذا المستخدم؟ استخدمه فقط إن فقد هاتفه وتحققت من هويته شخصياً.">{% csrf_token %}<button class="btn danger sm">إعادة ضبط التحقق الثنائي (فقدان الهاتف)</button></form>
+    {% endif %}
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

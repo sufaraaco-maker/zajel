@@ -1,0 +1,6 @@
+<section class="section">
+  <div class="newsletter-box">
+    <div><h2>{{ b.title|default:"النشرة اليومية" }}</h2><p>أهم ما نشرناه خلال 24 ساعة، في بريدك كل صباح. بلا إعلانات ولا تتبّع.</p></div>
+    {% include "public/partials/newsletter_form.html" with nl_id="home" %}
+  </div>
+</section>

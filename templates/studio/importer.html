@@ -1,0 +1,29 @@
+{% extends "studio/base.html" %}
+{% block title %}استيراد الأرشيف{% endblock %}
+{% block content %}
+<div class="page-title"><div><h1>استيراد الأرشيف</h1><p>انقل أرشيفك من ووردبريس أو أي نظام آخر، مع تحويل الروابط القديمة تلقائياً.</p></div></div>
+<div class="cols cols-2">
+  <form method="post" enctype="multipart/form-data" class="panel">
+    {% csrf_token %}
+    <h2>{{ "upload"|icon:18 }} رفع ملف</h2>
+    <div class="form-row"><input type="file" name="file" accept=".xml,.jsonl,.json" required></div>
+    <label class="check"><input type="checkbox" name="download_media" value="1" checked> تنزيل الصور إلى الخادم (مع نزع بياناتها المخفية)</label>
+    <label class="check"><input type="checkbox" name="dry_run" value="1"> تجربة دون حفظ (عدّ فقط)</label>
+    <button class="btn primary" style="margin-top:8px">ابدأ الاستيراد</button>
+    <p class="small muted">للأرشيف الكبير (أكثر من 50 ميغابايت) استخدم سطر الأوامر على الخادم: <code dir="ltr">python manage.py arcms_import wxr export.xml --download-media</code></p>
+  </form>
+  <section class="panel small">
+    <h2>الصيغ المدعومة</h2>
+    <p><strong>ووردبريس (WXR):</strong> من لوحة ووردبريس: أدوات ← تصدير ← كل المحتوى. تُنقل المقالات والأقسام والوسوم والكتّاب والصور البارزة، وتُحوَّل روابط المقالات القديمة وروابط <code dir="ltr">?p=123</code> بتحويل دائم 301.</p>
+    <p><strong>JSON Lines:</strong> سطر لكل مادة بالحقول: <code dir="ltr">id, title, body, excerpt, subtitle, published_at, status, kind, category, tags, author, image_url, image_caption, url, source</code>.</p>
+    <p>إعادة الاستيراد آمنة: المادة الموجودة تُحدَّث ولا تتكرر، ولا يُعاد توزيع الأرشيف على القنوات.</p>
+    <p>روابط محوَّلة حالياً: <strong>{{ redirects }}</strong></p>
+  </section>
+</div>
+<section class="panel">
+  <h2>عمليات الاستيراد</h2>
+  <div class="table-wrap"><table class="data"><thead><tr><th>الملف</th><th>المصدر</th><th>بدأ</th><th>انتهى</th><th class="num">جديدة</th><th class="num">محدَّثة</th><th class="num">متجاوَزة</th><th>أخطاء</th></tr></thead>
+  <tbody>{% for r in runs %}<tr><td dir="ltr" style="text-align:right">{{ r.filename }}{% if r.dry_run %} (تجربة){% endif %}</td><td>{{ r.source }}</td><td class="small">{{ r.started_at|ar_datetime }}</td><td class="small">{{ r.finished_at|ar_datetime|default:"جارٍ…" }}</td><td class="num">{{ r.created }}</td><td class="num">{{ r.updated }}</td><td class="num">{{ r.skipped }}</td>
+  <td class="small">{% if r.errors %}<details><summary>{{ r.errors|length }}</summary><ul>{% for e in r.errors|slice:":20" %}<li>{{ e }}</li>{% endfor %}</ul></details>{% else %}—{% endif %}</td></tr>{% empty %}<tr><td colspan="8" class="empty">لا عمليات بعد.</td></tr>{% endfor %}</tbody></table></div>
+</section>
+{% endblock %}

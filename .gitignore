@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+*.pyc
+*.sqlite3
+/var/
+/media/
+/staticfiles/
+/backups/
+.env
+.env.*
+!.env.example
+*.arcbak
+*.key
+node_modules/
+.coverage
+htmlcov/

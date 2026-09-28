@@ -1,0 +1,25 @@
+<section class="section">
+  <div class="hero{% if b.block.layout == 'grid' %} no-latest{% endif %}">
+    {% with a=b.lead %}{% if a %}
+    <a class="hero-lead" href="{{ a.get_absolute_url }}">
+      {% if a.featured_image %}<img src="{{ a.featured_image.large }}" srcset="{{ a.featured_image.srcset }}" sizes="(max-width: 760px) 100vw, 60vw" alt="{{ a.featured_image.alt_text }}" fetchpriority="high">{% endif %}
+      <div class="caption">
+        {% if a.is_breaking %}<span class="kicker">عاجل</span>{% elif a.display_kicker %}<span class="kicker">{{ a.display_kicker }}</span>{% endif %}
+        <h2>{{ a.title }}</h2>
+        {% if a.subtitle %}<p>{{ a.subtitle }}</p>{% endif %}
+        <div class="meta">{% if a.category %}<span>{{ a.category.name }}</span>{% endif %}<time datetime="{{ a.published_at|isoformat }}">{{ a.published_at|ar_relative }}</time></div>
+      </div>
+    </a>
+    {% endif %}{% endwith %}
+    <div class="hero-side">
+      {% for a in b.items|slice:":4" %}{% if forloop.first %}{% include "public/partials/card.html" with a=a %}{% else %}{% include "public/partials/card.html" with a=a variant="row" %}{% endif %}{% endfor %}
+    </div>
+    {% if b.block.layout != 'grid' %}
+    <aside class="timeline" aria-label="آخر الأخبار">
+      <h2><span class="dot"></span>آخر الأخبار</h2>
+      <ol>{% for a in b.latest_timeline %}<li><time datetime="{{ a.published_at|isoformat }}">{{ a.published_at|ar_time }}</time><a href="{{ a.get_absolute_url }}">{{ a.title }}</a></li>{% endfor %}</ol>
+      <a class="more" href="{% url 'public:latest' %}">كل الأخبار</a>
+    </aside>
+    {% endif %}
+  </div>
+</section>

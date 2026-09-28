@@ -1,0 +1,30 @@
+{% extends "studio/base.html" %}
+{% block title %}سجل التدقيق{% endblock %}
+{% block content %}
+<div class="page-title"><div><h1>سجل التدقيق</h1><p>كل تغيير ودخول ونشر وتوزيع، بقيود متسلسلة بالتجزئة لا تُعدَّل ولا تُحذف.</p></div></div>
+{% if chain_ok %}<div class="chain ok">{{ "shield"|icon:20 }} <div><strong>السلسلة سليمة.</strong> فُحص {{ chain_count }} قيداً؛ لم يُعدَّل أو يُحذف أي قيد منذ البداية.</div></div>
+{% else %}<div class="chain bad">{{ "alert"|icon:20 }} <div><strong>السلسلة مكسورة عند القيد #{{ broken.pk }}.</strong> يعني هذا تعديلاً مباشراً في قاعدة البيانات خارج التطبيق. احفظ نسخة من القاعدة الآن وحقّق.</div></div>{% endif %}
+<form class="filters" method="get" style="margin-top:14px">
+  <select name="action"><option value="">كل الأحداث</option>{% for v, l in actions %}<option value="{{ v }}"{% if f.action == v %} selected{% endif %}>{{ l }}</option>{% endfor %}</select>
+  <select name="actor"><option value="">كل المستخدمين</option>{% for u in actors %}<option value="{{ u.pk }}"{% if f.actor == u.pk|stringformat:"s" %} selected{% endif %}>{{ u }}</option>{% endfor %}</select>
+  <input type="search" name="q" value="{{ f.q }}" placeholder="بحث في الوصف أو رقم العنصر">
+  <button class="btn">تصفية</button>
+</form>
+<div class="table-wrap"><table class="data">
+  <thead><tr><th>#</th><th>الوقت</th><th>الفاعل</th><th>الحدث</th><th>العنصر</th><th>التفاصيل</th><th>العنوان</th></tr></thead>
+  <tbody>
+  {% for e in page %}
+  <tr>
+    <td class="small muted">{{ e.pk }}</td>
+    <td class="small">{{ e.created_at|ar_datetime }}</td>
+    <td>{{ e.actor_label }}</td>
+    <td><span class="pill {% if e.action == 'login_failed' or e.action == 'delete' or e.action == 'security' %}fail{% elif e.action == 'publish' %}ok{% endif %}">{{ e.get_action_display }}</span></td>
+    <td class="small">{{ e.object_type }}{% if e.object_id %} #{{ e.object_id }}{% endif %}<div>{{ e.object_repr|truncatechars:60 }}</div></td>
+    <td class="small">{{ e.message }}{% if e.changes %}<details><summary>الحقول ({{ e.changes|length }})</summary><ul style="margin:0;padding-inline-start:16px">{% for k, v in e.changes.items %}<li><strong>{{ k }}</strong>: {{ v|stringformat:"s"|truncatechars:160 }}</li>{% endfor %}</ul></details>{% endif %}</td>
+    <td class="small" dir="ltr">{{ e.ip|default:"" }}</td>
+  </tr>
+  {% empty %}<tr><td colspan="7" class="empty">لا قيود.</td></tr>{% endfor %}
+  </tbody>
+</table></div>
+{% include "studio/partials/pagination.html" %}
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends "studio/base.html" %}
+{% block title %}البداية{% endblock %}
+{% block content %}
+<div class="page-title">
+  <div><h1>{{ greeting }}، {{ user }}</h1><p>{{ now|ar_date }}{% if site.show_hijri %} · {{ now|ar_hijri }}{% endif %}</p></div>
+  <div class="btn-row">
+    {% if "article.create" in user_caps %}<a class="btn primary" href="{% url 'studio:article_new' %}">{{ "plus"|icon:16 }} خبر جديد</a>{% endif %}
+    {% if "breaking.manage" in user_caps %}<a class="btn dark" href="{% url 'studio:breaking' %}">{{ "bolt"|icon:16 }} عاجل</a>{% endif %}
+  </div>
+</div>
+
+{% if not worker_ok %}<div class="alert warning">{{ "alert"|icon:18 }} <div><strong>العامل الخلفي متوقف.</strong> النشر المجدول والتوزيع على القنوات والنشرة لن تعمل حتى يُشغَّل <code>manage.py arcms_worker</code>.</div></div>{% endif %}
+{% if failed_jobs %}<div class="alert error">{{ "alert"|icon:18 }} {{ failed_jobs }} عملية توزيع أو مهمة خلفية فشلت خلال يومين. <a href="{% url 'studio:distribution' %}">اعرض التفاصيل</a></div>{% endif %}
+{% if nav_counts.returned %}<div class="alert warning">{{ "pen"|icon:18 }} أُعيدت إليك {{ nav_counts.returned }} مادة للتعديل.</div>{% endif %}
+
+{% if today %}
+<div class="cols cols-4" style="margin-bottom:18px">
+  <div class="kpi"><div class="label">المتصفحون الآن</div><div class="value">{{ realtime.active|ar_compact }}</div><div class="delta">آخر 5 دقائق</div></div>
+  <div class="kpi"><div class="label">مشاهدات اليوم</div><div class="value">{{ today.views|ar_compact }}</div><div class="delta">الأمس حتى هذه الساعة: {{ today.views_yesterday_same_time|ar_compact }}</div></div>
+  <div class="kpi"><div class="label">زوار اليوم</div><div class="value">{{ today.visitors|ar_compact }}</div><div class="delta">بصمات يومية مجهولة</div></div>
+  <div class="kpi"><div class="label">عاجل آخر 12 ساعة</div><div class="value">{{ breaking|length }}</div><div class="delta"><a href="{% url 'studio:analytics' %}">لوحة الجمهور ←</a></div></div>
+</div>
+{% endif %}
+
+<div class="cols cols-2">
+  {% if review_queue is not None %}
+  <section class="panel">
+    <h2>{{ "check"|icon:18 }} بانتظار مراجعتك <span class="pill in_review">{{ review_count }}</span><a class="more" href="{% url 'studio:articles' %}?status=in_review">الكل</a></h2>
+    <ul class="list">
+      {% for a in review_queue %}<li><div class="grow"><a href="{% url 'studio:article_edit' a.pk %}"><strong>{{ a.title }}</strong></a><div class="sub">{{ a.created_by }} · {{ a.category|default:"بلا قسم" }} · أُرسلت {{ a.submitted_at|ar_relative }}</div></div></li>
+      {% empty %}<li class="empty">لا شيء بانتظار المراجعة.</li>{% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+  <section class="panel">
+    <h2>{{ "pen"|icon:18 }} مسوداتي<a class="more" href="{% url 'studio:articles' %}?mine=1">الكل</a></h2>
+    <ul class="list">
+      {% for a in my_drafts %}<li><span class="pill {{ a.status }}">{{ a.get_status_display }}</span><div class="grow"><a href="{% url 'studio:article_edit' a.pk %}">{{ a.title }}</a><div class="sub">آخر حفظ {{ a.updated_at|ar_relative }}</div></div></li>
+      {% empty %}<li class="empty">لا مسودات. <a href="{% url 'studio:article_new' %}">ابدأ مادة جديدة</a></li>{% endfor %}
+    </ul>
+  </section>
+  {% if approved is not None %}
+  <section class="panel">
+    <h2>{{ "send"|icon:18 }} جاهزة للنشر</h2>
+    <ul class="list">
+      {% for a in approved %}<li><div class="grow"><a href="{% url 'studio:article_edit' a.pk %}">{{ a.title }}</a><div class="sub">{{ a.category|default:"" }}</div></div></li>{% empty %}<li class="empty">لا مواد معتمدة تنتظر النشر.</li>{% endfor %}
+    </ul>
+    {% if scheduled %}<h2 style="margin-top:14px">{{ "clock"|icon:18 }} مجدولة</h2>
+    <ul class="list">{% for a in scheduled %}<li><div class="grow"><a href="{% url 'studio:article_edit' a.pk %}">{{ a.title }}</a><div class="sub">{{ a.scheduled_at|ar_datetime }}</div></div></li>{% endfor %}</ul>{% endif %}
+  </section>
+  {% endif %}
+  <section class="panel">
+    <h2>{{ "eye"|icon:18 }} نُشر مؤخراً</h2>
+    <ul class="list">
+      {% for a in recent_published %}<li><div class="grow"><a href="{% url 'studio:article_edit' a.pk %}">{{ a.title }}</a><div class="sub">{{ a.published_at|ar_relative }} · {{ a.published_by|default:"" }} · {{ a.view_count|ar_compact }} مشاهدة</div></div><a class="btn sm" href="{{ a.get_absolute_url }}" target="_blank" rel="noopener">{{ "eye"|icon:14 }}</a></li>
+      {% empty %}<li class="empty">لم يُنشر شيء بعد.</li>{% endfor %}
+    </ul>
+  </section>
+  {% if live_now %}
+  <section class="panel">
+    <h2>{{ "live"|icon:18 }} تغطيات جارية</h2>
+    <ul class="list">{% for l in live_now %}<li><span class="pill breaking">مباشر</span><div class="grow"><a href="{% url 'studio:live_detail' l.pk %}">{{ l.title }}</a></div></li>{% endfor %}</ul>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

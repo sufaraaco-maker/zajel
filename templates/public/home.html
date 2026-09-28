@@ -1,0 +1,8 @@
+{% extends "public/base.html" %}
+{% block canonical %}<link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}/">{% endblock %}
+{% block content %}
+<h1 class="sr-only">{{ site.name }}</h1>
+{% for b in blocks %}{% include b.template with b=b %}{% empty %}
+<div class="empty">لم تُضف كتل للصفحة الرئيسية بعد. أضفها من «غرفة التحرير ← الصفحة الرئيسية».</div>
+{% endfor %}
+{% endblock %}

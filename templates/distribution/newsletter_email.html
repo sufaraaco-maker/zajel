@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>{{ site.name }}</title></head>
+<body style="margin:0;padding:0;background:#f2f2f0;font-family:Tahoma,'Segoe UI',Arial,sans-serif;direction:rtl;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f2f2f0;">
+<tr><td align="center" style="padding:20px 10px;">
+  <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:6px;overflow:hidden;">
+    <tr><td style="background:{{ site.primary_color }};padding:18px 22px;color:#fff;text-align:right;">
+      <div style="font-size:24px;font-weight:bold;">{{ site.name }}</div>
+      <div style="font-size:14px;opacity:.9;">النشرة اليومية · {{ day_label }}</div>
+    </td></tr>
+    {% for a in articles %}
+    <tr><td style="padding:18px 22px;border-bottom:1px solid #eee;text-align:right;">
+      {% if forloop.first and a.featured_image %}<a href="{{ home_url }}s/{{ a.pk }}?utm_source=newsletter"><img src="{{ home_url }}{{ a.featured_image.card|slice:'1:' }}" width="556" alt="" style="width:100%;max-width:556px;height:auto;border-radius:4px;display:block;margin-bottom:10px;"></a>{% endif %}
+      {% if a.category %}<div style="color:{{ site.primary_color }};font-size:12px;font-weight:bold;">{{ a.category.name }}</div>{% endif %}
+      <a href="{{ home_url }}s/{{ a.pk }}?utm_source=newsletter" style="color:#16181b;text-decoration:none;font-size:{% if forloop.first %}21{% else %}17{% endif %}px;font-weight:bold;line-height:1.6;">{{ a.title }}</a>
+      {% if forloop.first or a.subtitle %}<p style="color:#555;font-size:14px;line-height:1.8;margin:6px 0 0;">{{ a.subtitle|default:a.summary|truncatewords:40 }}</p>{% endif %}
+    </td></tr>
+    {% endfor %}
+    <tr><td style="padding:18px 22px;color:#777;font-size:12px;text-align:center;line-height:1.8;">
+      وصلتك هذه الرسالة لأنك اشتركت في نشرة {{ site.name }}.<br>
+      <a href="{{ unsubscribe_url }}" style="color:#777;">إلغاء الاشتراك</a> · <a href="{{ home_url }}" style="color:#777;">زيارة الموقع</a>
+    </td></tr>
+  </table>
+</td></tr>
+</table>
+</body>
+</html>

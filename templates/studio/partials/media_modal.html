@@ -1,0 +1,21 @@
+<dialog class="modal" id="media-modal" aria-labelledby="media-modal-title">
+  <div class="modal-head">
+    <h3 id="media-modal-title">اختر صورة</h3>
+    <input type="search" id="media-search" placeholder="ابحث في التعليقات والمصادر…" style="max-width:260px">
+    <button class="btn sm" type="button" data-close-modal>{{ "close"|icon:16 }}</button>
+  </div>
+  <div class="modal-body">
+    <label class="dropzone" id="media-drop">
+      {{ "upload"|icon:28 }}<br><strong>اسحب الصور هنا أو اضغط للاختيار</strong><br>
+      <span class="small">تُنزع إحداثيات GPS وبيانات الكاميرا والمصوّر من كل صورة تلقائياً قبل حفظها.</span>
+      <input type="file" id="media-file" accept="image/*" multiple hidden>
+    </label>
+    <div class="field-grid" style="margin-bottom:10px">
+      <div><label class="label" for="media-caption">التعليق للصور المرفوعة</label><input type="text" id="media-caption"></div>
+      <div><label class="label" for="media-credit">المصدر/المصوّر</label><input type="text" id="media-credit" placeholder="مثال: خاص / وكالات"></div>
+    </div>
+    <div id="media-status" class="small muted"></div>
+    <div class="media-grid" id="media-grid"></div>
+    <div style="text-align:center;margin-top:12px"><button class="btn sm" type="button" id="media-more" hidden>المزيد</button></div>
+  </div>
+</dialog>

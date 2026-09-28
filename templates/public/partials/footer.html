@@ -1,0 +1,34 @@
+{% load static %}
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div>
+      <div class="brand"><span class="brand-mark">{{ "pigeon"|icon:26 }}</span><span class="brand-name">{{ site.name }}</span></div>
+      <p>{{ site.footer_about|default:site.description }}</p>
+      <div class="social">
+        {% for key, label, url in site.social_links %}<a href="{{ url }}" target="_blank" rel="noopener" aria-label="{{ label }}">{{ key|icon:18 }}</a>{% endfor %}
+      </div>
+      {% if site.tips_note %}<div class="tips">{{ "shield"|icon:18 }}<span>{{ site.tips_note }}</span></div>{% endif %}
+    </div>
+    <div>
+      <h3>الأقسام</h3>
+      <ul>{% for item in menus.main|slice:":8" %}<li><a href="{{ item.url_cached }}">{{ item.label }}</a></li>{% endfor %}</ul>
+    </div>
+    <div>
+      <h3>عن الموقع</h3>
+      <ul>
+        {% for item in menus.footer %}<li><a href="{{ item.url_cached }}">{{ item.label }}</a></li>{% endfor %}
+        <li><a href="{% url 'public:latest' %}">آخر الأخبار</a></li>
+        <li><a href="{% url 'public:feed' %}">خلاصات RSS</a></li>
+      </ul>
+    </div>
+    <div>
+      <h3>النشرة اليومية</h3>
+      <p>أبرز الأخبار في بريدك كل صباح.</p>
+      {% include "public/partials/newsletter_form.html" %}
+    </div>
+  </div>
+  <div class="container footer-bottom">
+    <span>© {{ now|date:"Y"|ar_digits }} {{ site.name }} — {{ site.copyright_text }}</span>
+    <span>لا نستخدم ملفات تعريف الارتباط لتتبعك، ولا نشارك بيانات قرّائنا مع أي جهة.</span>
+  </div>
+</footer>

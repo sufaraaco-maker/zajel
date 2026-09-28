@@ -1,0 +1,67 @@
+"""ترويسات الأمان وسياسة أمان المحتوى (CSP).
+
+صفحات القرّاء لا تحمّل أي سكربت من طرف ثالث افتراضياً؛ الخطوط والأيقونات
+والسكربتات كلها من الخادم نفسه، فلا تعرف أي شركة خارجية من يقرأ ماذا.
+"""
+
+from django.conf import settings
+
+from arcms.content.embeds import EMBED_FRAME_HOSTS
+
+_FRAMES = " ".join(EMBED_FRAME_HOSTS)
+
+STRICT_PUBLIC = (
+    "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
+    "img-src 'self' data: https:; font-src 'self'; connect-src 'self'; media-src 'self' https:; "
+    f"frame-src {_FRAMES}; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+)
+RELAXED_PUBLIC = (
+    "default-src 'self'; script-src 'self' 'unsafe-inline' https:; style-src 'self' 'unsafe-inline' https:; "
+    "img-src 'self' data: https:; font-src 'self' https:; connect-src 'self' https:; media-src 'self' https:; "
+    "frame-src https:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+)
+STUDIO = (
+    "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
+    "img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self'; "
+    f"frame-src 'self' {_FRAMES}; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+)
+PERMISSIONS = "geolocation=(), camera=(), microphone=(), payment=(), usb=(), interest-cohort=()"
+
+
+class SecurityHeadersMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        path = request.path
+        if path.startswith(("/studio", "/accounts")):
+            response.setdefault("Content-Security-Policy", STUDIO)
+            # لا نسرّب روابط المسودات الداخلية إلى أي موقع يُفتح من غرفة التحرير.
+            # (same-origin لا no-referrer: الأخيرة تجعل المتصفح يرسل Origin: null فيرفض فحص CSRF النماذج.)
+            response["Referrer-Policy"] = "same-origin"
+            response["Cache-Control"] = "no-store"
+            response["X-Robots-Tag"] = "noindex, nofollow"
+        elif not path.startswith(("/static/", "/media/")):
+            response.setdefault("Content-Security-Policy", RELAXED_PUBLIC if _third_party_enabled() else STRICT_PUBLIC)
+        response.setdefault("Permissions-Policy", PERMISSIONS)
+        response.setdefault("X-Content-Type-Options", "nosniff")
+        if not settings.DEBUG:
+            response.setdefault("Cross-Origin-Resource-Policy", "same-site")
+        return response
+
+
+def _third_party_enabled() -> bool:
+    from arcms.core.models import AdSlot, SiteSettings
+
+    site = SiteSettings.load()
+    if site.custom_head_html.strip():
+        return True
+    from django.core.cache import cache
+
+    key = "arcms:ads-html"
+    has_ads = cache.get(key)
+    if has_ads is None:
+        has_ads = AdSlot.objects.filter(is_active=True).exclude(html="").exists()
+        cache.set(key, has_ads, 60)
+    return has_ads

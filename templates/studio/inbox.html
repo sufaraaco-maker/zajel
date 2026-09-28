@@ -1,0 +1,9 @@
+{% extends "studio/base.html" %}
+{% block title %}رسائل القرّاء{% endblock %}
+{% block content %}
+<div class="page-title"><div><h1>رسائل القرّاء</h1><p>تُحفظ الرسائل مشفّرة في قاعدة البيانات.</p></div></div>
+<div class="cols cols-2">
+  <section class="panel"><ul class="list">{% for m in page %}<li><span class="grow"><a href="?open={{ m.pk }}">{% if not m.is_read %}<strong>{{ m.subject|default:"(بلا موضوع)" }}</strong>{% else %}{{ m.subject|default:"(بلا موضوع)" }}{% endif %}</a><div class="sub">{{ m.name }} · {{ m.created_at|ar_relative }}</div></span></li>{% empty %}<li class="empty">لا رسائل.</li>{% endfor %}</ul>{% include "studio/partials/pagination.html" %}</section>
+  {% if opened %}<section class="panel"><h2>{{ opened.subject|default:"(بلا موضوع)" }}</h2><p class="small muted">{{ opened.name }}{% if opened.email %} · <bdi dir="ltr">{{ opened.email }}</bdi>{% endif %} · {{ opened.created_at|ar_datetime }}</p><div>{{ opened.body|linebreaksbr }}</div></section>{% endif %}
+</div>
+{% endblock %}

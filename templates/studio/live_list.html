@@ -1,0 +1,22 @@
+{% extends "studio/base.html" %}
+{% block title %}التغطيات المباشرة{% endblock %}
+{% block content %}
+<div class="page-title"><div><h1>التغطيات المباشرة</h1><p>تحديثات متتالية تظهر للقرّاء دون إعادة تحميل الصفحة.</p></div></div>
+<div class="cols cols-2">
+  <section class="panel">
+    <ul class="list">
+      {% for l in page %}<li>{% if l.is_live %}<span class="pill breaking">مباشر</span>{% else %}<span class="pill">انتهت</span>{% endif %}<div class="grow"><a href="{% url 'studio:live_detail' l.pk %}"><strong>{{ l.title }}</strong></a><div class="sub">بدأت {{ l.started_at|ar_datetime }}</div></div></li>
+      {% empty %}<li class="empty">لا تغطيات بعد.</li>{% endfor %}
+    </ul>
+  </section>
+  {% if form %}
+  <form method="post" class="panel" data-media-form>
+    {% csrf_token %}
+    <h2>تغطية جديدة</h2>
+    {% for field in form %}{% if field.name == "cover" %}<div class="form-row"><span class="label">{{ field.label }}</span>{% include "studio/partials/image_field.html" %}</div>{% else %}{% include "studio/partials/field.html" %}{% endif %}{% endfor %}
+    <button class="btn primary">ابدأ التغطية</button>
+  </form>
+  {% endif %}
+</div>
+{% endblock %}
+{% block modals %}{% include "studio/partials/media_modal.html" %}{% endblock %}

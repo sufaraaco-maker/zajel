@@ -1,0 +1,11 @@
+{% extends "studio/base.html" %}
+{% block title %}كتلة{% endblock %}
+{% block content %}
+<div class="page-title"><div><h1>{% if block %}تعديل كتلة{% else %}كتلة جديدة{% endif %}</h1><p><a href="{% url 'studio:homepage' %}">← الصفحة الرئيسية</a></p></div></div>
+<form method="post" class="panel" style="max-width:760px">
+  {% csrf_token %}
+  {% for field in form %}{% include "studio/partials/field.html" %}{% endfor %}
+  <p class="small muted">الحقول المطلوبة حسب النوع: «قسم» يحتاج قسماً، «أعمدة» تحتاج أقساماً، «ملف خاص» يحتاج ملفاً، «نوع مادة» يحتاج نوعاً، «إعلان» يحتاج مساحة إعلانية.</p>
+  <div class="btn-row"><button class="btn primary">حفظ</button><a class="btn" href="{% url 'studio:homepage' %}">إلغاء</a></div>
+</form>
+{% endblock %}

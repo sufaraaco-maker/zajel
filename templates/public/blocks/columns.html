@@ -1,0 +1,10 @@
+<section class="section">
+  <div class="grid grid-{{ b.columns|length|default:3 }}">
+    {% for col in b.columns %}
+    <div{% if col.category.color %} style="--primary: {{ col.category.color }}"{% endif %}>
+      <div class="section-head"><h2 class="section-title">{{ col.category.name }}</h2><a class="section-more" href="{{ col.category.get_absolute_url }}">المزيد</a></div>
+      {% for a in col.items %}{% if forloop.first %}{% include "public/partials/card.html" with a=a %}{% else %}<ul class="list-compact"><li><a href="{{ a.get_absolute_url }}">{{ a.title }}</a></li></ul>{% endif %}{% endfor %}
+    </div>
+    {% endfor %}
+  </div>
+</section>

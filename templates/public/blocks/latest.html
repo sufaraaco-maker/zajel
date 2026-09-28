@@ -1,0 +1,8 @@
+<section class="section{% if b.block.dark %} dark{% endif %}">
+  {% include "public/blocks/_head.html" %}
+  {% if b.block.layout == 'list' %}
+  <ul class="list-compact">{% for a in b.items %}<li><span class="meta"><time>{{ a.published_at|ar_time }}</time></span> <a href="{{ a.get_absolute_url }}">{{ a.title }}</a></li>{% endfor %}</ul>
+  {% else %}
+  <div class="grid grid-4">{% for a in b.items %}{% include "public/partials/card.html" with a=a show_category=True %}{% endfor %}</div>
+  {% endif %}
+</section>

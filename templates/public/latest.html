@@ -1,0 +1,18 @@
+{% extends "public/base.html" %}
+{% block title %}آخر الأخبار | {{ site.name }}{% endblock %}
+{% block content %}
+<div class="page-head"><h1>آخر الأخبار</h1><p>كل ما نُشر، بالترتيب الزمني.</p></div>
+<div class="with-sidebar">
+  <div class="timeline" style="background:transparent;padding:0">
+    <ol style="max-height:none">
+      {% regroup page.object_list by published_at|localdate as days %}
+      {% for day in days %}
+        <li style="padding-inline-start:0;border:0"><h2 class="section-title" style="font-size:1.05rem">{{ day.grouper|ar_date }}</h2></li>
+        {% for a in day.list %}<li><time datetime="{{ a.published_at|isoformat }}">{{ a.published_at|ar_time }}{% if a.category %} · {{ a.category.name }}{% endif %}</time><a href="{{ a.get_absolute_url }}">{{ a.title }}</a></li>{% endfor %}
+      {% endfor %}
+    </ol>
+    {% include "public/partials/pagination.html" %}
+  </div>
+  {% include "public/partials/sidebar.html" %}
+</div>
+{% endblock %}

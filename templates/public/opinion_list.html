@@ -1,0 +1,18 @@
+{% extends "public/base.html" %}
+{% block title %}{{ heading }} | {{ site.name }}{% endblock %}
+{% block content %}
+<div class="page-head"><h1>{{ heading }}</h1><p>آراء كتّابنا وضيوفنا. المقالات تعبّر عن آراء أصحابها.</p></div>
+<div class="opinion-row" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr))">
+  {% for a in page.object_list %}
+  <article class="opinion-card">
+    {% with au=a.primary_author %}{% if au %}
+    <a class="author-chip" href="{{ au.get_absolute_url }}">{% if au.photo %}<img class="avatar" src="{{ au.photo.thumb }}" alt="">{% else %}<span class="avatar">{{ au.name|slice:":1" }}</span>{% endif %}<span><strong>{{ au.name }}</strong><span>{{ au.title }}</span></span></a>
+    {% endif %}{% endwith %}
+    <h3><a href="{{ a.get_absolute_url }}">{{ a.title }}</a></h3>
+    <p class="meta">{{ a.summary|truncatewords:25 }}</p>
+    <div class="meta"><time>{{ a.published_at|ar_date_short }}</time></div>
+  </article>
+  {% empty %}<p class="empty">لا مقالات بعد.</p>{% endfor %}
+</div>
+{% include "public/partials/pagination.html" %}
+{% endblock %}

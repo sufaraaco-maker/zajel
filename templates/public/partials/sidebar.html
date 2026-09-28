@@ -1,0 +1,21 @@
+<aside class="sidebar">
+  {% if ad_sidebar %}{% include "public/partials/ad.html" with ad=ad_sidebar %}{% endif %}
+  {% if most_read %}
+  <section class="section">
+    <div class="section-head"><h2 class="section-title">الأكثر قراءة</h2></div>
+    <ol class="most-read">{% for a in most_read %}<li><a href="{{ a.get_absolute_url }}">{{ a.title }}</a></li>{% endfor %}</ol>
+  </section>
+  {% endif %}
+  {% if latest %}
+  <section class="section">
+    <div class="section-head"><h2 class="section-title">آخر الأخبار</h2><a class="section-more" href="{% url 'public:latest' %}">المزيد</a></div>
+    <div class="list-feed">{% for a in latest %}{% include "public/partials/card.html" with a=a variant="row" %}{% endfor %}</div>
+  </section>
+  {% endif %}
+  {% if site.newsletter_enabled %}
+  <section class="newsletter-box stacked">
+    <div><h2>النشرة اليومية</h2><p>أبرز الأخبار في بريدك كل صباح.</p></div>
+    {% include "public/partials/newsletter_form.html" with nl_id="side" %}
+  </section>
+  {% endif %}
+</aside>

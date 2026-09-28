@@ -1,0 +1,77 @@
+{% load static %}<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>{% block title %}غرفة التحرير{% endblock %} · {{ site.short_name }}</title>
+<link rel="stylesheet" href="{% static 'css/fonts.css' %}">
+<link rel="stylesheet" href="{% static 'css/studio.css' %}">
+<style>:root{--primary:{{ site.primary_color }}}</style>
+{% block head %}{% endblock %}
+</head>
+<body>
+<div class="shell">
+  <aside class="side" id="side">
+    <a class="brand" href="{% url 'studio:home' %}"><span class="mark">{{ "pigeon"|icon:22 }}</span><span>{{ site.short_name }}<small>غرفة التحرير</small></span></a>
+    {% if "article.create" in user_caps %}<a class="btn primary new-btn" href="{% url 'studio:article_new' %}">{{ "plus"|icon:16 }} مادة جديدة</a>{% endif %}
+    <nav aria-label="غرفة التحرير">
+      {% with p=request.path %}
+      <a href="{% url 'studio:home' %}" class="{% if p == '/studio/' %}active{% endif %}">{{ "home"|icon:18 }} البداية</a>
+      {% if "article.create" in user_caps or "article.edit_any" in user_caps or "distribution.send" in user_caps %}
+      <a href="{% url 'studio:articles' %}" class="{% if '/studio/articles' in p %}active{% endif %}">{{ "list"|icon:18 }} المواد
+        {% if nav_counts.review %}<span class="count" title="بانتظار مراجعتك">{{ nav_counts.review }}</span>{% elif nav_counts.returned %}<span class="count" title="أُعيدت إليك">{{ nav_counts.returned }}</span>{% endif %}</a>
+      {% endif %}
+      {% if "breaking.manage" in user_caps %}<a href="{% url 'studio:breaking' %}" class="{% if '/studio/breaking' in p %}active{% endif %}">{{ "bolt"|icon:18 }} العاجل</a>{% endif %}
+      {% if "live.post" in user_caps or "live.manage" in user_caps %}<a href="{% url 'studio:live_list' %}" class="{% if '/studio/live' in p %}active{% endif %}">{{ "live"|icon:18 }} التغطيات المباشرة</a>{% endif %}
+      {% if "media.upload" in user_caps %}<a href="{% url 'studio:media' %}" class="{% if '/studio/media' in p %}active{% endif %}">{{ "image"|icon:18 }} مكتبة الوسائط</a>{% endif %}
+      {% if "analytics.view" in user_caps %}<a href="{% url 'studio:analytics' %}" class="{% if '/studio/analytics' in p %}active{% endif %}">{{ "chart"|icon:18 }} الجمهور</a>{% endif %}
+
+      {% if "homepage.manage" in user_caps or "taxonomy.manage" in user_caps or "pages.manage" in user_caps %}<div class="group">بناء الموقع</div>{% endif %}
+      {% if "homepage.manage" in user_caps %}
+      <a href="{% url 'studio:homepage' %}" class="{% if '/studio/homepage' in p %}active{% endif %}">{{ "grid"|icon:18 }} الصفحة الرئيسية</a>
+      <a href="{% url 'studio:menus_list' %}" class="{% if '/studio/menus' in p %}active{% endif %}">{{ "menu"|icon:18 }} القوائم</a>
+      {% endif %}
+      {% if "taxonomy.manage" in user_caps %}
+      <a href="{% url 'studio:categories_list' %}" class="{% if '/studio/categories' in p %}active{% endif %}">{{ "folder"|icon:18 }} الأقسام</a>
+      <a href="{% url 'studio:authors_list' %}" class="{% if '/studio/authors' in p %}active{% endif %}">{{ "pen"|icon:18 }} الكتّاب</a>
+      <a href="{% url 'studio:dossiers_list' %}" class="{% if '/studio/dossiers' in p %}active{% endif %}">{{ "folder"|icon:18 }} الملفات الخاصة</a>
+      <a href="{% url 'studio:tags_list' %}" class="{% if '/studio/tags' in p %}active{% endif %}">{{ "link"|icon:18 }} الوسوم</a>
+      {% endif %}
+      {% if "pages.manage" in user_caps %}<a href="{% url 'studio:pages_list' %}" class="{% if '/studio/pages' in p %}active{% endif %}">{{ "list"|icon:18 }} الصفحات الثابتة</a>{% endif %}
+      {% if "homepage.manage" in user_caps %}<a href="{% url 'studio:ads_list' %}" class="{% if '/studio/ads' in p %}active{% endif %}">{{ "image"|icon:18 }} الإعلانات</a>{% endif %}
+
+      {% if "distribution.manage" in user_caps or "distribution.send" in user_caps %}<div class="group">التوزيع</div>
+      <a href="{% url 'studio:distribution' %}" class="{% if '/studio/distribution' in p or '/studio/whatsapp' in p %}active{% endif %}">{{ "send"|icon:18 }} القنوات والمشتركون</a>{% endif %}
+
+      {% if "settings.manage" in user_caps or "users.manage" in user_caps or "audit.view" in user_caps %}<div class="group">الإدارة والأمان</div>{% endif %}
+      {% if "settings.manage" in user_caps %}<a href="{% url 'studio:settings' %}" class="{% if '/studio/settings' in p %}active{% endif %}">{{ "gear"|icon:18 }} إعدادات الموقع</a>
+      <a href="{% url 'studio:inbox' %}" class="{% if '/studio/inbox' in p %}active{% endif %}">{{ "inbox"|icon:18 }} رسائل القرّاء</a>{% endif %}
+      {% if "users.manage" in user_caps %}<a href="{% url 'studio:users' %}" class="{% if '/studio/users' in p %}active{% endif %}">{{ "users"|icon:18 }} المستخدمون والرتب</a>{% endif %}
+      {% if "audit.view" in user_caps %}<a href="{% url 'studio:audit' %}" class="{% if '/studio/audit' in p %}active{% endif %}">{{ "history"|icon:18 }} سجل التدقيق</a>{% endif %}
+      {% if "backups.manage" in user_caps %}<a href="{% url 'studio:backups' %}" class="{% if '/studio/backups' in p %}active{% endif %}">{{ "lock"|icon:18 }} النسخ الاحتياطي</a>{% endif %}
+      {% if "import.run" in user_caps %}<a href="{% url 'studio:importer' %}" class="{% if '/studio/import' in p %}active{% endif %}">{{ "upload"|icon:18 }} استيراد الأرشيف</a>{% endif %}
+      {% if "settings.manage" in user_caps or "backups.manage" in user_caps %}<a href="{% url 'studio:health' %}" class="{% if '/studio/health' in p %}active{% endif %}">{{ "shield"|icon:18 }} فحص الجاهزية</a>{% endif %}
+      {% endwith %}
+    </nav>
+  </aside>
+  <div>
+    <header class="topbar">
+      <button class="btn sm side-toggle" type="button" data-side-toggle aria-label="القائمة">{{ "menu"|icon:18 }}</button>
+      <form action="{% url 'studio:articles' %}" method="get" role="search"><input type="search" name="q" placeholder="ابحث في كل المواد (رقم أو كلمات)…" aria-label="بحث في المواد"></form>
+      <span class="spacer"></span>
+      <a class="btn sm" href="/" target="_blank" rel="noopener">{{ "eye"|icon:16 }} الموقع</a>
+      <a class="userbox" href="{% url 'studio:profile' %}"><span class="avatar">{{ "user"|icon:18 }}</span><span>{{ user }}<br><span class="role">{{ user.get_role_display }}{% if user.has_2fa %} · {{ "shield"|icon:12 }} محمي{% endif %}</span></span></a>
+      <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="btn sm" type="submit" title="خروج">{{ "logout"|icon:16 }}</button></form>
+    </header>
+    <main class="content">
+      {% for m in messages %}<div class="alert {{ m.tags }}">{{ m }}</div>{% endfor %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+{% block modals %}{% endblock %}
+<script src="{% static 'js/studio.js' %}" defer></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,77 @@
+{% extends "studio/base.html" %}
+{% block title %}الجمهور{% endblock %}
+{% block content %}
+<div class="page-title">
+  <div><h1>أرقام الجمهور</h1><p>تُقاس على خادمكم دون أي طرف ثالث أو ملفات تعريف ارتباط. لا تُحفظ عناوين IP؛ الزائر بصمة يومية تُمحى مفاتيحها كل ليلة.</p></div>
+</div>
+<form class="filters" method="get" aria-label="الفترة">
+  <div class="tabs" style="border:0;margin:0">
+    <a href="?days=1" class="{% if days == 1 %}active{% endif %}">اليوم</a>
+    <a href="?days=7" class="{% if days == 7 %}active{% endif %}">آخر 7 أيام</a>
+    <a href="?days=30" class="{% if days == 30 %}active{% endif %}">آخر 30 يوماً</a>
+  </div>
+</form>
+
+<div class="cols cols-4" style="margin-bottom:18px">
+  <div class="kpi"><div class="label">المتصفحون الآن</div><div class="value">{{ realtime.active|ar_compact }}</div><div class="delta">زوار مختلفون خلال آخر 5 دقائق</div></div>
+  <div class="kpi"><div class="label">مشاهدات اليوم</div><div class="value">{{ today.views|ar_compact }}</div><div class="delta">الأمس حتى الساعة نفسها: {{ today.views_yesterday_same_time|ar_compact }}</div></div>
+  <div class="kpi"><div class="label">زوار اليوم</div><div class="value">{{ today.visitors|ar_compact }}</div><div class="delta">تقدير لعدد القرّاء المختلفين</div></div>
+  <div class="kpi"><div class="label">نُشر اليوم</div><div class="value">{{ published_today|ar_compact }}</div><div class="delta">مادة</div></div>
+</div>
+
+<section class="panel viz" data-viz>
+  <h2>المشاهدات اليومية — آخر 30 يوماً</h2>
+  <svg class="chart" direction="ltr" viewBox="0 0 {{ chart.width }} {{ chart.height }}" role="img" aria-label="أعمدة المشاهدات اليومية لآخر 30 يوماً، الأحدث على اليسار">
+    {% for g in chart.grid %}
+      <line class="{% if forloop.first %}baseline{% else %}grid-line{% endif %}" x1="{{ chart.plot_left }}" x2="{{ chart.plot_right }}" y1="{{ g.y }}" y2="{{ g.y }}"/>
+      <text class="axis-label" x="{{ chart.axis_x }}" y="{{ g.y }}" dy="4" text-anchor="start">{{ g.label }}</text>
+    {% endfor %}
+    {% for b in chart.bars %}
+      <rect class="hit" x="{{ b.hit_x }}" y="0" width="{{ b.hit_w }}" height="{{ chart.baseline }}" tabindex="0"
+            data-label="{{ b.label }}" data-views="{{ b.views }}" data-visitors="{{ b.visitors }}" aria-label="{{ b.label }}: {{ b.views }} مشاهدة، {{ b.visitors }} زائر"/>
+      {% if b.path %}<path class="col{% if b.is_last %} current{% endif %}" d="{{ b.path }}"/>{% endif %}
+      {% if b.is_last %}<text class="value-label" x="{{ b.x }}" y="{{ b.y }}" dy="-6" text-anchor="middle">{{ b.value_label }}</text>{% endif %}
+      {% if b.show_tick %}<text class="axis-label" x="{{ b.x }}" y="{{ chart.label_y }}" text-anchor="middle">{{ b.short }}</text>{% endif %}
+    {% endfor %}
+  </svg>
+  <div class="viz-tip" hidden></div>
+  <details class="small" style="margin-top:8px"><summary>عرض الأرقام جدولاً</summary>
+    <div class="table-wrap" style="margin-top:8px"><table class="data"><thead><tr><th>اليوم</th><th class="num">المشاهدات</th><th class="num">الزوار</th></tr></thead>
+    <tbody>{% for s in series reversed %}<tr><td>{{ s.day|ar_date }}</td><td class="num">{{ s.views }}</td><td class="num">{{ s.visitors }}</td></tr>{% endfor %}</tbody></table></div>
+  </details>
+</section>
+
+<div class="cols cols-2">
+  <section class="panel viz">
+    <h2>من أين يأتي القرّاء</h2>
+    {% for label, n in sources %}
+    <div class="hbar"><span>{{ label }}</span><div class="track"><div class="fill" style="width:{{ n|percent_of:sources_total }}%"></div></div><span class="num">{{ n|ar_compact }} <span>({{ n|percent_of:sources_total }}٪)</span></span></div>
+    {% empty %}<p class="empty">لا بيانات بعد لهذه الفترة.</p>{% endfor %}
+    {% if referrers %}<h2 style="margin-top:16px">أبرز المواقع المُحيلة</h2>
+    <ul class="list small">{% for host, n in referrers %}<li><span class="grow" dir="ltr" style="text-align:right">{{ host }}</span><span>{{ n|ar_compact }}</span></li>{% endfor %}</ul>{% endif %}
+  </section>
+  <section class="panel viz">
+    <h2>الأجهزة</h2>
+    {% for label, n in devices %}
+    <div class="hbar"><span>{{ label }}</span><div class="track"><div class="fill" style="width:{{ n|percent_of:devices_total }}%"></div></div><span class="num">{{ n|percent_of:devices_total }}٪</span></div>
+    {% empty %}<p class="empty">لا بيانات بعد.</p>{% endfor %}
+    <h2 style="margin-top:16px">الأقسام الأكثر قراءة</h2>
+    <ul class="list small">{% for name, n in categories %}<li><span class="grow">{{ name }}</span><span>{{ n|ar_compact }} مشاهدة</span></li>{% empty %}<li class="empty">لا بيانات بعد.</li>{% endfor %}</ul>
+  </section>
+</div>
+
+<section class="panel">
+  <h2>المواد الأكثر قراءة {% if days == 1 %}اليوم{% else %}خلال {{ days }} يوماً{% endif %}</h2>
+  <div class="table-wrap"><table class="data">
+    <thead><tr><th>#</th><th>المادة</th><th>القسم</th><th>نُشرت</th><th class="num">المشاهدات</th><th class="num">الزوار</th></tr></thead>
+    <tbody>{% for r in top_rows %}<tr><td class="muted">{{ forloop.counter }}</td><td class="title-cell"><a href="{% url 'studio:article_edit' r.article.pk %}">{{ r.article.title }}</a></td><td>{{ r.article.category|default:"—" }}</td><td class="small">{{ r.article.published_at|ar_relative }}</td><td class="num">{{ r.views }}</td><td class="num">{{ r.visitors }}</td></tr>
+    {% empty %}<tr><td colspan="6" class="empty">لا مشاهدات مسجّلة بعد لهذه الفترة.</td></tr>{% endfor %}</tbody>
+  </table></div>
+</section>
+
+<div class="cols cols-3">
+  <div class="kpi"><div class="label">مشتركو النشرة</div><div class="value">{{ subscribers.newsletter|ar_compact }}</div></div>
+  <div class="kpi"><div class="label">مشتركو الإشعارات</div><div class="value">{{ subscribers.push|ar_compact }}</div></div>
+  <div class="kpi"><div class="label">مشتركو واتساب</div><div class="value">{{ subscribers.whatsapp|ar_compact }}</div></div>
+</div>
+{% endblock %}

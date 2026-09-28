@@ -1,0 +1,12 @@
+{% extends "studio/base.html" %}
+{% block title %}مشتركو واتساب{% endblock %}
+{% block content %}
+<div class="page-title"><div><h1>مشتركو واتساب</h1><p><a href="{% url 'studio:distribution' %}">← التوزيع</a> · أرقام وافق أصحابها على استقبال الأخبار.</p></div></div>
+<div class="cols cols-2">
+  <form method="post" class="panel">{% csrf_token %}<h2>إضافة رقم</h2>{% for field in form %}{% include "studio/partials/field.html" %}{% endfor %}<button class="btn primary">إضافة</button></form>
+  <form method="post" enctype="multipart/form-data" class="panel">{% csrf_token %}<h2>استيراد CSV</h2><p class="small muted">عمود أول للرقم الدولي (مثل 970599123456)، وعمود ثانٍ اختياري للاسم.</p><input type="file" name="csv" accept=".csv,text/csv" required><button class="btn" style="margin-top:8px">استيراد</button></form>
+</div>
+<div class="table-wrap"><table class="data"><thead><tr><th>الرقم</th><th>الاسم</th><th>المصدر</th><th>منذ</th><th>نشط</th></tr></thead>
+<tbody>{% for s in page %}<tr><td dir="ltr" style="text-align:right">{{ s.phone }}</td><td>{{ s.name }}</td><td>{{ s.source }}</td><td>{{ s.opted_in_at|ar_date_short }}</td><td>{{ s.is_active|yesno:"✓,—" }}</td></tr>{% empty %}<tr><td colspan="5" class="empty">لا أرقام بعد.</td></tr>{% endfor %}</tbody></table></div>
+{% include "studio/partials/pagination.html" %}
+{% endblock %}

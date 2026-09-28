@@ -1,0 +1,33 @@
+{% extends "studio/base.html" %}
+{% block title %}المستخدمون{% endblock %}
+{% block content %}
+<div class="page-title"><div><h1>المستخدمون والرتب</h1><p>التحقق الثنائي إلزامي للمحررين ومن فوقهم دائماً.</p></div><a class="btn primary" href="{% url 'studio:user_new' %}">{{ "plus"|icon:16 }} مستخدم جديد</a></div>
+<div class="table-wrap" style="margin-bottom:18px">
+<table class="data">
+  <thead><tr><th>الاسم</th><th>اسم الدخول</th><th>الرتبة</th><th>التحقق الثنائي</th><th>آخر نشاط</th><th class="num">المواد</th><th>الحالة</th></tr></thead>
+  <tbody>
+  {% for u in users %}
+  <tr>
+    <td class="title-cell"><a href="{% url 'studio:user_edit' u.pk %}">{{ u }}</a></td>
+    <td dir="ltr" style="text-align:right">{{ u.username }}</td>
+    <td>{{ u.get_role_display }}</td>
+    <td>{% if u.has_2fa %}<span class="pill ok">مفعّل</span>{% elif u.requires_2fa %}<span class="pill warn">مطلوب — لم يُفعَّل</span>{% else %}<span class="pill">اختياري</span>{% endif %}</td>
+    <td class="small">{{ u.last_seen_at|ar_relative|default:"—" }}</td>
+    <td class="num">{{ u.n_articles }}</td>
+    <td>{% if u.is_active %}<span class="pill ok">نشط</span>{% else %}<span class="pill fail">معطّل</span>{% endif %}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+<section class="panel">
+  <h2>مصفوفة الصلاحيات</h2>
+  <p class="small muted">الصلاحيات معرّفة في الكود وتُراجع مع كل إصدار؛ لا يمكن توسيعها من الواجهة. رؤساء الأقسام والمحررون والمراسلون يعملون ضمن أقسامهم إن حُدّدت لهم.</p>
+  <div class="table-wrap">
+  <table class="data matrix">
+    <thead><tr><th>الصلاحية</th>{% for v, l in roles %}<th>{{ l }}{% if v in forced_2fa %}<br><span class="small muted">{{ "shield"|icon:12 }} 2FA</span>{% endif %}</th>{% endfor %}</tr></thead>
+    <tbody>{% for row in matrix %}<tr><td>{{ row.cap }}</td>{% for yes in row.roles %}<td>{% if yes %}<span class="yes">✓</span>{% else %}<span class="no">—</span>{% endif %}</td>{% endfor %}</tr>{% endfor %}</tbody>
+  </table>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,12 @@
+<div class="ticker" role="region" aria-label="{{ site.ticker_label }}">
+  <div class="container">
+    <span class="ticker-label"><span class="pulse" aria-hidden="true"></span>{{ site.ticker_label }}</span>
+    <div class="ticker-track">
+      <div class="ticker-items">
+        {% for b in ticker %}
+        <span><time datetime="{{ b.created_at|isoformat }}">{{ b.created_at|ar_time }}</time>{% if b.get_url %}<a href="{{ b.get_url }}">{{ b.text }}</a>{% else %}{{ b.text }}{% endif %}</span>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,51 @@
+{% load static %}<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}{{ site.name }} | {{ site.tagline }}{% endblock %}</title>
+<meta name="description" content="{% block description %}{{ site.description }}{% endblock %}">
+<meta name="theme-color" content="{{ site.primary_color }}">
+{% block canonical %}{% endblock %}
+{% block robots %}{% endblock %}
+<meta property="og:site_name" content="{{ site.name }}">
+<meta property="og:locale" content="ar_AR">
+{% block og %}
+<meta property="og:type" content="website">
+<meta property="og:title" content="{{ site.name }}">
+<meta property="og:description" content="{{ site.description }}">
+{% if site.default_share_image %}<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ site.default_share_image.social }}">{% endif %}
+{% endblock %}
+<meta name="twitter:card" content="summary_large_image">
+<link rel="manifest" href="{% url 'public:manifest' %}">
+<link rel="icon" href="{% if site.logo %}{{ site.logo.thumb }}{% else %}{% static 'img/icon-192.png' %}{% endif %}">
+<link rel="alternate" type="application/rss+xml" title="{{ site.name }}" href="{% url 'public:feed' %}">
+{% block feeds %}{% endblock %}
+<link rel="preload" href="{% static 'fonts/ibm-plex-sans-arabic-arabic-700-normal.woff2' %}" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="{% static 'css/fonts.css' %}">
+<link rel="stylesheet" href="{% static 'css/public.css' %}">
+<style>
+:root{--primary:{{ site.primary_color }};--accent:{{ site.accent_color }};
+--font-head:{% if site.font_headings == 'kufi' %}"Noto Kufi Arabic"{% elif site.font_headings == 'naskh' %}"Noto Naskh Arabic"{% else %}"IBM Plex Sans Arabic"{% endif %},"Segoe UI",Tahoma,sans-serif;
+--font-body:{% if site.font_body == 'kufi' %}"Noto Kufi Arabic"{% elif site.font_body == 'plex' %}"IBM Plex Sans Arabic"{% else %}"Noto Naskh Arabic"{% endif %},"Segoe UI",Tahoma,serif}
+</style>
+<script src="{% static 'js/theme-init.js' %}"></script>
+{% block head %}{% endblock %}
+{% if site.custom_head_html %}{{ site.custom_head_html|safe }}{% endif %}
+</head>
+<body {% if site.analytics_enabled %}data-track{% endif %} {% if track_article %}data-article="{{ track_article }}"{% endif %} {% if track_category %}data-category="{{ track_category }}"{% endif %}>
+<a class="skip-link" href="#main">انتقل إلى المحتوى</a>
+{% include "public/partials/header.html" %}
+{% if ticker %}{% include "public/partials/ticker.html" %}{% endif %}
+<main id="main">
+  <div class="container">
+    {% if ad_header %}{% include "public/partials/ad.html" with ad=ad_header %}{% endif %}
+    {% if messages %}<ul class="messages">{% for m in messages %}<li class="{{ m.tags }}">{{ m }}</li>{% endfor %}</ul>{% endif %}
+    {% block content %}{% endblock %}
+  </div>
+</main>
+{% include "public/partials/footer.html" %}
+<script src="{% static 'js/public.js' %}" defer></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

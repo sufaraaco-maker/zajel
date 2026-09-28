@@ -1,0 +1,1 @@
+<div class="ad-slot"><small>إعلان</small>{% if ad.html %}{{ ad.html|safe }}{% elif ad.image %}<a href="{{ ad.link|default:'#' }}" target="_blank" rel="sponsored noopener"><img src="{{ ad.image.url }}" alt="{{ ad.name }}" loading="lazy"></a>{% endif %}</div>

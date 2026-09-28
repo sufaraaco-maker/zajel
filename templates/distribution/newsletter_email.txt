@@ -1,0 +1,7 @@
+{{ site.name }} — النشرة اليومية · {{ day_label }}
+{% for a in articles %}
+• {{ a.title }}
+  {{ home_url }}s/{{ a.pk }}?utm_source=newsletter
+{% endfor %}
+—
+لإلغاء الاشتراك: {{ unsubscribe_url }}

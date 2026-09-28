@@ -1,0 +1,16 @@
+{% extends "studio/base.html" %}
+{% block title %}فحص الجاهزية{% endblock %}
+{% block content %}
+<div class="page-title"><div><h1>فحص الجاهزية</h1><p>ما يلزم قبل التجربة على خادم حقيقي وبعدها. الأمر نفسه متاح على الخادم: <code dir="ltr">python manage.py arcms_check</code></p></div>
+  <a class="btn" href="?live=1">{{ "send"|icon:16 }} فحص الاتصال بالقنوات والبريد</a></div>
+<div class="cols cols-3" style="margin-bottom:18px">
+  <div class="kpi"><div class="label">سليم</div><div class="value" style="color:var(--ok)">{{ summary.ok }}</div></div>
+  <div class="kpi"><div class="label">تنبيه</div><div class="value" style="color:var(--warn)">{{ summary.warn }}</div></div>
+  <div class="kpi"><div class="label">يجب إصلاحه</div><div class="value" style="color:var(--bad)">{{ summary.fail }}</div></div>
+</div>
+<section class="panel">
+  {% for c in checks %}
+  <div class="check-row"><strong>{{ c.area }}</strong><span class="pill {{ c.level }}">{% if c.level == "ok" %}سليم{% elif c.level == "warn" %}تنبيه{% else %}خلل{% endif %}</span><div>{{ c.message }}{% if c.hint %}<div class="hint">{{ c.hint }}</div>{% endif %}</div></div>
+  {% endfor %}
+</section>
+{% endblock %}

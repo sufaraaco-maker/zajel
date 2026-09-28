@@ -1,0 +1,20 @@
+{% extends "public/base.html" %}
+{% block title %}{{ author.name }} | {{ site.name }}{% endblock %}
+{% block content %}
+<div class="author-hero">
+  {% if author.photo %}<img class="avatar lg" src="{{ author.photo.card }}" alt="{{ author.name }}">{% else %}<span class="avatar lg">{{ author.name|slice:":1" }}</span>{% endif %}
+  <div>
+    <h1>{{ author.name }}</h1>
+    {% if author.title %}<p><strong>{{ author.title }}</strong></p>{% endif %}
+    {% if author.bio %}<p>{{ author.bio }}</p>{% endif %}
+    {% if author.x_handle %}<p><a href="https://x.com/{{ author.x_handle }}" target="_blank" rel="noopener" dir="ltr">{{ "x"|icon:14 }} @{{ author.x_handle }}</a></p>{% endif %}
+  </div>
+</div>
+<div class="with-sidebar">
+  <div>
+    <div class="list-feed">{% for a in page.object_list %}{% include "public/partials/card.html" with a=a variant="row" excerpt=True show_category=True %}{% empty %}<p class="empty">لا مواد بعد.</p>{% endfor %}</div>
+    {% include "public/partials/pagination.html" %}
+  </div>
+  {% include "public/partials/sidebar.html" %}
+</div>
+{% endblock %}

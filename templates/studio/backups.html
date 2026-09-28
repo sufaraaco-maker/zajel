@@ -1,0 +1,31 @@
+{% extends "studio/base.html" %}
+{% block title %}النسخ الاحتياطي{% endblock %}
+{% block content %}
+<div class="page-title"><div><h1>النسخ الاحتياطي المشفّر</h1><p>تُشفَّر كل نسخة بمفتاح عام؛ الخادم يستطيع إنشاء النسخ لكنه لا يستطيع قراءتها. المفتاح الخاص يبقى معك خارج الخادم.</p></div>
+  {% if has_key %}<form method="post" action="{% url 'studio:backup_now' %}">{% csrf_token %}<label class="check"><input type="checkbox" name="media" value="1" checked> مع الصور</label><button class="btn primary">{{ "lock"|icon:16 }} أنشئ نسخة الآن</button></form>{% endif %}
+</div>
+{% if not has_key %}
+<div class="alert error">{{ "alert"|icon:18 }}<div><strong>لا مفتاح للنسخ بعد.</strong> على الخادم نفّذ <code>python manage.py arcms_backup_keygen</code>، واحفظ المفتاح الخاص في مكان آمن خارج الخادم، وضع العام في <code>ARCMS_BACKUP_PUBLIC_KEY</code>.</div></div>
+{% else %}
+<div class="cols cols-3" style="margin-bottom:18px">
+  <div class="kpi"><div class="label">بصمة المفتاح العام</div><div class="value" style="font-size:1.1rem;direction:ltr;text-align:right">{{ fingerprint }}</div></div>
+  <div class="kpi"><div class="label">مكان الحفظ</div><div class="small" style="direction:ltr;text-align:right">{{ backup_dir }}</div><div class="delta">يُحتفظ بآخر {{ keep }} نسخة</div></div>
+  <div class="kpi"><div class="label">نسخة تلقائية</div><div class="value" style="font-size:1.1rem">يومياً</div><div class="delta">الساعة من ARCMS_BACKUP_HOUR (افتراضياً 3 فجراً)</div></div>
+</div>
+{% endif %}
+<div class="table-wrap"><table class="data">
+  <thead><tr><th>الملف</th><th>الحالة</th><th>أنشئت</th><th>المصدر</th><th class="num">الحجم</th><th>SHA-256</th><th></th></tr></thead>
+  <tbody>{% for r in records %}<tr>
+    <td dir="ltr" style="text-align:right">{{ r.filename }}</td>
+    <td><span class="pill {% if r.status == 'ok' %}ok{% elif r.status == 'failed' %}fail{% else %}warn{% endif %}">{{ r.get_status_display }}</span>{% if r.error %}<div class="small" style="color:var(--bad)">{{ r.error|truncatechars:100 }}</div>{% endif %}</td>
+    <td class="small">{{ r.created_at|ar_datetime }}</td><td class="small">{{ r.trigger }}</td>
+    <td class="num">{{ r.size|filesizeformat }}</td><td class="small" dir="ltr" style="text-align:right">{{ r.sha256|truncatechars:20 }}</td>
+    <td>{% if r.status == "ok" %}<a class="btn sm" href="{% url 'studio:backup_download' r.pk %}">{{ "download"|icon:14 }} تنزيل</a>{% endif %}</td>
+  </tr>{% empty %}<tr><td colspan="7" class="empty">لا نسخ بعد.</td></tr>{% endfor %}</tbody>
+</table></div>
+<section class="panel small" style="margin-top:18px">
+  <h2>الاستعادة</h2>
+  <p>على خادم جديد: ثبّت المنصة، ثم <code dir="ltr">python manage.py arcms_restore arcms-….arcbak --key /path/to/private.key</code>. اختبر الاستعادة مرة على الأقل قبل الاعتماد على النسخ.</p>
+  <p>للتحقق من نسخة دون استعادتها: <code dir="ltr">python manage.py arcms_restore FILE --key KEY --verify-only</code>.</p>
+</section>
+{% endblock %}

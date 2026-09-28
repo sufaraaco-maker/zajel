@@ -1,0 +1,16 @@
+{% extends "studio/base.html" %}
+{% load static %}
+{% block title %}الصفحة{% endblock %}
+{% block head %}<link rel="stylesheet" href="{% static 'vendor/quill/quill.snow.css' %}">{% endblock %}
+{% block content %}
+<div class="page-title"><div><h1>{% if obj %}{{ obj }}{% else %}صفحة جديدة{% endif %}</h1><p><a href="{{ list_url }}">← الصفحات الثابتة</a></p></div></div>
+<form method="post" class="panel" data-rich-form>
+  {% csrf_token %}
+  {% for field in form %}{% if field.name != "body" %}{% include "studio/partials/field.html" %}{% endif %}{% endfor %}
+  <div class="form-row"><span class="label">المحتوى</span><div id="editor">{{ form.body.value|default:''|safe }}</div>{{ form.body }}</div>
+  <div class="btn-row"><button class="btn primary" type="submit">حفظ</button><a class="btn" href="{{ list_url }}">إلغاء</a></div>
+</form>
+{% if obj %}<form method="post" action="{% url 'studio:pages_delete' obj.pk %}" data-confirm="حذف الصفحة؟">{% csrf_token %}<button class="btn danger sm">حذف</button></form>{% endif %}
+{% endblock %}
+{% block modals %}{% include "studio/partials/media_modal.html" %}{% endblock %}
+{% block scripts %}<script src="{% static 'vendor/quill/quill.js' %}" defer></script>{% endblock %}

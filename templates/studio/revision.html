@@ -1,0 +1,10 @@
+{% extends "studio/base.html" %}
+{% block title %}مقارنة نسخة{% endblock %}
+{% block content %}
+<div class="page-title">
+  <div><h1>مقارنة بالنسخة الحالية</h1><p><a href="{% url 'studio:article_edit' article.pk %}">← {{ article.title }}</a> · نسخة {{ revision.created_at|ar_datetime }} بواسطة {{ revision.created_by|default:"النظام" }}</p></div>
+  <form method="post" data-confirm="استرجاع هذه النسخة؟ ستُحفظ النسخة الحالية في السجل.">{% csrf_token %}<button class="btn primary">{{ "history"|icon:16 }} استرجاع هذه النسخة</button></form>
+</div>
+<p class="muted small"><del style="background:#fde2e2">المحذوف</del> موجود في النسخة القديمة فقط، و<ins style="background:#dff3e5;text-decoration:none">المضاف</ins> في النسخة الحالية.</p>
+{% for d in diffs %}<section class="panel"><h2>{{ d.field }}</h2><div class="diff">{{ d.html|safe }}</div></section>{% empty %}<div class="panel empty">لا فروق في النص بين النسختين.</div>{% endfor %}
+{% endblock %}
