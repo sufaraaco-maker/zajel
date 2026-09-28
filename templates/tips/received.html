@@ -1,0 +1,11 @@
+{% extends "public/base.html" %}
+{% block title %}وصلت رسالتك | {{ site.name }}{% endblock %}
+{% block content %}
+<article class="tips-page narrow">
+  <header class="page-head"><h1>وصلت رسالتك</h1></header>
+  <p>هذا رمزك السري. لن نعرضه مرة أخرى ولا نستطيع استعادته، فاكتبه في مكان آمن:</p>
+  <p class="tips-code" dir="ltr">{{ code }}</p>
+  <p>بهذا الرمز تستطيع من <a href="{% url 'public:tips_follow' %}">صفحة المتابعة</a> قراءة أسئلتنا وردودنا وإرسال ما يستجد. تفقّدها بعد يوم أو يومين.</p>
+  <p class="meta">من يحصل على هذا الرمز يقرأ ردودنا عليك، لكنه لا يرى نص رسالتك ولا مرفقاتها.</p>
+</article>
+{% endblock %}

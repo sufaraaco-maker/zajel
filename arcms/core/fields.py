@@ -41,6 +41,15 @@ def decrypt_text(value: str) -> str:
         return "⚠ تعذّر فك التشفير (مفتاح غير مطابق)"
 
 
+def encrypt_bytes(data: bytes) -> bytes:
+    return _fernet(settings.FIELD_ENCRYPTION_KEY).encrypt(data)
+
+
+def decrypt_bytes(token: bytes) -> bytes:
+    """يرفع cryptography.fernet.InvalidToken إن لم يطابق المفتاح أو عُبث بالبيانات."""
+    return _fernet(settings.FIELD_ENCRYPTION_KEY).decrypt(bytes(token))
+
+
 class EncryptedTextField(models.TextField):
     """نص يُخزَّن مشفّراً ويُقرأ صريحاً داخل التطبيق فقط."""
 

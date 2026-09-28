@@ -400,3 +400,20 @@ mark { background: color-mix(in srgb, var(--primary) 18%, transparent); color: i
 [data-push].on { background: var(--primary); color: #fff; border-color: var(--primary); }
 .article-body iframe.ql-video { width: 100%; aspect-ratio: 16 / 9; height: auto; border: 0; border-radius: var(--radius); margin: 1em 0; }
 .dossier-banner > img { width: 100%; height: 100%; min-height: 220px; object-fit: cover; }
+
+/* صندوق المعلومات الآمن */
+.tips-page { max-width: 1020px; margin-inline: auto; }
+.tips-page.narrow { max-width: 720px; }
+.tips-page .page-head h1 { display: flex; align-items: center; gap: 10px; }
+.tips-grid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 28px; align-items: start; }
+.tips-form { display: grid; gap: 14px; margin-bottom: 20px; }
+.tips-form label { font-family: var(--font-ui); font-size: .95rem; }
+.tips-form .field[type="file"] { padding: 8px; }
+.tips-advice { background: var(--surface); border-radius: var(--radius); padding: 18px 20px; font-family: var(--font-ui); font-size: .95rem; line-height: 1.8; }
+.tips-advice h2 { font-size: 1.05rem; margin: 0 0 6px; }
+.tips-advice ul { margin: 0 0 16px; padding-inline-start: 20px; }
+.tips-code { font: 700 1.5rem/1.4 ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; letter-spacing: .06em; background: var(--surface); border: 2px dashed var(--primary); border-radius: var(--radius); padding: 16px; text-align: center; user-select: all; overflow-wrap: anywhere; }
+.tips-thread { margin: 20px 0; }
+.tips-thread h2 { font-size: 1.1rem; }
+.tips-reply { background: var(--surface); border-inline-start: 3px solid var(--primary); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 10px; }
+@media (max-width: 760px) { .tips-grid { grid-template-columns: 1fr; } }

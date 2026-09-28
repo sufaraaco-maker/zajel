@@ -49,6 +49,7 @@ class Cap:
     AUDIT = "audit.view"
     BACKUPS = "backups.manage"
     IMPORT = "import.run"
+    TIPS = "tips.manage"
 
 
 CAPABILITY_LABELS = {
@@ -78,6 +79,7 @@ CAPABILITY_LABELS = {
     Cap.AUDIT: "سجل التدقيق",
     Cap.BACKUPS: "النسخ الاحتياطي",
     Cap.IMPORT: "استيراد الأرشيف",
+    Cap.TIPS: "صندوق المعلومات الآمن",
 }
 
 _WRITER = {Cap.ARTICLE_CREATE, Cap.ARTICLE_EDIT_OWN, Cap.ARTICLE_SUBMIT, Cap.MEDIA_UPLOAD}
@@ -98,6 +100,7 @@ _CHIEF = _DESK_HEAD | {
     Cap.HOMEPAGE,
     Cap.PAGES,
     Cap.DIST_MANAGE,
+    Cap.TIPS,
 }
 _SOCIAL = {Cap.ANALYTICS, Cap.DIST_SEND, Cap.DIST_MANAGE, Cap.MEDIA_UPLOAD, Cap.BREAKING}
 _ADMIN = set(CAPABILITY_LABELS)

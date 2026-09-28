@@ -171,6 +171,11 @@ def user_sessions_end(request, pk: int):
 def profile(request):
     from arcms.content.models import Author
 
+    if request.method == "POST" and request.POST.get("action") == "notifications":
+        request.user.email_notifications = request.POST.get("email_notifications") == "on"
+        request.user.save(update_fields=["email_notifications"])
+        messages.success(request, "حُفظ تفضيل التنبيهات.")
+        return redirect("studio:profile")
     return render(
         request,
         "studio/profile.html",

@@ -66,6 +66,10 @@ class Command(BaseCommand):
                         location=MenuItem.Location.TOP, label=pages[slug].title, link_type=MenuItem.LinkType.PAGE,
                         page=pages[slug], order=order,
                     )
+                MenuItem.objects.create(
+                    location=MenuItem.Location.TOP, label="أرسل معلومة بأمان", link_type=MenuItem.LinkType.URL,
+                    url="/tips/", order=10,
+                )
                 for order, slug in enumerate(("about", "privacy", "terms", "contact")):
                     MenuItem.objects.create(
                         location=MenuItem.Location.FOOTER, label=pages[slug].title, link_type=MenuItem.LinkType.PAGE,

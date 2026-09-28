@@ -1,0 +1,37 @@
+{% extends "public/base.html" %}
+{% block title %}أرسل معلومة بأمان | {{ site.name }}{% endblock %}
+{% block description %}أرسل إلى {{ site.name }} معلومة أو صورة أو وثيقة دون أن نعرف من أنت.{% endblock %}
+{% block content %}
+<article class="tips-page">
+  <header class="page-head"><h1>{{ "shield"|icon:26 }} أرسل معلومة بأمان</h1></header>
+  <div class="tips-grid">
+    <form method="post" enctype="multipart/form-data" class="tips-form">
+      {% csrf_token %}
+      {% if error %}<ul class="messages"><li class="error">{{ error }}</li></ul>{% endif %}
+      <label>الموضوع (اختياري)<input class="field" name="subject" maxlength="200" value="{{ form.subject }}" autocomplete="off"></label>
+      <label>المعلومة<textarea class="field" name="body" rows="9" required minlength="10" maxlength="20000" autocomplete="off">{{ form.body }}</textarea></label>
+      <label>صور أو ملفات PDF (حتى {{ max_files }}، 15 ميغابايت لكل ملف)<input class="field" type="file" name="files" multiple accept="image/*,application/pdf"></label>
+      <label>كيف نتواصل معك؟ (اختياري)<input class="field" name="contact" maxlength="300" value="{{ form.contact }}" autocomplete="off" placeholder="سيغنال، أو بريد لا يحمل اسمك… اتركه فارغاً لتبقى مجهولاً"></label>
+      <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <button class="btn" type="submit">{{ "send"|icon:16 }} أرسل</button>
+      <p class="meta">ستحصل بعد الإرسال على رمز سري تتابع به ردودنا وترسل ما يستجد، دون أن نعرف هويتك.</p>
+    </form>
+    <aside class="tips-advice">
+      <h2>ما الذي نفعله لحمايتك</h2>
+      <ul>
+        <li>لا نحفظ عنوان جهازك (IP) ولا نوع متصفحك، ولا نضع في هذه الصفحة أي أداة قياس أو إعلان.</li>
+        <li>ننزع من الصور كل البيانات المخفية: موقع التصوير (GPS)، وطراز الهاتف ورقمه، والتاريخ، واسم الملف الأصلي.</li>
+        <li>نحفظ رسالتك ومرفقاتها مشفّرة، ولا يطّلع عليها إلا رئيس التحرير ومن يكلّفه، ويُسجَّل كل اطلاع.</li>
+        <li>نحذف البلاغات المغلقة نهائياً بعد مدة محددة.</li>
+      </ul>
+      <h2>ما الذي تفعله أنت</h2>
+      <ul>
+        <li>الأسلم أن تفتح هذه الصفحة من <strong>متصفح Tor</strong>، أو على الأقل من نافذة خاصة، ومن جهاز وشبكة لا يرتبطان بعملك.</li>
+        <li><strong>ملفات PDF لا نستطيع تنظيفها</strong>: قد تحمل اسم كاتبها أو جهازه. إن كنت تخشى ذلك فصوّر الصفحات وأرسل الصور بدلاً منها.</li>
+        <li>لا تذكر في الرسالة ما يدل عليك إن لم يكن ضرورياً، واحتفظ بالرمز السري في مكان آمن.</li>
+      </ul>
+      <p class="meta"><a href="{% url 'public:tips_follow' %}">لديك رمز من رسالة سابقة؟ تابع الردود من هنا.</a></p>
+    </aside>
+  </div>
+</article>
+{% endblock %}

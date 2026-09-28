@@ -179,6 +179,10 @@ def transition(article: Article, user, action: str, *, note: str = "", when: dat
     article.save()
     ArticleRevision.capture(article, user, note=message)
     _log(article, action, message, before)
+    if action in ("submit", "return", "approve", "publish"):
+        from arcms.accounts.notify import workflow_event
+
+        transaction.on_commit(lambda: workflow_event(article.pk, action, user.pk))
     if action == "publish":
         transaction.on_commit(lambda: _after_publish(article.pk))
     if action == "unpublish":
@@ -209,6 +213,12 @@ def _after_publish(article_id: int) -> None:
     on_article_published(article_id)
 
 
+def _notify_published(article_id: int) -> None:
+    from arcms.accounts.notify import workflow_event
+
+    workflow_event(article_id, "publish", None)
+
+
 def publish_due(now: datetime | None = None) -> list[int]:
     """يُستدعى من العامل الخلفي كل دورة: ينشر المواد التي حان موعدها."""
     from arcms.audit.services import acting_as
@@ -229,5 +239,6 @@ def publish_due(now: datetime | None = None) -> list[int]:
             ArticleRevision.capture(article, publisher, note="نُشرت آلياً في موعدها")
             record(Action.PUBLISH, article, message="نشر مجدول", changes={"status": [Status.SCHEDULED, Status.PUBLISHED]})
             transaction.on_commit(lambda pk=pk: _after_publish(pk))
+            transaction.on_commit(lambda pk=pk: _notify_published(pk))
             published.append(pk)
     return published

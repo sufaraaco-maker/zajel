@@ -302,3 +302,12 @@ code { background: #f1f1ee; padding: 1px 6px; border-radius: 4px; font-size: .88
 .cal-item .c { display: block; font-size: .72rem; color: var(--muted); }
 .cal-item.scheduled { background: #e3f3f6; border-inline-start: 3px solid #0d5f6e; }
 @media (max-width: 1100px) { .calendar { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* صندوق المعلومات */
+.tip-body { white-space: normal; line-height: 1.9; }
+.tip-msg { border-inline-start: 3px solid var(--line); padding: 8px 12px; margin-bottom: 10px; }
+.tip-msg.ours { border-color: var(--primary); background: var(--bg); }
+.tip-files { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-top: 12px; }
+.tip-file { display: grid; gap: 6px; align-content: start; }
+.tip-file img { width: 100%; height: 120px; object-fit: cover; border-radius: 6px; border: 1px solid var(--line); }
+.tip-doc { height: 120px; display: grid; place-items: center; border: 1px dashed var(--line); border-radius: 6px; font-weight: 700; }

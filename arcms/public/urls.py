@@ -2,6 +2,8 @@ from django.contrib.sitemaps.views import index as sitemap_index
 from django.contrib.sitemaps.views import sitemap
 from django.urls import path, re_path
 
+from arcms.tips import views as tips
+
 from . import feeds, sitemaps, views
 
 app_name = "public"
@@ -22,6 +24,8 @@ urlpatterns = [
     re_path(r"^live/(?P<slug>[^/]+)/entries\.json$", views.live_entries_json, name="live_entries"),
     re_path(r"^live/(?P<slug>[^/]+)/?$", views.live_detail, name="live"),
     re_path(r"^p/(?P<slug>[^/]+)/?$", views.page_detail, name="page"),
+    path("tips/", tips.submit, name="tips"),
+    path("tips/follow/", tips.follow, name="tips_follow"),
     path("newsletter/subscribe", views.newsletter_subscribe, name="newsletter_subscribe"),
     path("newsletter/confirm/<str:token>", views.newsletter_confirm, name="newsletter_confirm"),
     path("newsletter/unsubscribe/<str:token>", views.newsletter_unsubscribe, name="newsletter_unsubscribe"),

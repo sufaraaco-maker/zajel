@@ -1,0 +1,29 @@
+{% extends "studio/base.html" %}
+{% block title %}صندوق المعلومات{% endblock %}
+{% block content %}
+<div class="page-title">
+  <div><h1>صندوق المعلومات الآمن</h1><p>ما يرسله المصادر من <a href="{% url 'public:tips' %}" target="_blank" rel="noopener">صفحة الإرسال</a>. لا يُحفظ عنهم عنوان ولا متصفح، والنصوص والمرفقات مشفّرة، وكل اطلاع يُسجَّل باسمك. المغلق يُحذف نهائياً بعد {{ retention }} يوماً.</p></div>
+</div>
+<div class="tabs">
+  <a href="?status=open" class="{% if status == 'open' %}active{% endif %}">مفتوحة ({{ counts.open }})</a>
+  {% for value, label in statuses %}<a href="?status={{ value }}" class="{% if status == value %}active{% endif %}">{{ label }}</a>{% endfor %}
+  <a href="?status=all" class="{% if status == 'all' %}active{% endif %}">الكل</a>
+</div>
+<div class="table-wrap"><table class="data">
+  <thead><tr><th>المرجع</th><th>الموضوع</th><th>الحالة</th><th>المتابِع</th><th>مرفقات</th><th>رسائل</th><th>آخر حركة</th></tr></thead>
+  <tbody>
+  {% for t in page %}
+  <tr>
+    <td dir="ltr" style="text-align:right"><a href="{% url 'studio:tip_detail' t.pk %}">{% if t.unread %}<strong>{{ t.ref }}</strong>{% else %}{{ t.ref }}{% endif %}</a></td>
+    <td><a href="{% url 'studio:tip_detail' t.pk %}">{% if t.unread %}<span class="pill warn">جديد</span> {% endif %}{{ t.subject|default:"(بلا موضوع)"|truncatechars:70 }}</a></td>
+    <td><span class="pill{% if t.status == 'new' %} warn{% elif t.status == 'used' %} ok{% endif %}">{{ t.get_status_display }}</span></td>
+    <td class="small">{{ t.assigned_to|default:"—" }}</td>
+    <td class="num">{{ t.n_files }}</td>
+    <td class="num">{{ t.n_msgs }}</td>
+    <td class="small">{{ t.updated_at|ar_relative }}</td>
+  </tr>
+  {% empty %}<tr><td colspan="7" class="empty">لا بلاغات هنا.</td></tr>{% endfor %}
+  </tbody>
+</table></div>
+{% include "studio/partials/pagination.html" %}
+{% endblock %}

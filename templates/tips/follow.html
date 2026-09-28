@@ -1,0 +1,31 @@
+{% extends "public/base.html" %}
+{% block title %}متابعة رسالتك | {{ site.name }}{% endblock %}
+{% block content %}
+<article class="tips-page narrow">
+  <header class="page-head"><h1>متابعة رسالتك</h1></header>
+  {% if error %}<ul class="messages"><li class="error">{{ error }}</li></ul>{% endif %}
+  {% if tip %}
+    {% if sent %}<ul class="messages"><li class="success">وصلت رسالتك الجديدة.</li></ul>{% endif %}
+    <p class="meta">أرسلت إلينا {{ sent_count }} رسالة. لا نعرض هنا نصوصها حمايةً لك.</p>
+    <section class="tips-thread">
+      <h2>ردود غرفة الأخبار</h2>
+      {% for m in replies %}<div class="tips-reply"><div class="meta">{{ m.created_at|ar_datetime }}</div><div>{{ m.body|linebreaksbr }}</div></div>
+      {% empty %}<p class="meta">لا ردود بعد. نقرأ كل رسالة، وقد يستغرق التحقق وقتاً.</p>{% endfor %}
+    </section>
+    <form method="post" enctype="multipart/form-data" class="tips-form">
+      {% csrf_token %}
+      <input type="hidden" name="code" value="{{ code }}">
+      <label>رسالة جديدة<textarea class="field" name="body" rows="6" required maxlength="20000" autocomplete="off"></textarea></label>
+      <label>صور أو ملفات PDF (حتى {{ max_files }})<input class="field" type="file" name="files" multiple accept="image/*,application/pdf"></label>
+      <button class="btn" type="submit">{{ "send"|icon:16 }} أرسل</button>
+    </form>
+  {% else %}
+    <form method="post" class="tips-form">
+      {% csrf_token %}
+      <label>الرمز السري<input class="field" name="code" required autocomplete="off" dir="ltr" placeholder="XXXXX-XXXXX-XXXXX-XXXXX" spellcheck="false"></label>
+      <button class="btn" type="submit">متابعة</button>
+    </form>
+    <p class="meta"><a href="{% url 'public:tips' %}">إرسال معلومة جديدة</a></p>
+  {% endif %}
+</article>
+{% endblock %}

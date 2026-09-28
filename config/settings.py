@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "arcms.analytics",
     "arcms.backups",
     "arcms.importer",
+    "arcms.tips",
     "arcms.studio",
     "arcms.public",
 ]
@@ -181,6 +182,7 @@ if not FIELD_ENCRYPTION_KEY and (DEBUG or TESTING):
 ARCMS_2FA_ISSUER = env.get("ARCMS_2FA_ISSUER", "arcms")
 ARCMS_LOGIN_MAX_FAILURES = env.get_int("ARCMS_LOGIN_MAX_FAILURES", 5)
 ARCMS_LOGIN_LOCK_MINUTES = env.get_int("ARCMS_LOGIN_LOCK_MINUTES", 15)
+ARCMS_TIPS_RETENTION_DAYS = env.get_int("ARCMS_TIPS_RETENTION_DAYS", 90)
 
 # --- البريد (النشرة اليومية والإشعارات الداخلية) ---
 EMAIL_BACKEND = env.get(

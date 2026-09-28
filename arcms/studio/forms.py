@@ -256,7 +256,7 @@ class SiteSettingsForm(forms.ModelForm):
         ("روابط التواصل", ["telegram", "whatsapp", "x_twitter", "facebook", "instagram", "youtube", "tiktok",
                            "alt_language_label", "alt_language_url", "contact_email", "tips_note"]),
         ("التذييل", ["footer_about", "copyright_text"]),
-        ("سياسات التحرير والأمان", ["require_2fa_all_staff", "require_review"]),
+        ("سياسات التحرير والأمان", ["require_2fa_all_staff", "require_review", "tips_enabled"]),
         ("الجمهور والتوزيع", ["analytics_enabled", "analytics_respect_dnt", "newsletter_enabled", "newsletter_hour",
                               "newsletter_count", "push_enabled", "home_cache_seconds"]),
         ("متقدم", ["custom_head_html"]),

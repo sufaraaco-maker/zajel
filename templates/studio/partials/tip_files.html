@@ -1,0 +1,8 @@
+{% if files %}<div class="tip-files">{% for f in files %}
+  <div class="tip-file">
+    {% if f.kind == "image" %}<a href="{% url 'studio:tip_attachment' f.tip_id f.pk %}?inline=1" target="_blank" rel="noopener"><img src="{% url 'studio:tip_attachment' f.tip_id f.pk %}?inline=1" alt="مرفق" loading="lazy"></a>{% else %}<div class="tip-doc">PDF</div>{% endif %}
+    <div class="small">{{ f.get_kind_display }} · {{ f.size|filesizeformat }}{% if f.width %} · <bdi dir="ltr">{{ f.width }}×{{ f.height }}</bdi>{% endif %}</div>
+    {% if f.removed %}<div class="small muted">نُزع منها: {{ f.removed|join:"، " }}</div>{% endif %}
+    {% if f.metadata_warning %}<div class="small" style="color:var(--warn)">لم تُنزع بيانات هذا المستند؛ قد يحمل اسم كاتبه أو جهازه. لا تنشره كما هو.</div>{% endif %}
+    <a class="btn sm" href="{% url 'studio:tip_attachment' f.tip_id f.pk %}">{{ "download"|icon:14 }} تنزيل</a>
+  </div>{% endfor %}</div>{% endif %}

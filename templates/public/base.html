@@ -31,15 +31,15 @@
 </style>
 <script src="{% static 'js/theme-init.js' %}"></script>
 {% block head %}{% endblock %}
-{% if site.custom_head_html %}{{ site.custom_head_html|safe }}{% endif %}
+{% if site.custom_head_html and not private_page %}{{ site.custom_head_html|safe }}{% endif %}
 </head>
-<body {% if site.analytics_enabled %}data-track{% endif %} {% if track_article %}data-article="{{ track_article }}"{% endif %} {% if track_category %}data-category="{{ track_category }}"{% endif %}>
+<body {% if site.analytics_enabled and not private_page %}data-track{% endif %} {% if track_article %}data-article="{{ track_article }}"{% endif %} {% if track_category %}data-category="{{ track_category }}"{% endif %}>
 <a class="skip-link" href="#main">انتقل إلى المحتوى</a>
 {% include "public/partials/header.html" %}
 {% if ticker %}{% include "public/partials/ticker.html" %}{% endif %}
 <main id="main">
   <div class="container">
-    {% if ad_header %}{% include "public/partials/ad.html" with ad=ad_header %}{% endif %}
+    {% if ad_header and not private_page %}{% include "public/partials/ad.html" with ad=ad_header %}{% endif %}
     {% if messages %}<ul class="messages">{% for m in messages %}<li class="{{ m.tags }}">{{ m }}</li>{% endfor %}</ul>{% endif %}
     {% block content %}{% endblock %}
   </div>

@@ -236,6 +236,14 @@ class Command(BaseCommand):
                                          description="كل ما نشرناه عن موسم الزيتون: الحصاد، والأسعار، وحكايات المزارعين.")
         dossier.articles.set(Article.objects.filter(tags__name="الزيتون"))
         HomeBlock.objects.create(kind=HomeBlock.Kind.DOSSIER, dossier=dossier, order=45, count=4)
+        from arcms.tips.services import add_newsroom_reply, create_tip
+
+        tip, _ = create_tip(
+            subject="حفريات قرب السور ليلاً",
+            body="منذ ثلاث ليالٍ تعمل آليات بعد منتصف الليل قرب الجهة الجنوبية من السور. صوّرت من نافذة البيت.",
+            files=[with_fake_gps(make_art(4242, "#3b3f46"))],
+        )
+        add_newsroom_reply(tip, chief, "شكراً لك. هل تعرف الجهة المنفّذة؟ ولا ترسل صوراً من النافذة نفسها مرة أخرى.")
 
     def _traffic(self):
         """زيارات مصطنعة لثلاثين يوماً حتى تمتلئ لوحة الجمهور و«الأكثر قراءة»."""

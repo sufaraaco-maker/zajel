@@ -55,4 +55,8 @@ def _studio(user) -> dict:
         counts["review"] = qs.count()
     if Cap.ARTICLE_PUBLISH in caps:
         counts["approved"] = Article.objects.filter(status=Status.APPROVED).count()
+    if Cap.TIPS in caps:
+        from arcms.tips.models import Tip
+
+        counts["tips"] = Tip.objects.filter(unread=True).count()
     return {"user_caps": caps, "nav_counts": counts}

@@ -33,6 +33,9 @@ class User(AbstractUser):
     must_change_password = models.BooleanField("يجب تغيير كلمة المرور", default=False)
     password_changed_at = models.DateTimeField(null=True, blank=True)
     last_seen_at = models.DateTimeField(null=True, blank=True)
+    email_notifications = models.BooleanField(
+        "تنبيهات البريد", default=True, help_text="بريد عند إرسال مادة للمراجعة أو إعادتها أو اعتمادها أو نشرها."
+    )
     # يدخل في بصمة الجلسة: زيادته تُنهي كل الجلسات المفتوحة للحساب على كل الأجهزة.
     session_epoch = models.PositiveIntegerField(default=0, editable=False)
 

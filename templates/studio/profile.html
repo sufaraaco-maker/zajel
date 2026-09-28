@@ -21,6 +21,13 @@
   <section class="panel">
     <h2>صلاحياتك</h2>
     <div class="chips">{% for c in caps %}<span class="chip">{{ c }}</span>{% endfor %}</div>
+    <h2 style="margin-top:18px">التنبيهات</h2>
+    <form method="post">{% csrf_token %}<input type="hidden" name="action" value="notifications">
+      <label class="check"><input type="checkbox" name="email_notifications"{% if user.email_notifications %} checked{% endif %}> بريد عند إرسال مادة لمراجعتي، أو إعادة مادتي أو اعتمادها أو نشرها{% if "tips.manage" in user_caps %}، وعند وصول رسالة إلى صندوق المعلومات{% endif %}</label>
+      {% if not user.email %}<p class="small muted">لا بريد مسجَّل لحسابك؛ اطلب من مدير النظام إضافته.</p>{% endif %}
+      <p class="small muted">لا يحمل البريد نص المادة ولا عنوانها قبل النشر، فقط رقمها ورابطها.</p>
+      <button class="btn sm">حفظ</button>
+    </form>
     {% if author %}<p class="small" style="margin-top:14px">سطر الكاتب: <a href="{{ author.get_absolute_url }}" target="_blank" rel="noopener">{{ author.name }}</a></p>{% endif %}
   </section>
 </div>

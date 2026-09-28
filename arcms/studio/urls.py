@@ -9,6 +9,7 @@ from . import views_admin as admin
 from . import views_articles as articles
 from . import views_media as media
 from . import views_newsroom as newsroom
+from . import views_tips as tips_views
 from . import views_tools as tools
 from .base import Crud
 from .forms import AdSlotForm, AuthorForm, CategoryForm, DossierForm, MenuItemForm, PageForm, TagForm
@@ -118,6 +119,10 @@ urlpatterns = [
     path("subscribers/export.csv", tools.subscribers_export, name="subscribers_export"),
     path("subscribers/<int:pk>/delete/", tools.subscriber_delete, name="subscriber_delete"),
     path("calendar/", tools.calendar, name="calendar"),
+    path("tips/", tips_views.tips_list, name="tips"),
+    path("tips/<int:pk>/", tips_views.tip_detail, name="tip_detail"),
+    path("tips/<int:pk>/delete/", tips_views.tip_delete, name="tip_delete"),
+    path("tips/<int:pk>/files/<int:att>/", tips_views.tip_attachment, name="tip_attachment"),
     *categories.urls(),
     *tags.urls(),
     *authors.urls(),

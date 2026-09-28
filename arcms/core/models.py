@@ -99,6 +99,11 @@ class SiteSettings(models.Model):
     require_review = models.BooleanField(
         "إلزام المراجعة قبل النشر", default=True, help_text="يمنع رئيس القسم من نشر مادته دون مراجعة زميل."
     )
+    tips_enabled = models.BooleanField(
+        "صندوق المعلومات الآمن",
+        default=True,
+        help_text="صفحة يرسل منها المصادر معلومات وصوراً دون كشف هويتهم، ويطّلع عليها رئيس التحرير ومدير النظام فقط.",
+    )
     analytics_enabled = models.BooleanField("قياس الجمهور", default=True)
     analytics_respect_dnt = models.BooleanField("احترام «عدم التتبع» في المتصفح", default=True)
     newsletter_enabled = models.BooleanField("النشرة اليومية", default=True)
