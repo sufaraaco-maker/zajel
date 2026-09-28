@@ -320,3 +320,6 @@ code { background: #f1f1ee; padding: 1px 6px; border-radius: 4px; font-size: .88
 .theme-card .swatch i:first-child { flex: 2; background: var(--t-primary); }
 .theme-card .swatch i:last-child { flex: 1; background: var(--t-accent); }
 .theme-card small { color: var(--muted); font-size: .78rem; }
+.setup-steps { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.setup-form fieldset { margin-bottom: 16px; }
+label.theme-card:has(input:checked) { border-color: var(--t-primary, var(--primary)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--t-primary, var(--primary)) 25%, transparent); }

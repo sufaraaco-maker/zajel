@@ -47,7 +47,8 @@
       <a href="{% url 'studio:distribution' %}" class="{% if '/studio/distribution' in p or '/studio/whatsapp' in p or '/studio/subscribers' in p %}active{% endif %}">{{ "send"|icon:18 }} القنوات والمشتركون</a>{% endif %}
 
       {% if "settings.manage" in user_caps or "users.manage" in user_caps or "audit.view" in user_caps %}<div class="group">الإدارة والأمان</div>{% endif %}
-      {% if "settings.manage" in user_caps %}<a href="{% url 'studio:settings' %}" class="{% if '/studio/settings' in p %}active{% endif %}">{{ "gear"|icon:18 }} إعدادات الموقع</a>
+      {% if "settings.manage" in user_caps %}<a href="{% url 'studio:setup' %}" class="{% if '/studio/setup' in p %}active{% endif %}">{{ "check"|icon:18 }} معالج الإعداد</a>
+      <a href="{% url 'studio:settings' %}" class="{% if '/studio/settings' in p %}active{% endif %}">{{ "gear"|icon:18 }} إعدادات الموقع</a>
       <a href="{% url 'studio:inbox' %}" class="{% if '/studio/inbox' in p %}active{% endif %}">{{ "inbox"|icon:18 }} رسائل القرّاء</a>{% endif %}
       {% if "users.manage" in user_caps %}<a href="{% url 'studio:users' %}" class="{% if '/studio/users' in p %}active{% endif %}">{{ "users"|icon:18 }} المستخدمون والرتب</a>{% endif %}
       {% if "audit.view" in user_caps %}<a href="{% url 'studio:audit' %}" class="{% if '/studio/audit' in p %}active{% endif %}">{{ "history"|icon:18 }} سجل التدقيق</a>{% endif %}

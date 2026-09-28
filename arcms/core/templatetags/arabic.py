@@ -131,3 +131,14 @@ def localdate(value):
 def dict_items(value):
     """أزواج قاموس للحلقات. ‎d.items‎ في القوالب تُقرأ مفتاحاً إن وُجد مفتاح اسمه items."""
     return list(value.items()) if isinstance(value, dict) else []
+
+
+@register.filter
+def split_words(value):
+    return str(value).split()
+
+
+@register.filter
+def getfield(form, name):
+    """حقل نموذج باسمه (للقوالب التي ترتّب الحقول يدوياً)."""
+    return form[name]

@@ -1,0 +1,40 @@
+{% extends "studio/base.html" %}
+{% block title %}معالج الإعداد{% endblock %}
+{% block content %}
+<div class="page-title"><div><h1>معالج إعداد الموقع</h1><p>لكل مؤسسة نسختها: اسمها وشعارها ومظهرها وأقسامها ومنصاتها. يمكن العودة إلى هنا وتغيير أي شيء في أي وقت، وكل تفصيل آخر في <a href="{% url 'studio:settings' %}">إعدادات الموقع</a>.</p></div></div>
+<div class="setup-steps">{% for label, ok in steps %}<span class="pill{% if ok %} ok{% else %} warn{% endif %}">{% if ok %}{{ "check"|icon:14 }}{% endif %} {{ label }}</span>{% endfor %}</div>
+<form method="post" data-media-form class="setup-form">
+  {% csrf_token %}
+  {% if form.errors %}<div class="alert error">راجع الحقول المعلَّمة.</div>{% endif %}
+  <fieldset>
+    <legend>1. الهوية</legend>
+    <div class="field-grid">
+      {% for name in "name short_name tagline description"|split_words %}{% with field=form|getfield:name %}{% include "studio/partials/field.html" %}{% endwith %}{% endfor %}
+      <div class="form-row"><span class="label">الشعار</span>{% with field=form.logo %}{% include "studio/partials/image_field.html" %}{% endwith %}<div class="help">PNG أو SVG محوَّل إلى PNG بخلفية شفافة، يظهر في الترويسة وأيقونة الموقع.</div></div>
+      <div class="form-row"><span class="label">الشعار على الخلفية الداكنة (اختياري)</span>{% with field=form.logo_dark %}{% include "studio/partials/image_field.html" %}{% endwith %}<div class="help">يظهر في التذييل والوضع الداكن.</div></div>
+    </div>
+  </fieldset>
+  <fieldset>
+    <legend>2. المظهر</legend>
+    <div class="themes">
+      <label class="theme-card"><input type="radio" name="theme" value="" checked hidden><span class="swatch" style="--t-primary: {{ site.primary_color }}; --t-accent: {{ site.accent_color }}"><i></i><i></i></span><strong>المظهر الحالي</strong><small>بلا تغيير</small></label>
+      {% for key, t in themes|dict_items %}
+      <label class="theme-card" style="--t-primary: {{ t.primary_color }}; --t-accent: {{ t.accent_color }}"><input type="radio" name="theme" value="{{ key }}" hidden><span class="swatch"><i></i><i></i></span><strong>{{ t.label }}</strong><small>{% if t.header_style == "compact" %}ترويسة حديثة{% else %}ترويسة كلاسيكية{% endif %}</small></label>
+      {% endfor %}
+    </div>
+  </fieldset>
+  <fieldset>
+    <legend>3. بنية الموقع</legend>
+    {% include "studio/partials/field.html" with field=form.structure %}
+  </fieldset>
+  <fieldset>
+    <legend>4. المنصات والتواصل</legend>
+    <div class="field-grid">
+      {% for name in "telegram whatsapp x_twitter facebook instagram youtube tiktok alt_language_url contact_email header_cta_label header_cta_url"|split_words %}{% with field=form|getfield:name %}{% include "studio/partials/field.html" %}{% endwith %}{% endfor %}
+    </div>
+    <p class="small muted">روابط المنصات تظهر في الترويسة والتذييل وكتلة «منصاتنا»، ورابط تيليجرام يصير رابط بطاقة الترويج. بيانات النشر الآلي إلى القنوات (رموز البوتات) في ملف البيئة على الخادم، وتُفعَّل من «التوزيع».</p>
+  </fieldset>
+  <button class="btn primary" type="submit">تطبيق</button>
+</form>
+{% endblock %}
+{% block modals %}{% include "studio/partials/media_modal.html" %}{% endblock %}

@@ -399,6 +399,19 @@
       hit.addEventListener("blur", function () { tip.hidden = true; });
     });
   });
+})();
+
+(function () {
+  "use strict";
+  function $(s, r) { return (r || document).querySelector(s); }
+  function $$(s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
+  function el(tag, attrs, text) {
+    var n = document.createElement(tag);
+    Object.keys(attrs || {}).forEach(function (k) { n.setAttribute(k, attrs[k]); });
+    if (text) n.textContent = text;
+    return n;
+  }
+
   // --- نموذج كتلة الصفحة الرئيسية: إظهار حقول النوع المختار فقط، واختيار المواد ---
   var blockForm = $("[data-block-form]");
   if (blockForm) {

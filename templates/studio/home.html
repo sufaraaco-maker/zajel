@@ -9,6 +9,7 @@
   </div>
 </div>
 
+{% if "settings.manage" in user_caps and not site.logo %}<div class="alert info">{{ "gear"|icon:18 }} <div><strong>أكمل إعداد الموقع:</strong> الشعار والمظهر والأقسام والمنصات في صفحة واحدة. <a href="{% url 'studio:setup' %}">افتح معالج الإعداد ←</a></div></div>{% endif %}
 {% if not worker_ok %}<div class="alert warning">{{ "alert"|icon:18 }} <div><strong>العامل الخلفي متوقف.</strong> النشر المجدول والتوزيع على القنوات والنشرة لن تعمل حتى يُشغَّل <code>manage.py arcms_worker</code>.</div></div>{% endif %}
 {% if failed_jobs %}<div class="alert error">{{ "alert"|icon:18 }} {{ failed_jobs }} عملية توزيع أو مهمة خلفية فشلت خلال يومين. <a href="{% url 'studio:distribution' %}">اعرض التفاصيل</a></div>{% endif %}
 {% if nav_counts.returned %}<div class="alert warning">{{ "pen"|icon:18 }} أُعيدت إليك {{ nav_counts.returned }} مادة للتعديل.</div>{% endif %}

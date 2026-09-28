@@ -9,6 +9,7 @@ from . import views_admin as admin
 from . import views_articles as articles
 from . import views_media as media
 from . import views_newsroom as newsroom
+from . import views_setup as setup_views
 from . import views_tips as tips_views
 from . import views_tools as tools
 from .base import Crud
@@ -96,6 +97,7 @@ urlpatterns = [
     path("homepage/<int:pk>/", admin.homepage_block, name="homepage_edit"),
     path("homepage/<int:pk>/action/", admin.homepage_action, name="homepage_action"),
     path("settings/", admin.site_settings, name="settings"),
+    path("setup/", setup_views.setup, name="setup"),
     path("users/", admin.users, name="users"),
     path("users/new/", admin.user_edit, name="user_new"),
     path("users/<int:pk>/", admin.user_edit, name="user_edit"),

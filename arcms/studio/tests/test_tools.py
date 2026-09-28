@@ -142,3 +142,32 @@ class TemplateKeyCollisionTests(ArcmsTestCase):
         block.save()  # قيد تدقيق فيه حقل اسمه items
         self.assertEqual(self.client.get(reverse("studio:audit")).status_code, 200)
         self.assertEqual(self.client.get(reverse("studio:audit"), {"items": "x", "page": 1}).status_code, 200)
+
+
+class SetupWizardTests(ArcmsTestCase):
+    def test_wizard_applies_identity_theme_structure(self):
+        from arcms.content.models import Category
+        from arcms.core.models import HomeBlock, MenuItem, SiteSettings
+
+        login(self.client, make_user("root", Role.ADMIN))
+        self.assertContains(self.client.get(reverse("studio:home")), "أكمل إعداد الموقع")
+        self.assertContains(self.client.get(reverse("studio:setup")), "معالج إعداد الموقع")
+        existing = make_article("مادة قديمة")
+        resp = self.client.post(reverse("studio:setup"), {
+            "name": "شبكة الغد", "short_name": "الغد", "tagline": "من الميدان", "description": "وصف",
+            "telegram": "https://t.me/alghad", "contact_email": "news@alghad.example",
+            "theme": "olive-green", "structure": "general",
+        })
+        self.assertEqual(resp.status_code, 302)
+        site = SiteSettings.objects.get(pk=1)
+        self.assertEqual((site.name, site.short_name, site.telegram), ("شبكة الغد", "الغد", "https://t.me/alghad"))
+        self.assertEqual(site.primary_color, "#1c6b3a")
+        self.assertTrue(Category.objects.filter(name="رياضة").exists())
+        self.assertTrue(MenuItem.objects.exists())
+        self.assertTrue(HomeBlock.objects.exists())
+        self.assertTrue(type(existing).objects.filter(pk=existing.pk).exists())  # لا تُحذف المواد
+        self.assertIn("شبكة الغد", self.client.get("/").content.decode())
+
+    def test_chief_cannot_open_wizard(self):
+        login(self.client, make_user("chief", Role.CHIEF))
+        self.assertEqual(self.client.get(reverse("studio:setup")).status_code, 403)
