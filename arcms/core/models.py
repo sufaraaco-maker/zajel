@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import threading
+import time
 from datetime import timedelta
 
 from django.core.cache import cache
@@ -35,6 +37,8 @@ FONT_STACKS = {
     "amiri": 'Amiri,"Traditional Arabic",serif',
 }
 
+
+_local_settings = threading.local()
 
 class SiteSettings(models.Model):
     """سجل وحيد يحمل هوية الموقع وسلوكه. يُعدَّل من «إعدادات الموقع»."""
@@ -157,17 +161,31 @@ class SiteSettings(models.Model):
     def __str__(self) -> str:
         return self.name
 
+    # نسخة في ذاكرة العملية لثوانٍ: مرشّحات التواريخ تطلب الإعدادات عشرات المرات في الصفحة الواحدة،
+    # والذاكرة المؤقتة المشتركة قد تكون جدولاً في القاعدة (استعلام لكل طلب).
+    LOCAL_TTL = 5.0
+
     def save(self, *args, **kwargs):
         self.pk = 1
         super().save(*args, **kwargs)
         cache.delete(self.CACHE_KEY)
+        SiteSettings.forget_local()
+
+    @staticmethod
+    def forget_local() -> None:
+        _local_settings.value = None
 
     @classmethod
     def load(cls) -> "SiteSettings":
+        now = time.monotonic()
+        hit = getattr(_local_settings, "value", None)
+        if hit is not None and hit[1] > now:
+            return hit[0]
         obj = cache.get(cls.CACHE_KEY)
         if obj is None:
             obj, _ = cls.objects.get_or_create(pk=1)
             cache.set(cls.CACHE_KEY, obj, 300)
+        _local_settings.value = (obj, now + cls.LOCAL_TTL)
         return obj
 
     @property
