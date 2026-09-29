@@ -114,7 +114,12 @@ class RegistrationTests(ArcmsTestCase):
         options = post_json(self.client, "accounts:key_register_begin", {"password": PASSWORD}).json()
         self.assertEqual(options["rp"]["id"], "localhost")
         self.assertEqual(options["attestation"], "none")
-        self.assertNotIn(str(self.user.pk), options["user"]["id"])  # معرّف عشوائي لا رقم الحساب
+        # معرّف عشوائي من 32 بايتاً يُحفظ للحساب، لا رقمه ولا اسمه
+        handle = webauthn.unb64url(options["user"]["id"])
+        self.assertEqual(len(handle), 32)
+        self.user.refresh_from_db()
+        self.assertEqual(options["user"]["id"], self.user.webauthn_handle)
+        self.assertNotIn(self.user.username.encode(), handle)
         self.assertEqual([p["alg"] for p in options["pubKeyCredParams"]], [-7, -8, -257])
 
     def test_password_required(self):
