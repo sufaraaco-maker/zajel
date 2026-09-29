@@ -74,7 +74,16 @@ button { font: inherit; cursor: pointer; }
 .site-header.dark { border-color: transparent; }
 .header-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 14px; }
 .brand { display: flex; align-items: center; gap: 12px; }
-.brand img { height: 58px; width: auto; }
+.brand img { height: var(--logo-h, 58px); width: auto; }
+/* نسخة الشعار الفاتحة على ترويسة داكنة أو في الوضع الداكن */
+.brand .logo-dark, .site-header.dark .brand .logo-light { display: none; }
+.site-header.dark .brand .logo-dark { display: block; }
+:root[data-theme="dark"] .site-header.follows-page .logo-light { display: none; }
+:root[data-theme="dark"] .site-header.follows-page .logo-dark { display: block; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .site-header.follows-page .logo-light { display: none; }
+  :root:not([data-theme="light"]) .site-header.follows-page .logo-dark { display: block; }
+}
 .brand-mark { width: 46px; height: 46px; border-radius: 10px; background: var(--primary); display: grid; place-items: center; color: var(--on-primary); }
 .brand-name { font-family: var(--font-head); font-weight: 800; font-size: 1.9rem; line-height: 1.1; letter-spacing: 0; }
 .brand-tagline { color: var(--muted); font-size: .85rem; }
@@ -559,7 +568,7 @@ mark { background: color-mix(in srgb, var(--primary) 18%, transparent); color: i
 .header-cta:hover { color: var(--on-primary); opacity: .9; }
 .site-header.compact { position: sticky; top: 0; z-index: 40; box-shadow: 0 2px 12px rgba(0,0,0,.06); }
 .site-header.compact .header-row { padding-block: 10px; }
-.site-header.compact .brand img { height: 46px; }
+.site-header.compact .brand img { height: var(--logo-h, 46px); }
 .site-header.compact .brand-tagline { display: none; }
 .site-header.compact .search-form { display: none; }
 .site-header.compact .search-form.open { display: flex; position: absolute; inset-inline: 16px; top: calc(100% - 6px); z-index: 50; background: var(--bg); }
@@ -633,6 +642,7 @@ mark { background: color-mix(in srgb, var(--primary) 18%, transparent); color: i
   .tool-btn { width: 36px; height: 36px; }
   .header-row { gap: 10px; }
   .brand { min-width: 0; }
+  .site-header .brand img, .site-header.compact .brand img { height: min(var(--logo-h, 42px), 50px); max-width: 46vw; object-fit: contain; }
 }
 
 /* صفحة القسم بغلاف */

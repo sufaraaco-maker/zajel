@@ -12,11 +12,12 @@
     </div>
   </div>
 </div>
-<header class="site-header{% if site.palette.on_header == '#ffffff' %} dark{% endif %}{% if site.header_style == 'compact' %} compact{% endif %}">
+<header class="site-header{% if site.palette.on_header == '#ffffff' %} dark{% endif %}{% if site.header_style == 'compact' %} compact{% endif %}{% if not site.header_color and not site.header_dark %} follows-page{% endif %}">
   <div class="container header-row">
     <a class="brand" href="/" aria-label="{{ site.name }} - الرئيسية">
       {% if site.logo %}
-        <img src="{{ site.logo.url }}" alt="{{ site.name }}" width="{{ site.logo.width }}" height="{{ site.logo.height }}">
+        <img{% if site.logo_dark %} class="logo-light"{% endif %} src="{{ site.logo.url }}" alt="{{ site.name }}" width="{{ site.logo.width }}" height="{{ site.logo.height }}">
+        {% if site.logo_dark %}<img class="logo-dark" src="{{ site.logo_dark.url }}" alt="" width="{{ site.logo_dark.width }}" height="{{ site.logo_dark.height }}">{% endif %}
       {% else %}
         <span class="brand-mark">{{ "pigeon"|icon:30 }}</span>
         <span><span class="brand-name">{{ site.name }}</span><br><span class="brand-tagline">{{ site.tagline }}</span></span>

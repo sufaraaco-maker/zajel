@@ -34,11 +34,12 @@ python manage.py runserver
 - الدخول: اسم مستخدم من ناتج `arcms_demo` (مثل `chief`) وكلمة المرور `zajel-demo-2026`، ثم رمز التحقق الثنائي من تطبيق مصادقة أُضيف إليه السر المطبوع (يُحفظ أيضاً في `var/demo-credentials.txt`).
 - العامل الخلفي (النشر المجدول والتوزيع والنشرة) في طرفية ثانية بعد تفعيل البيئة: `python manage.py arcms_worker`
 - لإعادة البدء من الصفر: احذف `var/arcms.sqlite3` ومجلد `media/` ثم أعد `migrate` و`arcms_demo`.
+- هويات تجريبية أخرى: `python manage.py arcms_demo --brand sonbola` (أو `ofoq`). الصور الحقيقية تُنزّل من ويكيميديا كومنز وتُحفظ في `var/demo-photos`؛ دون إنترنت أضف `--no-photos`. التعريفات في `arcms/core/demo_brands.py` والشعارات في `arcms/core/demo_assets/logos`.
 
 ## الاختبارات والفحص
 
 ```bash
-python manage.py test          # 296 اختباراً
+python manage.py test          # 305 اختبارات
 ruff check arcms config
 ```
 

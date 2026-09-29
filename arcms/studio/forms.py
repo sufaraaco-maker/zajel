@@ -369,7 +369,8 @@ class SiteSettingsForm(forms.ModelForm):
 
     COLOR_SECTION = "الألوان والهوية البصرية"
     SECTIONS = (
-        ("الهوية", ["name", "short_name", "tagline", "description", "logo", "logo_dark", "default_share_image"]),
+        ("الهوية", ["name", "short_name", "tagline", "description", "logo", "logo_dark", "logo_height",
+                    "default_share_image"]),
         (COLOR_SECTION, ["primary_color", "accent_color", "header_dark", *SiteSettings.COLOR_AREAS]),
         ("الخطوط والشكل", ["font_headings", "font_body", "corner_style"]),
         ("الترويسة والتذييل", ["header_style", "header_cta_label", "header_cta_url", "app_ios_url", "app_android_url"]),
@@ -383,6 +384,12 @@ class SiteSettingsForm(forms.ModelForm):
                               "newsletter_count", "push_enabled", "home_cache_seconds"]),
         ("متقدم", ["custom_head_html"]),
     )
+
+    def clean_logo_height(self):
+        value = self.cleaned_data.get("logo_height") or 0
+        if 0 < value < 32:
+            raise forms.ValidationError("أقل ارتفاع مقروء 32 بكسل (أو صفر للتلقائي).")
+        return value
 
     def clean_header_cta_url(self):
         return _clean_link(self.cleaned_data.get("header_cta_url"))

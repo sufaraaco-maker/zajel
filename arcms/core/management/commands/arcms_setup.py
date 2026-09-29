@@ -8,7 +8,7 @@ from arcms.accounts.roles import Role
 from arcms.audit.services import acting_as
 from arcms.content.models import Category, Page
 from arcms.core.models import HomeBlock, MenuItem, SiteSettings
-from arcms.core.presets import PAGES, PRESETS, THEMES, apply_theme
+from arcms.core.presets import PAGES, PRESETS, THEMES, apply_theme, create_blocks
 from arcms.distribution.models import Channel, ChannelConfig
 
 
@@ -81,24 +81,7 @@ class Command(BaseCommand):
 
             if opts["force"] or not HomeBlock.objects.exists():
                 HomeBlock.objects.all().delete()
-                for order, (kind, title, cfg) in enumerate(preset["blocks"]):
-                    block = HomeBlock.objects.create(
-                        kind=kind,
-                        title=title,
-                        order=(order + 1) * 10,
-                        count=cfg.get("count", 6),
-                        layout=cfg.get("layout", HomeBlock.Layout.GRID),
-                        article_kind=cfg.get("article_kind", ""),
-                        category=cats.get(cfg.get("category")),
-                        background=cfg.get("background", ""),
-                        subtitle=cfg.get("subtitle", ""),
-                        text=cfg.get("text", ""),
-                        link=cfg.get("link", ""),
-                        button_label=cfg.get("button_label", ""),
-                        items=cfg.get("items", ""),
-                    )
-                    if cfg.get("categories"):
-                        block.categories.set([cats[c] for c in cfg["categories"]])
+                create_blocks(preset["blocks"], cats)
 
             for channel in Channel.values:
                 ChannelConfig.get(channel)

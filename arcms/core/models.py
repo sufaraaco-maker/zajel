@@ -8,7 +8,7 @@ import time
 from datetime import timedelta
 
 from django.core.cache import cache
-from django.core.validators import RegexValidator
+from django.core.validators import MaxValueValidator, RegexValidator
 from django.db import models
 from django.utils import timezone
 
@@ -68,6 +68,10 @@ class SiteSettings(models.Model):
         blank=True,
         on_delete=models.SET_NULL,
         related_name="+",
+    )
+    logo_height = models.PositiveSmallIntegerField(
+        "ارتفاع الشعار في الترويسة (بكسل)", default=0, validators=[MaxValueValidator(120)],
+        help_text="صفر = تلقائي. الشعارات العريضة تحتاج ارتفاعاً أقل، والمربعة أو ذات السطرين أكثر (بين 32 و120).",
     )
     primary_color = models.CharField(
         "اللون الرئيسي", max_length=7, default="#b0101c", validators=[hex_color],

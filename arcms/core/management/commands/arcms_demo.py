@@ -1,5 +1,7 @@
-"""موقع تجريبي كامل للتجربة المحلية: مستخدمون بكل الرتب، مواد بكل الأنواع، صور مولَّدة،
-عاجل، تغطية مباشرة، ملف خاص، وأرقام جمهور لثلاثين يوماً. لا يُستخدم على خادم إنتاج."""
+"""موقع تجريبي كامل للتجربة المحلية: مستخدمون بكل الرتب، مواد بكل الأنواع، صور حقيقية بتراخيص حرة
+(أو مولَّدة دون اتصال)، عاجل، تغطية مباشرة، ملف خاص، وأرقام جمهور لثلاثين يوماً.
+ثلاث هويات جاهزة (--brand): زاجل وسنبلة وأفق، لكل منها شعار وألوان وخطوط وواجهة.
+لا يُستخدم على خادم إنتاج."""
 
 from __future__ import annotations
 
@@ -8,6 +10,7 @@ import io
 import math
 import random
 from datetime import timedelta
+from pathlib import Path
 
 from django.conf import settings
 from django.core.management import call_command
@@ -20,7 +23,7 @@ from arcms.accounts import totp
 from arcms.accounts.models import User
 from arcms.accounts.roles import Role
 from arcms.audit.services import acting_as, suppressed
-from arcms.content.imaging import store_image
+from arcms.content.imaging import ImageRejected, store_image
 from arcms.content.models import (
     Article,
     Author,
@@ -33,14 +36,18 @@ from arcms.content.models import (
     Status,
     Tag,
 )
+from arcms.core.demo_brands import BRANDS
 from arcms.core.demo_data import ARTICLES, AUTHORS, BREAKING, EXTRA_ARTICLES, LIVE, silent_mp3
-from arcms.core.models import HomeBlock, SiteSettings
+from arcms.core.demo_photos import CommonsPhotos, credits_html, query_for
+from arcms.core.models import HomeBlock, MenuItem, SiteSettings
+
+LOGOS = Path(__file__).resolve().parents[2] / "demo_assets" / "logos"
 
 DEMO_PASSWORD = "zajel-demo-2026"
 USERS = [
     ("admin", "مدير النظام", Role.ADMIN),
     ("chief", "رئيس التحرير", Role.CHIEF),
-    ("deskhead", "رئيسة قسم الضفة", Role.DESK_HEAD),
+    ("deskhead", "رئيسة القسم", Role.DESK_HEAD),
     ("editor", "المحرر المناوب", Role.EDITOR),
     ("reporter", "سلمى الخطيب", Role.REPORTER),
     ("social", "محرر المنصات", Role.SOCIAL),
@@ -98,17 +105,29 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("--force", action="store_true", help="التشغيل حتى لو وُجدت مواد")
         parser.add_argument("--no-traffic", action="store_true")
-        parser.add_argument("--theme", default="modern-blue", help="المظهر الجاهز للموقع التجريبي")
+        parser.add_argument("--brand", choices=list(BRANDS), default="zajel",
+                            help="الهوية: " + "، ".join(f"{k} ({b['name']})" for k, b in BRANDS.items()))
+        parser.add_argument("--theme", help="مظهر جاهز بدل ألوان الهوية وخطوطها")
+        parser.add_argument("--no-photos", action="store_true", help="صور مولَّدة بدل صور ويكيميديا كومنز الحقيقية")
+        parser.add_argument("--photos-cache", help="مجلد حفظ الصور المنزّلة (الافتراضي var/demo-photos)")
 
     def handle(self, *args, **opts):
         if not settings.DEBUG and not opts["force"]:
             raise CommandError("هذا الأمر للتجربة المحلية فقط. استخدم --force إن كنت متأكداً.")
         if Article.objects.exists() and not opts["force"]:
             raise CommandError("توجد مواد بالفعل. استخدم --force لإضافة المحتوى التجريبي.")
-        call_command("arcms_setup", preset="palestine", site_name="زاجل الإخبارية", short_name="زاجل", verbosity=0)
+        self.brand = brand = BRANDS[opts["brand"]]
+        self.photos = None
+        if not opts["no_photos"]:
+            cache = Path(opts["photos_cache"]) if opts.get("photos_cache") else settings.BASE_DIR / "var" / "demo-photos"
+            self.photos = CommonsPhotos(cache, log=lambda msg: self.stdout.write(self.style.WARNING(msg)))
+            self.stdout.write("تنزيل صور حقيقية بتراخيص حرة من ويكيميديا كومنز (تُحفظ للمرات القادمة)…")
+        call_command("arcms_setup", preset=brand["preset"], site_name=brand["name"], short_name=brand["short_name"],
+                     verbosity=0, stdout=self.stdout)
         with acting_as(label="المحتوى التجريبي"), suppressed(), transaction.atomic():
             site = SiteSettings.objects.get(pk=1)
-            site.tagline = "نسخة تجريبية من منصة arcms — محتوى متخيَّل"
+            site.tagline = brand["tagline"]
+            site.description = f"{brand['name']}: موقع تجريبي لمنصة arcms — المحتوى متخيَّل."
             site.telegram = "https://t.me/example"
             site.x_twitter = "https://x.com/example"
             site.facebook = "https://facebook.com/example"
@@ -116,24 +135,36 @@ class Command(BaseCommand):
             site.instagram = "https://instagram.com/example"
             site.whatsapp = "https://whatsapp.com/channel/example"
             site.alt_language_url = "https://example.org/en"
-            site.footer_about = "زاجل موقع تجريبي لمنصة arcms: منصة نشر إخبارية عربية تعمل على خوادم المؤسسة وتملك بياناتها."
+            site.footer_about = brand["footer_about"]
             site.header_cta_label = "أرسل معلومة"
             site.header_cta_url = "/tips/"
             site.app_android_url = "https://play.google.com/store/apps/details?id=org.example.news"
             site.app_ios_url = "https://apps.apple.com/app/id0000000000"
             site.save()
-            from arcms.core.presets import apply_theme
+            from arcms.core.presets import apply_theme, create_blocks
 
-            apply_theme(site, opts.get("theme") or "modern-blue")
+            apply_theme(site, opts.get("theme") or brand["theme"])
+            if not opts.get("theme"):
+                for field, value in brand["settings"].items():
+                    setattr(site, field, value)
+            self._logos(site, brand)
+            site.save()
+            if brand.get("blocks"):
+                HomeBlock.objects.all().delete()
+                create_blocks(brand["blocks"], {c.name: c for c in Category.objects.all()})
             creds = self._users()
-            authors = self._authors()
+            authors = self._authors(site)
             self._articles(authors)
             self._extras()
+            self._credits_page()
         if not opts["no_traffic"]:
             self._traffic()
-        call_command("arcms_reindex", verbosity=0)
+        call_command("arcms_reindex", verbosity=0, stdout=self.stdout)
         lines = [f"{u}\t{DEMO_PASSWORD}\tTOTP: {s}" for u, s in creds]
-        self.stdout.write(self.style.SUCCESS("اكتمل الموقع التجريبي."))
+        self.stdout.write(self.style.SUCCESS(f"اكتمل الموقع التجريبي: {brand['name']}."))
+        if self.photos is not None:
+            n = len(self.photos.credits)
+            self.stdout.write(f"صور حقيقية: {n}" + ("" if n else " (تعذّر التنزيل؛ استُخدمت صور مولَّدة)"))
         path = settings.BASE_DIR / "var" / "demo-credentials.txt"
         try:
             path.parent.mkdir(exist_ok=True)
@@ -144,9 +175,33 @@ class Command(BaseCommand):
         for line in lines:
             self.stdout.write("  " + line)
 
+    def _logos(self, site, brand):
+        for field, suffix in (("logo", ""), ("logo_dark", "-dark")):
+            path = LOGOS / f"{brand['logo']}{suffix}.png"
+            if path.exists():
+                asset, _ = store_image(path.read_bytes(), title=f"شعار {brand['name']}", alt=brand["name"])
+                setattr(site, field, asset)
+
+    def _image(self, data: dict, seed: int, color: str, *, caption: str, gps: bool = False):
+        """صورة حقيقية مناسبة للمادة إن أمكن، وإلا لوحة مولَّدة بلون القسم."""
+        tall = data.get("tall", False)
+        photo = self.photos.get(query_for(data, data.get("source_category", "")), tall=tall) if self.photos else None
+        if photo:
+            try:
+                image, _ = store_image(with_fake_gps(photo.data) if gps else photo.data, caption=caption, credit=photo.credit)
+                return image
+            except ImageRejected:
+                pass
+        raw = make_art(seed, color, tall=tall)
+        image, _ = store_image(with_fake_gps(raw) if gps else raw, caption=caption,
+                               credit=f"{self.brand['short_name']} / صورة توضيحية")
+        return image
+
     def _users(self):
         creds = []
         for username, name, role in USERS:
+            if username == "deskhead":
+                name = self.brand["desk_label"]
             user, created = User.objects.get_or_create(username=username, defaults={"display_name": name, "role": role})
             if created:
                 user.set_password(DEMO_PASSWORD)
@@ -157,12 +212,12 @@ class Command(BaseCommand):
                 user.recovery_codes = [totp.hash_recovery_code(c) for c in codes]
                 user.save()
             creds.append((username, user.totp_secret))
-        west_bank = Category.objects.filter(name="الضفة الغربية").first()
-        if west_bank:
-            west_bank.desk_members.add(User.objects.get(username="deskhead"))
+        desk = Category.objects.filter(name=self.brand["desk"]).first()
+        if desk:
+            desk.desk_members.add(User.objects.get(username="deskhead"))
         return creds
 
-    def _authors(self):
+    def _authors(self, site):
         authors = {}
         reporter = User.objects.get(username="reporter")
         for n, (name, title, columnist) in enumerate(AUTHORS):
@@ -170,24 +225,36 @@ class Command(BaseCommand):
             photo, _ = store_image(make_art(900 + n, tones[n % len(tones)]), caption=name)
             author, _ = Author.objects.get_or_create(
                 name=name,
-                defaults={"title": title, "is_columnist": columnist, "photo": photo, "bio": f"{title} في زاجل الإخبارية."},
+                defaults={"title": title, "is_columnist": columnist, "photo": photo, "bio": f"{title} في {site.name}."},
             )
             authors[name] = author
         authors["سلمى الخطيب"].user = reporter
         authors["سلمى الخطيب"].save()
         return authors
 
+    def _article_list(self) -> list[dict]:
+        """مواد الهوية أولاً (أحدث وأبرز)، ثم المحتوى المشترك بعد مواءمة أقسامه مع أقسام القالب."""
+        brand = self.brand
+        items = [dict(a) for a in brand["articles"]]
+        for data in [*ARTICLES, *EXTRA_ARTICLES]:
+            if data["category"] in brand["skip"]:
+                continue
+            item = dict(data, source_category=data["category"])
+            item["category"] = brand["category_map"].get(data["category"], data["category"])
+            if brand["articles"]:  # واجهة الهوية لموادها الخاصة
+                item["featured"], item["priority"] = False, 0
+            items.append(item)
+        return items
+
     def _articles(self, authors):
         now = timezone.now()
         chief = User.objects.get(username="chief")
         reporter = User.objects.get(username="reporter")
         cats = {c.name: c for c in Category.objects.all()}
-        for i, data in enumerate([*ARTICLES, *EXTRA_ARTICLES]):
+        for i, data in enumerate(self._article_list()):
             cat = cats.get(data["category"])
-            raw = make_art(i + 1, cat.color if cat else "#3c4650", tall=data.get("tall", False))
-            if i == 0:
-                raw = with_fake_gps(raw)
-            image, _ = store_image(raw, caption=data.get("subtitle", "")[:120] or data["title"], credit="زاجل / صورة توضيحية")
+            image = self._image(data, i + 1, cat.color if cat else "#3c4650", gps=i == 0,
+                                caption=data.get("subtitle", "")[:120] or data["title"])
             when = now - timedelta(minutes=35 + i * 97 + random.Random(i).randint(0, 60))
             article = Article.objects.create(
                 kind=data["kind"],
@@ -222,7 +289,7 @@ class Command(BaseCommand):
             article.authors.set([authors[data["author"]]])
             article.tags.set([Tag.get_or_create_by_name(t) for t in data.get("tags", [])])
             for n in range(data.get("gallery", 0)):
-                g, _ = store_image(make_art(500 + i * 10 + n, cat.color if cat else "#555"), caption=f"صورة {n + 1}")
+                g = self._image(data, 500 + i * 10 + n, cat.color if cat else "#555", caption=f"صورة {n + 1}")
                 GalleryItem.objects.create(article=article, media=g, order=n, caption=f"من السوق صباحاً ({n + 1})")
         # مواد في مراحل التحرير لتجربة سير العمل
         for title, status in (
@@ -231,32 +298,34 @@ class Command(BaseCommand):
             ("أُعيدت للتعديل: جولة في معرض الصناعات المحلية", Status.CHANGES),
         ):
             Article.objects.create(
-                title=title, kind="news", status=status, category=cats.get("الضفة الغربية"), created_by=reporter,
+                title=title, kind="news", status=status, category=cats.get(self.brand["desk"]), created_by=reporter,
                 body="<p>نص أولي للمادة يحتاج إلى استكمال.</p>", submitted_at=now if status != Status.DRAFT else None,
             )
 
     def _extras(self):
         now = timezone.now()
         chief = User.objects.get(username="chief")
-        for n, text in enumerate(BREAKING):
+        brand = self.brand
+        for n, text in enumerate(brand.get("breaking", BREAKING)):
             BreakingNews.objects.create(text=text, created_by=chief, created_at=now - timedelta(minutes=20 + n * 50),
                                         send_telegram=False, send_push=False)
-        live = LiveCoverage.objects.create(title=LIVE["title"], summary=LIVE["summary"], created_by=chief,
+        live_data = brand.get("live", LIVE)
+        live = LiveCoverage.objects.create(title=live_data["title"], summary=live_data["summary"], created_by=chief,
                                            started_at=now - timedelta(hours=3))
-        for n, text in enumerate(LIVE["entries"]):
+        for n, text in enumerate(live_data["entries"]):
             LiveEntry.objects.create(coverage=live, body=text, author=chief, created_at=now - timedelta(minutes=170 - n * 40),
                                      is_important=n == 1)
-        cover, _ = store_image(make_art(777, "#1c6b3a"), caption="ملف موسم الزيتون")
-        dossier = Dossier.objects.create(title="ملف خاص: موسم الزيتون", cover=cover, color="#1c6b3a",
-                                         description="كل ما نشرناه عن موسم الزيتون: الحصاد، والأسعار، وحكايات المزارعين.")
-        dossier.articles.set(Article.objects.filter(tags__name="الزيتون"))
+        spec = brand["dossier"]
+        cover = self._image({"photo": spec["photo"]}, 777, spec["color"], caption=spec["title"])
+        dossier = Dossier.objects.create(title=spec["title"], cover=cover, color=spec["color"], description=spec["description"])
+        dossier.articles.set(Article.objects.filter(tags__name__in=spec["tags"]).distinct())
         HomeBlock.objects.create(kind=HomeBlock.Kind.DOSSIER, dossier=dossier, order=45, count=4)
         # كتل الواجهة التي تحتاج بيانات الموقع التجريبي: رابط القناة للترويج، ومختارات المحررين، وأعداد المتابعين
         site = SiteSettings.objects.get(pk=1)
-        HomeBlock.objects.filter(kind=HomeBlock.Kind.PROMO, link="").update(link=site.telegram)
-        HomeBlock.objects.filter(kind=HomeBlock.Kind.PLATFORMS).update(
-            items="telegram | 1.2 مليون\nwhatsapp | 480 ألف\nx | 350 ألف\nfacebook | 2.1 مليون\ninstagram | 900 ألف\nyoutube | 610 ألف"
+        HomeBlock.objects.filter(kind=HomeBlock.Kind.PROMO, link="").update(
+            link=getattr(site, brand.get("promo_channel", "telegram")) or site.telegram
         )
+        HomeBlock.objects.filter(kind=HomeBlock.Kind.PLATFORMS).update(items=brand["platforms"])
         from arcms.core.models import HomeBlockArticle
 
         picks = HomeBlock.objects.filter(kind=HomeBlock.Kind.PICKS).first()
@@ -273,6 +342,22 @@ class Command(BaseCommand):
             files=[with_fake_gps(make_art(4242, "#3b3f46"))],
         )
         add_newsroom_reply(tip, chief, "شكراً لك. هل تعرف الجهة المنفّذة؟ ولا ترسل صوراً من النافذة نفسها مرة أخرى.")
+
+    def _credits_page(self):
+        """صفحة «مصادر الصور» في التذييل: نسبة كل صورة حقيقية لصاحبها وترخيصها."""
+        if not self.photos or not self.photos.credits:
+            return
+        from arcms.content.models import Page
+        from arcms.content.sanitize import sanitize_html
+
+        page, _ = Page.objects.update_or_create(
+            slug="photo-credits",
+            defaults={"title": "مصادر الصور", "body": sanitize_html(credits_html(self.photos.credits)), "is_published": True},
+        )
+        MenuItem.objects.get_or_create(
+            location=MenuItem.Location.FOOTER, page=page,
+            defaults={"label": page.title, "link_type": MenuItem.LinkType.PAGE, "order": 20},
+        )
 
     def _traffic(self):
         """زيارات مصطنعة لثلاثين يوماً حتى تمتلئ لوحة الجمهور و«الأكثر قراءة»."""

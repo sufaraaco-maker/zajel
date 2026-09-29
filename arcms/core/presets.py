@@ -164,3 +164,27 @@ def apply_theme(site, key: str) -> bool:
         setattr(site, field, "")
     site.save()
     return True
+
+
+def create_blocks(blocks, cats) -> None:
+    """ينشئ كتل الصفحة الرئيسية من قائمة (النوع، العنوان، الإعدادات)؛ cats: اسم القسم ← القسم."""
+    from arcms.core.models import HomeBlock
+
+    for order, (kind, title, cfg) in enumerate(blocks):
+        block = HomeBlock.objects.create(
+            kind=kind,
+            title=title,
+            order=(order + 1) * 10,
+            count=cfg.get("count", 6),
+            layout=cfg.get("layout", HomeBlock.Layout.GRID),
+            article_kind=cfg.get("article_kind", ""),
+            category=cats.get(cfg.get("category")),
+            background=cfg.get("background", ""),
+            subtitle=cfg.get("subtitle", ""),
+            text=cfg.get("text", ""),
+            link=cfg.get("link", ""),
+            button_label=cfg.get("button_label", ""),
+            items=cfg.get("items", ""),
+        )
+        if cfg.get("categories"):
+            block.categories.set([cats[c] for c in cfg["categories"]])
