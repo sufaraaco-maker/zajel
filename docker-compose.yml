@@ -1,4 +1,4 @@
-# تشغيل arcms على خادم المؤسسة: قاعدة بيانات، ويب، عامل خلفي، وCaddy لشهادات HTTPS تلقائية.
+# تشغيل arcms على خادم المؤسسة: قاعدة بيانات، Redis، ويب، عامل خلفي، وCaddy لشهادات HTTPS تلقائية.
 # الاستخدام: cp .env.example .env && (عدّل القيم) && docker compose up -d --build
 services:
   db:
@@ -17,6 +17,18 @@ services:
       timeout: 5s
       retries: 20
 
+  # ذاكرة مؤقتة مشتركة بين عمليات الويب: الصفحات المبنية وحدود المعدل ونسخة المحتوى.
+  # للذاكرة فقط (لا حفظ على القرص)، فلا تحتاج نسخاً احتياطياً ولا تضيع فيها بيانات.
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "256mb", "--maxmemory-policy", "allkeys-lru"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
   web:
     build: .
     image: arcms:latest
@@ -29,11 +41,15 @@ services:
       ARCMS_BACKUP_DIR: /data/backups
       ARCMS_STATIC_ROOT: /app/staticfiles
       ARCMS_BEHIND_PROXY: "1"
+      ARCMS_CACHE_URL: ${ARCMS_CACHE_URL:-redis://redis:6379/0}
     volumes:
       - media:/data/media
       - backups:/data/backups
+      - static:/data/static
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/robots.txt', timeout=5)"]
@@ -53,6 +69,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
       web:
         condition: service_started
 
@@ -69,6 +87,7 @@ services:
       - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
       - ./deploy/caddy-sites:/etc/caddy/sites:ro
       - media:/data/media:ro
+      - static:/data/static:ro
       - caddy_data:/data
       - caddy_config:/config
     depends_on:
@@ -78,5 +97,6 @@ volumes:
   pgdata:
   media:
   backups:
+  static:
   caddy_data:
   caddy_config:

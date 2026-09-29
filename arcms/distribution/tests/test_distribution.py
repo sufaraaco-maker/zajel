@@ -202,10 +202,13 @@ class PushTests(ArcmsTestCase):
 @override_settings(SITE_URL="https://news.example.org")
 class NewsletterTests(ArcmsTestCase):
     def test_double_opt_in_and_unsubscribe(self):
-        resp = self.client.post(reverse("public:newsletter_subscribe"), {"email": "Reader@Example.org"})
+        resp = self.client.post(reverse("public:newsletter_subscribe"), {"email": "Reader@Example.org"},
+                                HTTP_ORIGIN="http://testserver")
         self.assertEqual(resp.status_code, 302)
         sub = NewsletterSubscriber.objects.get(email="reader@example.org")
         self.assertIsNone(sub.confirmed_at)
+        self.assertEqual(len(mail.outbox), 0)  # الصفحة لا تنتظر خادم البريد
+        run_pending()
         self.assertEqual(len(mail.outbox), 1)
         self.assertIn(sub.token, mail.outbox[0].body)
         self.client.get(reverse("public:newsletter_confirm", args=[sub.token]))
@@ -215,8 +218,18 @@ class NewsletterTests(ArcmsTestCase):
         sub.refresh_from_db()
         self.assertFalse(sub.is_active)
 
+    def test_mail_outage_does_not_break_the_page(self):
+        with mock.patch("django.core.mail.backends.locmem.EmailBackend.send_messages", side_effect=OSError("smtp down")):
+            resp = self.client.post(reverse("public:newsletter_subscribe"), {"email": "later@example.org"},
+                                    HTTP_ORIGIN="http://testserver")
+            self.assertEqual(resp.status_code, 302)
+            run_pending()  # تفشل المحاولة وتُعاد لاحقاً
+        self.assertEqual(len(mail.outbox), 0)
+        self.assertTrue(NewsletterSubscriber.objects.filter(email="later@example.org").exists())
+
     def test_honeypot_blocks_bots(self):
-        self.client.post(reverse("public:newsletter_subscribe"), {"email": "bot@example.org", "website": "spam"})
+        self.client.post(reverse("public:newsletter_subscribe"), {"email": "bot@example.org", "website": "spam"},
+                         HTTP_ORIGIN="http://testserver")
         self.assertFalse(NewsletterSubscriber.objects.exists())
 
     def test_daily_issue(self):

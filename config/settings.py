@@ -65,6 +65,9 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    # صفحات القرّاء المخزنة تُقدَّم من هنا قبل بقية السلسلة (arcms/public/pagecache.py)
+    "arcms.public.pagecache.ReaderCacheMiddleware",
+    "arcms.analytics.middleware.BeaconMiddleware",
     "arcms.core.middleware.SecurityHeadersMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "arcms.tips.middleware.TipsHostMiddleware",
@@ -104,9 +107,15 @@ DATABASES = {
         env.get("ARCMS_DATABASE_URL", "sqlite:///var/arcms.sqlite3"), BASE_DIR
     )
 }
+# اتصال واحد يُعاد استخدامه لكل خيط بدل اتصال جديد لكل طلب (فتحه في PostgreSQL يكلّف أكثر من الطلب نفسه)
+DATABASES["default"]["CONN_MAX_AGE"] = env.get_int("ARCMS_DB_CONN_MAX_AGE", 60)
+DATABASES["default"]["CONN_HEALTH_CHECKS"] = True
 if DATABASES["default"]["ENGINE"].endswith("sqlite3"):
     Path(DATABASES["default"]["NAME"]).parent.mkdir(parents=True, exist_ok=True)
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# المشاهدات تُجمع في الذاكرة وتُكتب كل ثانية دفعة واحدة (analytics.collector)؛ فورية في الاختبارات.
+ARCMS_ANALYTICS_QUEUE = env.get_bool("ARCMS_ANALYTICS_QUEUE", not TESTING)
 
 _cache_url = env.get("ARCMS_CACHE_URL", "")
 if TESTING:

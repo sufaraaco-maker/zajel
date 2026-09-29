@@ -4,6 +4,8 @@
 والسكربتات كلها من الخادم نفسه، فلا تعرف أي شركة خارجية من يقرأ ماذا.
 """
 
+import time
+
 from django.conf import settings
 
 from arcms.content.embeds import EMBED_FRAME_HOSTS
@@ -56,12 +58,27 @@ class SecurityHeadersMiddleware:
         return response
 
 
+_ads_memo = {"value": False, "until": 0.0}
+
+
+def forget_ads(*args, **kwargs) -> None:
+    """إعلان بشيفرة خارجية أُضيف أو أزيل: تتغير سياسة المحتوى في الصفحات العامة."""
+    from django.core.cache import cache
+
+    cache.delete("arcms:ads-html")
+    _ads_memo["until"] = 0.0
+
+
 def _third_party_enabled() -> bool:
     from arcms.core.models import AdSlot, SiteSettings
 
     site = SiteSettings.load()
     if site.custom_head_html.strip():
         return True
+    # يُسأل في كل صفحة: جواب المخزن المشترك يُحفظ في العملية ثواني قليلة (مثل إعدادات الموقع)
+    now = time.monotonic()
+    if now < _ads_memo["until"]:
+        return _ads_memo["value"]
     from django.core.cache import cache
 
     key = "arcms:ads-html"
@@ -69,4 +86,5 @@ def _third_party_enabled() -> bool:
     if has_ads is None:
         has_ads = AdSlot.objects.filter(is_active=True).exclude(html="").exists()
         cache.set(key, has_ads, 60)
+    _ads_memo.update(value=has_ads, until=now + SiteSettings.LOCAL_TTL)
     return has_ads

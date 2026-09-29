@@ -42,7 +42,11 @@ def site(request):
     ctx = {"site": settings_obj, "now": timezone.now(), "tips_url": _tips_url()}
     path = request.path
     if not path.startswith(("/studio", "/accounts")):
+        from arcms.public.views import push_public_key
+
         ctx["menus"] = _menus()
+        ctx["push_key"] = push_public_key
+
     elif path.startswith(("/studio", "/accounts/keys")) and request.user.is_authenticated:
         ctx.update(_studio(request.user))
     return ctx

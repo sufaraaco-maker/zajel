@@ -93,10 +93,20 @@ class RenderTests(ArcmsTestCase):
         self.assertNotIn("[poll:", html)  # لا في المتن ولا في الوصف وبيانات المشاركة
         self.assertIn("لا أصوات بعد", html)
         self.assertIn('class="poll-results" hidden', html)
+        # من صوّت: الصفحة غير المخزنة تُبنى له بالنتائج، ولا تُخزَّن للآخرين
+        from django.core.cache import cache
+
+        from arcms.public import pagecache
+
+        cache.clear()
+        pagecache.clear_local()
         self.client.cookies[f"arcms_poll_{poll.pk}"] = "1"
         html = self.client.get(article.get_absolute_url()).content.decode()
         self.assertIn('class="poll-form" method="post" action="/poll/', html)
         self.assertIn(' hidden>', html.split('class="poll-form"')[1].split(">")[0] + ">")
+        del self.client.cookies[f"arcms_poll_{poll.pk}"]
+        html = self.client.get(article.get_absolute_url()).content.decode()
+        self.assertIn('class="poll-results" hidden', html)
 
     def test_home_block_shows_latest_open_poll(self):
         HomeBlock.objects.create(kind=HomeBlock.Kind.POLL, title="رأيك", order=1)

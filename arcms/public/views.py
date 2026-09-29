@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import time
 from datetime import timedelta
 
 from django.conf import settings
@@ -21,7 +22,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from arcms.accounts.middleware import session_fully_verified
-from arcms.analytics.collector import record_view
+from arcms.analytics.collector import queue_view
 from arcms.arabic.highlight import snippet
 from arcms.content import search as search_mod
 from arcms.content.models import (
@@ -43,11 +44,12 @@ from arcms.content.sensitive import mark_body as mark_sensitive
 from arcms.content.signals import public_cache_version
 from arcms.content.workflow import can_view
 from arcms.core.models import AdSlot, SiteSettings
-from arcms.core.ratelimit import exceeded
+from arcms.core.ratelimit import exceeded, exceeded_local
 from arcms.core.utils import absolute_url, client_ip, json_script_safe
 from arcms.distribution.models import NewsletterSubscriber, PushSubscription
 
 from .blocks import build_blocks, most_read, published
+from .pagecache import reader_cache
 
 PAGE_SIZE = 18
 
@@ -97,6 +99,7 @@ def _common(extra: dict | None = None) -> dict:
     return ctx
 
 
+@reader_cache
 def home(request):
     site = SiteSettings.load()
     key = f"arcms:home:{public_cache_version()}"
@@ -120,6 +123,7 @@ def _related(article: Article, limit: int = 4) -> list[Article]:
     return manual + list(qs.filter(published_at__gte=timezone.now() - timedelta(days=60))[: limit - len(manual)])
 
 
+@reader_cache
 def article_detail(request, pk: int, slug: str = ""):
     article = get_object_or_404(
         Article.objects.select_related("category", "featured_image").prefetch_related("tags", "authors__photo"), pk=pk
@@ -130,7 +134,7 @@ def article_detail(request, pk: int, slug: str = ""):
             preview = True
         else:
             raise Http404
-    if not preview and slug != article.slug:
+    if not preview and slug != (article.slug or "-"):  # بلا رابط نصي (استيراد جماعي) لا تُعاد إلى نفسها بلا نهاية
         return redirect(article.get_absolute_url(), permanent=True)
     gallery = list(article.gallery_items.select_related("media")) if article.kind == ArticleKind.GALLERY else []
     body = mark_sensitive(render_embeds(article.body))
@@ -271,6 +275,7 @@ def breaking_card(request, pk: int):
     return _card_response(cards.breaking_card(breaking, site))
 
 
+@reader_cache
 def category_detail(request, slug: str):
     category = get_object_or_404(Category.objects.select_related("cover"), slug=slug, is_active=True)
     qs = published().filter(Q(category_id__in=category.family_ids()) | Q(extra_categories=category)).distinct()
@@ -295,6 +300,7 @@ def category_detail(request, slug: str):
     )
 
 
+@reader_cache
 def tag_detail(request, slug: str):
     tag = get_object_or_404(Tag, slug=slug)
     items = published().filter(tags=tag)
@@ -304,12 +310,14 @@ def tag_detail(request, slug: str):
     return render(request, "public/listing.html", _common({"heading": f"#{tag.name}", "page": page, "most_read": most_read(5)}))
 
 
+@reader_cache
 def author_detail(request, slug: str):
     author = get_object_or_404(Author.objects.select_related("photo"), slug=slug, show_page=True)
     page = _paginate(request, published().filter(authors=author))
     return render(request, "public/author.html", _common({"author": author, "page": page, "most_read": most_read(5)}))
 
 
+@reader_cache
 def kind_list(request, kind: str):
     if kind not in ArticleKind.values:
         raise Http404
@@ -331,11 +339,13 @@ def kind_list(request, kind: str):
     )
 
 
+@reader_cache
 def latest_list(request):
     page = _paginate(request, published(), 30)
     return render(request, "public/latest.html", _common({"heading": "آخر الأخبار", "page": page}))
 
 
+@reader_cache
 def corrections_list(request):
     """سجل التصحيحات العلني: كل تصحيح منشور بتاريخه ورابط مادته، الأحدث أولاً."""
     qs = published().exclude(correction="").exclude(corrected_at__isnull=True).order_by("-corrected_at", "-pk")
@@ -343,6 +353,7 @@ def corrections_list(request):
     return render(request, "public/corrections.html", _common({"page": page}))
 
 
+@reader_cache
 def dossier_detail(request, slug: str):
     dossier = get_object_or_404(Dossier.objects.select_related("cover"), slug=slug, is_active=True)
     page = _paginate(request, published().filter(dossiers=dossier))
@@ -419,17 +430,20 @@ def search_view(request):
     )
 
 
+@reader_cache
 def live_list(request):
     page = _paginate(request, LiveCoverage.objects.select_related("cover"), 12)
     return render(request, "public/live_list.html", _common({"page": page}))
 
 
+@reader_cache
 def live_detail(request, slug: str):
     live = get_object_or_404(LiveCoverage.objects.select_related("cover"), slug=slug)
     entries = list(live.entries.select_related("image", "author").order_by("-is_pinned", "-created_at")[:200])
     return render(request, "public/live.html", _common({"live": live, "entries": entries, "most_read": most_read(5)}))
 
 
+@reader_cache
 @cache_control(max_age=10)
 def live_entries_json(request, slug: str):
     live = get_object_or_404(LiveCoverage, slug=slug)
@@ -445,6 +459,7 @@ def live_entries_json(request, slug: str):
     return JsonResponse({"is_live": live.is_live, "entries": html})
 
 
+@reader_cache
 def page_detail(request, slug: str):
     page = get_object_or_404(Page, slug=slug, is_published=True)
     sent = False
@@ -480,7 +495,7 @@ def _back(request) -> str:
 
 
 def _same_origin(request) -> bool:
-    """التصويت من صفحات الموقع نفسه فقط (بديل رمز CSRF في الصفحات المخزّنة مؤقتاً)."""
+    """الطلب من صفحات الموقع نفسه (بديل رمز CSRF في الصفحات المخزّنة للجميع): التصويت والاشتراك."""
     host = request.get_host()
     origin = request.META.get("HTTP_ORIGIN")
     if origin:
@@ -528,13 +543,16 @@ def poll_vote(request, pk: int):
     return resp
 
 
+@csrf_exempt  # النموذج في كل صفحة، والصفحات مخزّنة للجميع: التحقق بالمصدر لا برمز مرتبط بمتصفح
 @require_POST
 def newsletter_subscribe(request):
     from django.core.exceptions import ValidationError
     from django.core.validators import validate_email
 
-    from arcms.distribution.newsletter import send_confirmation
+    from arcms.core.jobs import enqueue
 
+    if not _same_origin(request):
+        return HttpResponse("طلب من خارج الموقع.", status=403, content_type="text/plain; charset=utf-8")
     email = request.POST.get("email", "").strip().lower()
     try:
         validate_email(email)
@@ -553,7 +571,7 @@ def newsletter_subscribe(request):
         sub.save()
     # لا تتحول صفحة الاشتراك إلى أداة لإغراق بريد أحد برسائل التأكيد.
     if not sub.confirmed_at and not _limited("newsletter-mail", email):
-        send_confirmation(sub)
+        enqueue("newsletter.confirm", {"sub": sub.pk})
     messages.success(request, "أرسلنا إليك رسالة لتأكيد الاشتراك. افتحها واضغط الرابط.")
     return redirect(_back(request))
 
@@ -613,6 +631,21 @@ def push_unsubscribe(request):
 
 # --- القياس ---
 
+_published_memo: dict[int, tuple[bool, float]] = {}
+
+
+def _is_published(article_id: int) -> bool:
+    """هل المادة منشورة؟ يُحفظ الجواب دقيقة في ذاكرة العملية: طلب القياس يتكرر مع كل قراءة."""
+    now = time.monotonic()
+    hit = _published_memo.get(article_id)
+    if hit and hit[1] > now:
+        return hit[0]
+    if len(_published_memo) > 20_000:
+        _published_memo.clear()
+    ok = Article.objects.published().filter(pk=article_id).exists()
+    _published_memo[article_id] = (ok, now + 60)
+    return ok
+
 
 @csrf_exempt
 @require_POST
@@ -624,7 +657,8 @@ def beacon(request):
         return HttpResponse(status=204)
     if len(request.body) > 2048:
         return HttpResponse(status=413)
-    if _limited("beacon", client_ip(request)):
+    limit, window = RATE_LIMITS["beacon"]
+    if exceeded_local("beacon", client_ip(request), limit=limit, window=window):
         return HttpResponse(status=204)  # لا يُحتسب ما زاد على المعقول من المصدر نفسه
     try:
         data = json.loads(request.body.decode("utf-8") or "{}")
@@ -638,9 +672,9 @@ def beacon(request):
             return None
 
     article_id = as_int(data.get("a"))
-    if article_id and not Article.objects.published().filter(pk=article_id).exists():
+    if article_id and not _is_published(article_id):
         article_id = None  # لا تُحتسب مشاهدة لمسودة، ولا يظهر عنوانها في لوحة الجمهور
-    record_view(
+    queue_view(
         ip=client_ip(request),
         user_agent=request.META.get("HTTP_USER_AGENT", ""),
         path=str(data.get("p", ""))[:300],
@@ -702,14 +736,22 @@ def service_worker(request):
     return response
 
 
-def push_config(request):
-    site = SiteSettings.load()
+def push_public_key() -> str:
+    """مفتاح الإشعارات العام إن كانت مفعّلة، وإلا فارغ. يُضمَّن في الصفحة فلا يسأل عنه كل قارئ بطلب مستقل."""
     from arcms.distribution.models import Channel, ChannelConfig
 
+    site = SiteSettings.load()
     enabled = bool(site.push_enabled and settings.ARCMS_VAPID_PUBLIC_KEY and ChannelConfig.get(Channel.PUSH).enabled)
-    return JsonResponse({"enabled": enabled, "key": settings.ARCMS_VAPID_PUBLIC_KEY if enabled else ""})
+    return settings.ARCMS_VAPID_PUBLIC_KEY if enabled else ""
 
 
+@reader_cache
+def push_config(request):
+    key = push_public_key()
+    return JsonResponse({"enabled": bool(key), "key": key})
+
+
+@reader_cache
 def breaking_json(request):
     return JsonResponse(
         {"items": [{"id": b.pk, "text": b.text, "url": b.get_url(), "at": b.created_at.isoformat()} for b in ticker()]},

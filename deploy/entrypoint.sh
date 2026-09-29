@@ -25,6 +25,9 @@ case "$1" in
   web)
     wait_for_db
     python manage.py migrate --noinput
+    # الملفات الثابتة يقدّمها Caddy من القرص مباشرة (لا تشغل عمليات الويب). أسماؤها تحمل بصمة
+    # محتواها، فتبقى القديمة للصفحات المفتوحة وتُضاف الجديدة مع كل إصدار.
+    if [ -d /data/static ]; then cp -a /app/staticfiles/. /data/static/; fi
     # سجل الوصول بلا عناوين IP: لا نحتفظ بما قد يُطلب لاحقاً لمعرفة من قرأ ماذا.
     exec gunicorn config.wsgi:application \
       --bind 0.0.0.0:8000 \
@@ -32,7 +35,8 @@ case "$1" in
       --threads "${ARCMS_WEB_THREADS:-4}" \
       --timeout 90 \
       --no-control-socket \
-      --max-requests 2000 --max-requests-jitter 200 \
+      --max-requests 20000 --max-requests-jitter 2000 \
+      --backlog 4096 \
       --forwarded-allow-ips="*" \
       --access-logfile - \
       --access-logformat '%(t)s "%(r)s" %(s)s %(b)s %(L)ss'

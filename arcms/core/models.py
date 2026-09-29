@@ -176,7 +176,11 @@ class SiteSettings(models.Model):
     newsletter_hour = models.PositiveSmallIntegerField("ساعة إرسال النشرة", default=7)
     newsletter_count = models.PositiveSmallIntegerField("عدد مواد النشرة", default=10)
     push_enabled = models.BooleanField("الإشعارات الفورية في المتصفح", default=True)
-    home_cache_seconds = models.PositiveSmallIntegerField("تخزين الرئيسية مؤقتاً (ثوانٍ)", default=30)
+    home_cache_seconds = models.PositiveSmallIntegerField(
+        "تخزين صفحات القرّاء (ثوانٍ)", default=30,
+        help_text="الصفحة تُبنى مرة وتُقدَّم جاهزة لكل القرّاء هذه المدة، وتتجدد فور النشر أو التعديل. "
+                  "0 يوقف التخزين (لا يُنصح به: خبر عاجل واحد يكفي لإبطاء الموقع).",
+    )
     custom_head_html = models.TextField(
         "شيفرة إضافية في الترويسة",
         blank=True,

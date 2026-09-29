@@ -23,7 +23,7 @@ RUN pip install -r requirements.txt
 
 COPY . .
 RUN useradd --system --uid 1000 --home /app arcms \
- && mkdir -p /data/media /data/backups /data/imports /app/staticfiles \
+ && mkdir -p /data/media /data/backups /data/imports /data/static /app/staticfiles \
  && ARCMS_SECRET_KEY=build-only ARCMS_DATABASE_URL=sqlite:////tmp/build.sqlite3 ARCMS_STATIC_ROOT=/app/staticfiles \
     python manage.py collectstatic --noinput -v0 \
  && rm -f /tmp/build.sqlite3 \
@@ -31,7 +31,7 @@ RUN useradd --system --uid 1000 --home /app arcms \
  && chmod +x deploy/entrypoint.sh
 
 USER arcms
-VOLUME ["/data/media", "/data/backups"]
+VOLUME ["/data/media", "/data/backups", "/data/static"]
 EXPOSE 8000
 ENTRYPOINT ["/app/deploy/entrypoint.sh"]
 CMD ["web"]

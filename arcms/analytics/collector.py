@@ -2,13 +2,20 @@
 
 from __future__ import annotations
 
+import atexit
 import hashlib
+import logging
+import os
 import re
 import secrets
+import threading
+import time
+from collections import Counter
 from urllib.parse import urlparse
 
 from django.conf import settings
-from django.db import IntegrityError
+from django.db import IntegrityError, close_old_connections
+from django.db.models import F
 from django.utils import timezone
 
 from .models import DailySalt, PageView
@@ -87,25 +94,102 @@ def is_bot(ua: str) -> bool:
     return not ua or bool(_BOT_RE.search(ua))
 
 
-def record_view(*, ip: str | None, user_agent: str, path: str, referrer: str, article_id=None, category_id=None,
-                utm_source: str = "", own_host: str = "") -> PageView | None:
+def _view_fields(*, ip, user_agent, path, referrer, article_id, category_id, utm_source, own_host) -> dict | None:
     if is_bot(user_agent):
         return None
     own_host = own_host or (urlparse(settings.SITE_URL).hostname or "")
     source, ref_host = classify_source(referrer, own_host, utm_source)
-    view = PageView.objects.create(
-        path=path[:300],
-        article_id=article_id,
-        category_id=category_id,
-        visitor=visitor_hash(ip or "", user_agent),
-        source=source,
-        referrer_host=ref_host[:120],
-        device=device_class(user_agent),
-    )
+    return {
+        "path": path[:300], "article_id": article_id, "category_id": category_id,
+        "visitor": visitor_hash(ip or "", user_agent), "source": source,
+        "referrer_host": ref_host[:120], "device": device_class(user_agent),
+    }
+
+
+def _bump_views(counts: Counter) -> None:
+    from arcms.content.models import Article
+
+    for article_id, n in counts.items():
+        Article.objects.filter(pk=article_id).update(view_count=F("view_count") + n)
+
+
+def record_view(*, ip: str | None, user_agent: str, path: str, referrer: str, article_id=None, category_id=None,
+                utm_source: str = "", own_host: str = "") -> PageView | None:
+    """يسجّل المشاهدة فوراً (للأدوات والاختبارات). طلبات القرّاء تمر بـ queue_view."""
+    fields = _view_fields(ip=ip, user_agent=user_agent, path=path, referrer=referrer, article_id=article_id,
+                          category_id=category_id, utm_source=utm_source, own_host=own_host)
+    if fields is None:
+        return None
+    view = PageView.objects.create(**fields)
     if article_id:
-        from django.db.models import F
-
-        from arcms.content.models import Article
-
-        Article.objects.filter(pk=article_id).update(view_count=F("view_count") + 1)
+        _bump_views(Counter({article_id: 1}))
     return view
+
+
+# --- طابور المشاهدات ---
+# خبر عاجل يعني آلاف المشاهدات في الثانية للمادة نفسها. كتابة كل منها وحدها تعني آلاف الإدراجات،
+# وآلاف التحديثات على صف المادة نفسه وكلها تنتظر قفله. الطابور يجمعها في ذاكرة العملية ويكتبها كل
+# ثانية دفعة واحدة، مع تحديث واحد لعدّاد كل مادة. أقصى ما يضيع إن انهارت العملية فجأة: ثانية من الأرقام.
+
+_queue: list[dict] = []
+_queue_lock = threading.Lock()
+_flusher = {"pid": None}
+FLUSH_SECONDS = 1.0
+MAX_QUEUED = 50_000  # فوق هذا (قاعدة متعطلة) تُهمل المشاهدات بدل أن تستنزف الذاكرة
+log = logging.getLogger(__name__)
+
+
+def queue_view(**kwargs) -> None:
+    fields = _view_fields(**{"category_id": None, "article_id": None, "utm_source": "", "own_host": "", **kwargs})
+    if fields is None:
+        return
+    if not getattr(settings, "ARCMS_ANALYTICS_QUEUE", True):
+        PageView.objects.create(**fields)
+        if fields["article_id"]:
+            _bump_views(Counter({fields["article_id"]: 1}))
+        return
+    with _queue_lock:
+        if len(_queue) >= MAX_QUEUED:
+            return
+        _queue.append(fields)
+    _ensure_flusher()
+
+
+def flush_views() -> int:
+    with _queue_lock:
+        batch = _queue[:]
+        _queue.clear()
+    if not batch:
+        return 0
+    PageView.objects.bulk_create([PageView(**f) for f in batch], batch_size=1000)
+    _bump_views(Counter(f["article_id"] for f in batch if f["article_id"]))
+    return len(batch)
+
+
+def _flush_loop() -> None:
+    while True:
+        time.sleep(FLUSH_SECONDS)
+        try:
+            close_old_connections()
+            flush_views()
+        except Exception:  # noqa: BLE001 - القاعدة قد تتعطل لحظة؛ الدفعة التالية تحاول من جديد
+            log.exception("تعذّر حفظ دفعة المشاهدات")
+
+
+def _ensure_flusher() -> None:
+    pid = os.getpid()
+    if _flusher["pid"] == pid:
+        return
+    with _queue_lock:
+        if _flusher["pid"] == pid:
+            return
+        _flusher["pid"] = pid  # بعد fork يبدأ كل عامل خيطه الخاص
+        threading.Thread(target=_flush_loop, name="arcms-views", daemon=True).start()
+
+
+@atexit.register
+def _flush_at_exit() -> None:
+    try:
+        flush_views()
+    except Exception:  # noqa: BLE001
+        pass

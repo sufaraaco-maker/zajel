@@ -177,14 +177,16 @@ docker compose exec web python manage.py arcms_audit_verify
 ## 8. الضغط والأداء (اليوم 10)
 
 ```bash
-# من جهاز خارجي: 50 اتصالاً متزامناً على الصفحة الرئيسية وصفحة مادة
-ab -n 2000 -c 50 https://beta.example.org/
-ab -n 2000 -c 50 https://beta.example.org/post/<رقم>/<الرابط>
+# من جهاز خارجي (لا من الخادم نفسه): إشعار عاجل يأتي بعشرة آلاف قارئ خلال عشر ثوانٍ
+pip install -r loadtest/requirements.txt
+python loadtest/readers.py spike --base https://beta.example.org --readers 10000 --window 10 --path "/post/<رقم>/<الرابط>" --procs 4
+# ويوم مزدحم: عشرة آلاف قارئ يتنقلون دقيقتين
+python loadtest/readers.py browse --base https://beta.example.org --readers 10000 --duration 120 --procs 4
 ```
 
-الصفحة الرئيسية مخزّنة مؤقتاً (30 ثانية افتراضياً). عند زحام متوقع (حدث كبير): زِد `ARCMS_WEB_WORKERS`، وفعّل Redis (`ARCMS_CACHE_URL`)، وضع شبكة توزيع محتوى أمام الموقع إن لزم.
+صفحات القرّاء مخزّنة (30 ثانية افتراضياً، وتتجدد فور النشر)، والملفات الثابتة يقدّمها Caddy، وRedis يعمل مع Docker. نتائج قياسنا وما يعنيه كل رقم في [LOADTEST.md](LOADTEST.md). لحدث استثنائي: زِد `ARCMS_WEB_WORKERS` (عملية لكل نواة)، أو استعمل nginx بذاكرة الصفحات (`deploy/nginx/arcms.conf`).
 
-**معيار القبول**: لا أخطاء 5xx، ومتوسط الاستجابة أقل من 500 ميلي ثانية.
+**معيار القبول**: 100% من الصفحات، وp99 للصفحة أقل من ثانيتين في سيناريو الإشعار، ولا أخطاء 5xx في الصفحات.
 
 ---
 

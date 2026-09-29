@@ -25,10 +25,14 @@ class ArcmsTestCase(TestCase):
     def setUp(self):
         from django.core.cache import cache
 
+        from arcms.core import ratelimit
         from arcms.core.models import SiteSettings
+        from arcms.public import pagecache
 
         cache.clear()
         SiteSettings.forget_local()
+        pagecache.clear_local()
+        ratelimit.clear_local()
 
 
 def make_user(username: str, role: str = "reporter", *, with_2fa: bool = True, password: str = "a-long-test-password") -> User:

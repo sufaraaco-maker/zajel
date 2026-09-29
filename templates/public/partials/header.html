@@ -39,7 +39,7 @@
         <button type="submit" aria-label="بحث">{{ "search"|icon:18 }}</button>
       </form>
       <button class="tool-btn" type="button" data-search-toggle aria-label="بحث">{{ "search"|icon:18 }}</button>
-      <button class="tool-btn" type="button" data-push hidden aria-label="إشعارات العاجل" title="فعّل إشعارات العاجل">{{ "bell"|icon:18 }}</button>
+      {% if push_key %}<button class="tool-btn" type="button" data-push="{{ push_key }}" hidden aria-label="إشعارات العاجل" title="فعّل إشعارات العاجل">{{ "bell"|icon:18 }}</button>{% endif %}
       <button class="tool-btn" type="button" data-theme-toggle aria-label="الوضع الداكن">{{ "moon"|icon:18 }}</button>
       <button class="tool-btn menu-toggle" type="button" data-menu-toggle aria-expanded="false" aria-label="القائمة">{{ "menu"|icon:20 }}</button>
     </div>

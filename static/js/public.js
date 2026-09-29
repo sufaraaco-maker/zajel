@@ -182,9 +182,10 @@
     for (var i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
     return out;
   }
-  if (bell && "serviceWorker" in navigator && "PushManager" in window) {
-    fetch("/push/config").then(function (r) { return r.json(); }).then(function (cfg) {
-      if (!cfg.enabled) return;
+  // المفتاح العام في الصفحة نفسها (data-push)؛ لا يظهر الزر إلا إن فعّلت المؤسسة الإشعارات
+  var pushKey = bell && bell.getAttribute("data-push");
+  if (pushKey && "serviceWorker" in navigator && "PushManager" in window) {
+    (function (cfg) {
       bell.hidden = false;
       navigator.serviceWorker.register("/sw.js").then(function (reg) {
         reg.pushManager.getSubscription().then(function (sub) {
@@ -207,7 +208,7 @@
           });
         });
       });
-    });
+    })({ key: pushKey });
   }
   // --- الشرائط المتحركة: أزرار ونقاط فوق التمرير الأصلي (يعمل السحب دون سكربت) ---
   $$("[data-carousel]").forEach(function (root) {

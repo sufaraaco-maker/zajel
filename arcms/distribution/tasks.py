@@ -198,3 +198,17 @@ def send_newsletter(payload):
     if issue is None:
         return {"skipped": "لا مواد جديدة"}
     return send_issue(issue)
+
+
+@handler("newsletter.confirm")
+def send_newsletter_confirmation(payload):
+    """رسالة تأكيد الاشتراك في العامل الخلفي: صفحة القارئ لا تنتظر خادم البريد ولا تفشل بتعطله."""
+    from .models import NewsletterSubscriber
+    from .newsletter import send_confirmation
+
+    sub = NewsletterSubscriber.objects.filter(pk=payload["sub"], confirmed_at__isnull=True).first()
+    if sub is None:
+        return {"skipped": "أُكّد الاشتراك أو حُذف"}
+    send_confirmation(sub)
+    return {"sent": 1}
+

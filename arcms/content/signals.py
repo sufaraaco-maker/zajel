@@ -22,6 +22,9 @@ def invalidate_public_cache(*args, **kwargs) -> None:
         cache.incr(PUBLIC_CACHE_VERSION_KEY)
     except ValueError:
         cache.set(PUBLIC_CACHE_VERSION_KEY, 2, None)
+    from arcms.public.pagecache import forget_version
+
+    forget_version()  # هذه العملية ترى التغيير فوراً؛ غيرها خلال ثانية
 
 
 def _reindex(pk: int) -> None:

@@ -39,7 +39,7 @@ python manage.py runserver
 ## الاختبارات والفحص
 
 ```bash
-python manage.py test          # 418 اختباراً
+python manage.py test          # 434 اختباراً
 ruff check arcms config
 ```
 
@@ -51,5 +51,6 @@ ruff check arcms config
 - `arcms/planning` خطة التغطية (المرحلة تتبع المادة عبر `signals.py`).
 - `arcms/wires` مكتب الوكالات (جلب RSS/Atom آمن في `feeds.py`، والاعتماد مسودةً في `services.py`).
 - `arcms/studio` غرفة التحرير، `arcms/public` الموقع العام، `templates/` و`static/` بلا خطوة بناء.
+- صفحات القرّاء مخزّنة (`arcms/public/pagecache.py`: المزخرف `reader_cache` على العروض، والوسيط `ReaderCacheMiddleware` يقدّمها قبل بقية السلسلة). لا تضع `{% csrf_token %}` في قالب صفحة قرّاء مخزّنة (لن تُخزَّن)؛ النماذج العامة تُحمى بـ `_same_origin`. المشاهدات تمر بطابور (`analytics.collector.queue_view`) يُكتب كل ثانية. اختبار الضغط: `loadtest/readers.py` ونتائجه في `docs/LOADTEST.md`.
 - الصلاحيات في `arcms/accounts/roles.py`، والمهام الخلفية في `arcms/*/tasks.py` عبر `arcms/core/jobs.py`.
 - الأسرار من البيئة فقط (`config/settings.py`، `.env.example`)، لا في قاعدة البيانات.

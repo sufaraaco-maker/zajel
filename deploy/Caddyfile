@@ -6,6 +6,16 @@
 		max_size 60MB
 	}
 
+	# الأنماط والسكربتات والخطوط: من القرص مباشرة، بنسخها المضغوطة مسبقاً، ولسنة (أسماؤها تتغير مع محتواها)
+	handle_path /static/* {
+		root * /data/static
+		header Cache-Control "public, max-age=31536000, immutable"
+		header X-Content-Type-Options nosniff
+		file_server {
+			precompressed br gzip
+		}
+	}
+
 	handle_path /media/* {
 		root * /data/media
 		header Cache-Control "public, max-age=31536000, immutable"
