@@ -195,6 +195,9 @@ if not FIELD_ENCRYPTION_KEY and (DEBUG or TESTING):
 ARCMS_2FA_ISSUER = env.get("ARCMS_2FA_ISSUER", "arcms")
 ARCMS_LOGIN_MAX_FAILURES = env.get_int("ARCMS_LOGIN_MAX_FAILURES", 5)
 ARCMS_LOGIN_LOCK_MINUTES = env.get_int("ARCMS_LOGIN_LOCK_MINUTES", 15)
+# مفاتيح الأمان: النطاق يُستنتج من SITE_URL؛ اضبطه إن كانت غرفة التحرير على نطاق فرعي آخر.
+ARCMS_WEBAUTHN_RP_ID = env.get("ARCMS_WEBAUTHN_RP_ID", "")
+ARCMS_WEBAUTHN_ORIGINS = tuple(o.strip().rstrip("/") for o in env.get("ARCMS_WEBAUTHN_ORIGINS", "").split(",") if o.strip())
 ARCMS_TIPS_RETENTION_DAYS = env.get_int("ARCMS_TIPS_RETENTION_DAYS", 90)
 
 # --- البريد (النشرة اليومية والإشعارات الداخلية) ---

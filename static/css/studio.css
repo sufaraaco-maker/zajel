@@ -99,6 +99,7 @@ table.data .num { text-align: end; font-variant-numeric: tabular-nums; }
 .pill.warn, .pill.pending { background: var(--warn-bg); color: var(--warn); }
 .pill.breaking { background: var(--primary); color: #fff; }
 
+[hidden] { display: none !important; }
 .alert { padding: 11px 14px; border-radius: 6px; margin-bottom: 12px; display: flex; gap: 10px; align-items: flex-start; }
 .alert.success { background: var(--ok-bg); color: var(--ok); }
 .alert.error { background: var(--bad-bg); color: var(--bad); }

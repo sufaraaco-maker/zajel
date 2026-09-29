@@ -1,14 +1,28 @@
 {% extends "accounts/base.html" %}
+{% load static %}
 {% block title %}التحقق الثنائي{% endblock %}
 {% block content %}
-<h1>رمز التحقق</h1>
-<p class="lead">افتح تطبيق المصادقة على هاتفك واكتب الرمز المكوّن من 6 أرقام لحساب <strong>{{ pending_user.username }}</strong>.</p>
+<h1>{% if keys_only %}مفتاح الأمان{% else %}رمز التحقق{% endif %}</h1>
 {% if error %}<div class="alert error">{{ error }}</div>{% endif %}
-<form method="post">
+{% if has_keys %}
+<div class="key-login" data-key-login data-begin="{% url 'accounts:key_login_begin' %}" data-finish="{% url 'accounts:key_login_finish' %}">
+  <p class="lead">{% if keys_only %}حسابك يقبل مفتاح الأمان فقط. {% endif %}صِل مفتاح الأمان أو استخدم مفتاح المرور على هذا الجهاز لحساب <strong>{{ pending_user.username }}</strong>.</p>
+  <button class="btn primary block" type="button" data-key-start>{{ "shield"|icon:18 }} ادخل بمفتاح الأمان</button>
+  <div class="alert error" data-key-error hidden></div>
+  <p class="small muted" data-key-unsupported hidden>هذا المتصفح لا يدعم مفاتيح الأمان؛ استخدم متصفحاً حديثاً{% if not keys_only %} أو رمز التطبيق أدناه{% endif %}.</p>
+</div>
+{% endif %}
+{% if not keys_only %}
+{% if has_keys %}<p class="small muted" style="margin:16px 0 6px">أو اكتب رمز تطبيق المصادقة:</p>{% else %}<p class="lead">افتح تطبيق المصادقة على هاتفك واكتب الرمز المكوّن من 6 أرقام لحساب <strong>{{ pending_user.username }}</strong>.</p>{% endif %}
+{% endif %}
+<form method="post"{% if keys_only %} class="recovery-only"{% endif %}>
   {% csrf_token %}
-  <div class="form-row"><label for="id_code" class="sr-only">الرمز</label><input class="otp-input" type="text" name="code" id="id_code" inputmode="numeric" autocomplete="one-time-code" maxlength="12" required autofocus placeholder="••••••"></div>
-  <button class="btn primary block" type="submit">تحقق</button>
+  {% if keys_only %}<details class="small"><summary>فقدت المفتاح؟ ادخل برمز استرداد</summary>{% endif %}
+  <div class="form-row"><label for="id_code" class="sr-only">الرمز</label><input class="otp-input" type="text" name="code" id="id_code" inputmode="{% if keys_only %}text{% else %}numeric{% endif %}" autocomplete="one-time-code" maxlength="12" {% if not keys_only %}required {% if not has_keys %}autofocus {% endif %}{% endif %}placeholder="{% if keys_only %}XXXXX-XXXXX{% else %}••••••{% endif %}"></div>
+  <button class="btn{% if not has_keys %} primary{% endif %} block" type="submit">تحقق</button>
+  {% if keys_only %}</details>{% endif %}
 </form>
-<details class="small" style="margin-top:14px"><summary>فقدت هاتفك؟</summary><p>اكتب أحد رموز الاسترداد العشرة التي حفظتها عند التفعيل (مثل <span dir="ltr">ABCDE-FGH23</span>) مكان الرمز. كل رمز يعمل مرة واحدة. إن لم تكن لديك رموز فاطلب من مدير النظام إعادة الضبط بعد التحقق من هويتك.</p></details>
+{% if not keys_only %}<details class="small" style="margin-top:14px"><summary>فقدت هاتفك؟</summary><p>اكتب أحد رموز الاسترداد العشرة التي حفظتها عند التفعيل (مثل <span dir="ltr">ABCDE-FGH23</span>) مكان الرمز. كل رمز يعمل مرة واحدة. إن لم تكن لديك رموز فاطلب من مدير النظام إعادة الضبط بعد التحقق من هويتك.</p></details>{% endif %}
 <p class="small" style="margin-top:10px"><a href="{% url 'accounts:login' %}">← العودة</a></p>
+{% if has_keys %}<script src="{% static 'js/webauthn.js' %}"></script>{% endif %}
 {% endblock %}

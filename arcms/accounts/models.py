@@ -38,6 +38,12 @@ class User(AbstractUser):
     )
     # يدخل في بصمة الجلسة: زيادته تُنهي كل الجلسات المفتوحة للحساب على كل الأجهزة.
     session_epoch = models.PositiveIntegerField(default=0, editable=False)
+    # معرّف عشوائي ثابت يُعطى لمفاتيح الأمان بدل رقم الحساب أو اسمه
+    webauthn_handle = models.CharField(max_length=64, blank=True, editable=False)
+    keys_only = models.BooleanField(
+        "مفتاح الأمان فقط", default=False,
+        help_text="لا يُقبل رمز التطبيق عند الدخول، بل مفتاح الأمان (ورموز الاسترداد للطوارئ).",
+    )
 
     objects = UserManager()
 
@@ -135,9 +141,38 @@ class User(AbstractUser):
         self.totp_confirmed_at = None
         self.totp_last_counter = None
         self.recovery_codes = []
-        self.save(update_fields=["totp_secret", "totp_confirmed_at", "totp_last_counter", "recovery_codes"])
+        self.keys_only = False
+        self.save(update_fields=["totp_secret", "totp_confirmed_at", "totp_last_counter", "recovery_codes", "keys_only"])
+        # الجهاز المفقود قد يكون مفتاح الأمان نفسه: تُحذف المفاتيح مع السر
+        self.security_keys.all().delete()
         # هاتف مفقود قد يكون في يد غيره: لا تبقى أي جلسة مفتوحة.
         self.end_all_sessions()
+
+    @property
+    def uses_keys_only(self) -> bool:
+        return self.keys_only and self.security_keys.exists()
+
+
+class SecurityKey(models.Model):
+    """مفتاح أمان أو مفتاح مرور (WebAuthn) عاملاً ثانياً للدخول."""
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="security_keys")
+    name = models.CharField("الاسم", max_length=60)
+    credential_id = models.CharField(max_length=1400, unique=True)
+    public_key = models.BinaryField()
+    sign_count = models.BigIntegerField(default=0)
+    aaguid = models.CharField(max_length=36, blank=True)
+    transports = models.JSONField(default=list, blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    last_used_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["created_at"]
+        verbose_name = "مفتاح أمان"
+        verbose_name_plural = "مفاتيح الأمان"
+
+    def __str__(self) -> str:
+        return self.name
 
 
 class LoginAttempt(models.Model):

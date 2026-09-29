@@ -1,0 +1,39 @@
+{% extends "studio/base.html" %}
+{% load static %}
+{% block title %}مفاتيح الأمان{% endblock %}
+{% block content %}
+<div class="page-title"><div><h1>مفاتيح الأمان ومفاتيح المرور</h1><p>عامل ثانٍ لا يُصطاد: المفتاح لا يوقّع إلا لنطاق هذا الموقع، فصفحة دخول مزيفة لا تحصل منه على شيء. يعمل مع مفاتيح USB وNFC (مثل YubiKey) ومع مفاتيح المرور في الهاتف والحاسوب.</p></div>
+<a class="btn" href="{% url 'studio:profile' %}">← حسابي</a></div>
+<div class="cols cols-2">
+  <section class="panel">
+    <h2>{{ "shield"|icon:18 }} مفاتيحك</h2>
+    <ul class="list">
+      {% for k in keys %}
+      <li><span class="grow"><strong>{{ k.name }}</strong><div class="sub">أُضيف {{ k.created_at|ar_date_short }}{% if k.last_used_at %} · آخر استخدام {{ k.last_used_at|ar_relative }}{% else %} · لم يُستخدم بعد{% endif %}</div></span>
+        <form method="post" class="btn-row" data-confirm="حذف المفتاح «{{ k.name }}»؟">{% csrf_token %}<input type="hidden" name="action" value="delete"><input type="hidden" name="key" value="{{ k.pk }}"><input type="password" name="password" placeholder="كلمة المرور" autocomplete="current-password" required style="width:150px"><button class="btn sm danger" type="submit">حذف</button></form></li>
+      {% empty %}<li class="empty">لا مفاتيح بعد.</li>{% endfor %}
+    </ul>
+    {% if keys %}
+    <h2 style="margin-top:18px">الدخول بالمفتاح فقط</h2>
+    <form method="post">{% csrf_token %}<input type="hidden" name="action" value="keys_only"><input type="hidden" name="enable" value="{% if user.keys_only %}0{% else %}1{% endif %}">
+      <p class="small muted">{% if user.keys_only %}مفعّل: لا يُقبل رمز التطبيق عند دخولك، بل المفتاح (ورموز الاسترداد للطوارئ).{% else %}أقوى حماية: لا يُقبل رمز التطبيق عند الدخول، فلا ينفع من يخدعك لكتابته. احتفظ بمفتاحين ورموز الاسترداد قبل التفعيل.{% endif %}</p>
+      <div class="btn-row"><input type="password" name="password" placeholder="كلمة المرور" autocomplete="current-password" required style="width:180px"><button class="btn{% if not user.keys_only %} primary{% endif %}" type="submit">{% if user.keys_only %}السماح برمز التطبيق مجدداً{% else %}فعّل الدخول بالمفتاح فقط{% endif %}</button></div>
+    </form>
+    {% endif %}
+  </section>
+  <section class="panel">
+    <h2>{{ "plus"|icon:18 }} إضافة مفتاح</h2>
+    {% if keys|length >= max_keys %}<p class="muted">بلغت الحد الأقصى ({{ max_keys }}).</p>{% else %}
+    <form data-key-register data-begin="{% url 'accounts:key_register_begin' %}" data-finish="{% url 'accounts:key_register_finish' %}">
+      <div class="form-row"><label for="key-name">اسم المفتاح</label><input id="key-name" name="name" type="text" maxlength="60" placeholder="مثل: مفتاح YubiKey الأزرق، هاتفي" required></div>
+      <div class="form-row"><label for="key-pass">كلمة المرور للتأكيد</label><input id="key-pass" name="password" type="password" autocomplete="current-password" required></div>
+      <button class="btn primary" type="submit">{{ "shield"|icon:16 }} سجّل المفتاح</button>
+      <div class="alert error" data-key-error hidden></div>
+      <p class="small muted" data-key-unsupported hidden>هذا المتصفح لا يدعم مفاتيح الأمان.</p>
+    </form>
+    <p class="small muted" style="margin-top:12px">بعد الضغط يطلب المتصفح لمس المفتاح أو بصمتك. سجّل مفتاحين (أحدهما احتياطي في مكان آمن)، فمن يفقد مفتاحه الوحيد يحتاج إلى رمز استرداد أو إلى مدير النظام.</p>
+    {% endif %}
+  </section>
+</div>
+<script src="{% static 'js/webauthn.js' %}"></script>
+{% endblock %}

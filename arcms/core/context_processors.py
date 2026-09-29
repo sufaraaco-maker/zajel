@@ -43,7 +43,7 @@ def site(request):
     path = request.path
     if not path.startswith(("/studio", "/accounts")):
         ctx["menus"] = _menus()
-    elif path.startswith("/studio") and request.user.is_authenticated:
+    elif path.startswith(("/studio", "/accounts/keys")) and request.user.is_authenticated:
         ctx.update(_studio(request.user))
     return ctx
 

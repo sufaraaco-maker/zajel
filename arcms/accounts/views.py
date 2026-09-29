@@ -106,7 +106,8 @@ def verify_view(request):
             error = "تعددت المحاولات الفاشلة. أُقفل الدخول مؤقتاً."
         else:
             code = form.cleaned_data["code"].strip()
-            ok = user.verify_totp(code)
+            # من اختار «مفتاح الأمان فقط» لا يُقبل منه رمز التطبيق (قابل للاصطياد)، بل رموز الاسترداد للطوارئ
+            ok = False if user.uses_keys_only else user.verify_totp(code)
             used_recovery = False
             if not ok and len("".join(c for c in code if c.isalnum())) == 10:
                 ok = used_recovery = user.use_recovery_code(code)
@@ -119,7 +120,9 @@ def verify_view(request):
             LoginAttempt.objects.create(username=user.username, ip=ip, success=False, stage="otp")
             record(Action.LOGIN_FAILED, user, message="رمز تحقق ثنائي خاطئ", actor=_actor(request, user))
             error = "الرمز غير صحيح أو انتهت صلاحيته."
-    return render(request, "accounts/verify.html", {"form": form, "error": error, "pending_user": user})
+    has_keys = user.security_keys.exists()
+    return render(request, "accounts/verify.html", {"form": form, "error": error, "pending_user": user,
+                                                    "has_keys": has_keys, "keys_only": has_keys and user.keys_only})
 
 
 def _check_current_factor(request, user: User, code: str) -> str:

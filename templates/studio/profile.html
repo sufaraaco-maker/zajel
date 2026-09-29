@@ -8,9 +8,11 @@
     <ul class="list">
       <li><span class="grow">التحقق الثنائي</span>{% if user.has_2fa %}<span class="pill ok">مفعّل</span>{% else %}<span class="pill warn">غير مفعّل</span>{% endif %}</li>
       <li><span class="grow">رموز الاسترداد المتبقية</span><strong>{{ user.recovery_codes|length }}</strong></li>
+      <li><span class="grow">مفاتيح الأمان</span>{% with n=user.security_keys.count %}{% if n %}<span class="pill ok">{{ n }}{% if user.keys_only %} · المفتاح فقط{% endif %}</span>{% else %}<span class="pill">لا يوجد</span>{% endif %}{% endwith %}</li>
     </ul>
     <div class="btn-row" style="margin-top:10px">
       <a class="btn" href="{% url 'accounts:password_change' %}">تغيير كلمة المرور</a>
+      <a class="btn" href="{% url 'accounts:keys' %}">{{ "shield"|icon:16 }} مفاتيح الأمان</a>
       <a class="btn" href="{% url 'accounts:enroll' %}?reset=1">{% if user.has_2fa %}نقل التحقق إلى هاتف جديد{% else %}تفعيل التحقق الثنائي{% endif %}</a>
     </div>
     <form method="post" action="{% url 'accounts:sessions_end' %}" style="margin-top:10px" data-confirm="إنهاء جلساتك على كل الأجهزة الأخرى؟ تبقى هذه الجلسة وحدها.">{% csrf_token %}<button class="btn sm" type="submit">إنهاء جلساتي على الأجهزة الأخرى</button></form>
