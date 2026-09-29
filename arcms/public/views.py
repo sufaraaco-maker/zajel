@@ -294,6 +294,13 @@ def latest_list(request):
     return render(request, "public/latest.html", _common({"heading": "آخر الأخبار", "page": page}))
 
 
+def corrections_list(request):
+    """سجل التصحيحات العلني: كل تصحيح منشور بتاريخه ورابط مادته، الأحدث أولاً."""
+    qs = published().exclude(correction="").exclude(corrected_at__isnull=True).order_by("-corrected_at", "-pk")
+    page = _paginate(request, qs, 30)
+    return render(request, "public/corrections.html", _common({"page": page}))
+
+
 def dossier_detail(request, slug: str):
     dossier = get_object_or_404(Dossier.objects.select_related("cover"), slug=slug, is_active=True)
     page = _paginate(request, published().filter(dossiers=dossier))

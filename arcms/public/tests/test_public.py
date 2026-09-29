@@ -170,3 +170,34 @@ class PublicSiteTests(ArcmsTestCase):
         with self.captureOnCommitCallbacks(execute=True):
             make_article("خبر جديد للتو", category=self.cat, is_featured=True, priority=50)
         self.assertContains(self.client.get("/"), "خبر جديد للتو")
+
+
+class CorrectionsLogTests(ArcmsTestCase):
+    def test_log_lists_published_corrections_newest_first(self):
+        now = timezone.now()
+        old = make_article("مادة صُححت قديماً", correction="تصحيح قديم", corrected_at=now - timedelta(days=2))
+        new = make_article("مادة صُححت اليوم", correction="تصحيح جديد", corrected_at=now)
+        make_article("مسودة مصححة", status=Status.DRAFT, correction="لا يظهر", corrected_at=now)
+        make_article("بلا تصحيح")
+        resp = self.client.get(reverse("public:corrections"))
+        html = resp.content.decode()
+        self.assertLess(html.index(new.title), html.index(old.title))
+        self.assertNotIn("لا يظهر", html)
+        self.assertNotIn("بلا تصحيح", html)
+        self.assertContains(self.client.get(new.get_absolute_url()), reverse("public:corrections"))
+
+    def test_studio_stamps_correction_date(self):
+        from arcms.accounts.roles import Role
+
+        chief = make_user("chief-c", Role.CHIEF)
+        login(self.client, chief)
+        article = make_article("مادة للتصحيح", created_by=chief)
+        data = {
+            "kind": "news", "title": article.title, "body": "<p>نص</p>", "category": article.category_id,
+            "priority": 0, "correction": "الصحيح أن الاجتماع يوم الأحد.", "action": "save",
+        }
+        self.client.post(reverse("studio:article_edit", args=[article.pk]), data)
+        article.refresh_from_db()
+        self.assertEqual(article.correction, "الصحيح أن الاجتماع يوم الأحد.")
+        self.assertIsNotNone(article.corrected_at)
+        self.assertContains(self.client.get(reverse("public:corrections")), "الاجتماع يوم الأحد")

@@ -196,6 +196,9 @@ def article_edit(request, pk: int | None = None):
                 obj.last_edited_by = user
                 if obj.status == Status.PUBLISHED and not creating:
                     obj.content_updated_at = timezone.now()
+                if "correction" in form.changed_data:
+                    # التصحيح يُؤرَّخ ليظهر في «سجل التصحيحات» العام؛ حذفه لا يمحو أثره من سجل النسخ
+                    obj.corrected_at = timezone.now() if obj.correction.strip() else None
                 if _needs_new_review(obj, user, before):
                     # «العينان الأربع»: ما اعتمده الزميل هو ما يُنشر. تعديل الكاتب بعد الاعتماد يعيدها للمراجعة.
                     obj.status, obj.reviewed_by, obj.scheduled_at = Status.IN_REVIEW, None, None

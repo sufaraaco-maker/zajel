@@ -653,3 +653,12 @@ mark { background: color-mix(in srgb, var(--primary) 18%, transparent); color: i
 .page-head.has-cover h1 { color: #fff; }
 .page-head.has-cover p { color: rgba(255,255,255,.88); }
 .page-head.has-cover .subnav a { color: #fff; border-color: rgba(255,255,255,.4); }
+
+/* سجل التصحيحات */
+.corrections-list { display: grid; gap: 6px; align-content: start; }
+.correction-item { border-bottom: 1px solid var(--line); padding-bottom: 14px; margin-bottom: 8px; }
+.correction-item .meta { display: flex; gap: 10px; color: var(--muted); font-size: .85rem; }
+.correction-item h2 { font-size: 1.15rem; margin: 6px 0 0; line-height: 1.6; }
+.correction-item h2 a { color: inherit; }
+.correction-item .correction { margin: 10px 0 0; }
+:root[data-theme="dark"] .correction-item .correction { background: #2b2410; color: #f0dca0; }

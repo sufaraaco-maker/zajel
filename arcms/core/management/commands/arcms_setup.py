@@ -78,6 +78,10 @@ class Command(BaseCommand):
                         location=MenuItem.Location.FOOTER, label=pages[slug].title, link_type=MenuItem.LinkType.PAGE,
                         page=pages[slug], order=order,
                     )
+                MenuItem.objects.create(
+                    location=MenuItem.Location.FOOTER, label="سجل التصحيحات", link_type=MenuItem.LinkType.URL,
+                    url="/corrections/", order=9,
+                )
 
             if opts["force"] or not HomeBlock.objects.exists():
                 HomeBlock.objects.all().delete()

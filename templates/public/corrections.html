@@ -1,0 +1,19 @@
+{% extends "public/base.html" %}
+{% block title %}سجل التصحيحات | {{ site.name }}{% endblock %}
+{% block description %}كل تصحيح نشره {{ site.name }} على مواده، بتاريخه ونصه.{% endblock %}
+{% block content %}
+<div class="page-head"><h1>سجل التصحيحات</h1><p>نخطئ أحياناً، ونصحح علناً. هنا كل تصحيح أجريناه على مادة منشورة، بتاريخه ونصه، ويظهر أيضاً أسفل المادة نفسها.</p></div>
+<div class="with-sidebar">
+  <div class="corrections-list">
+    {% for a in page %}
+    <article class="correction-item">
+      <div class="meta"><time datetime="{{ a.corrected_at|isoformat }}">{{ a.corrected_at|ar_datetime }}</time>{% if a.category %}<span>{{ a.category.name }}</span>{% endif %}</div>
+      <h2><a href="{{ a.get_absolute_url }}">{{ a.title }}</a></h2>
+      <div class="correction"><strong>تصحيح:</strong> {{ a.correction|linebreaksbr }}</div>
+    </article>
+    {% empty %}<p class="muted">لم ننشر أي تصحيح بعد.</p>{% endfor %}
+    {% include "public/partials/pagination.html" %}
+  </div>
+  {% include "public/partials/sidebar.html" %}
+</div>
+{% endblock %}

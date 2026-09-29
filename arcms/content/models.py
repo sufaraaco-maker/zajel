@@ -345,7 +345,8 @@ class Article(models.Model):
         blank=True,
         help_text="لا تظهر للجمهور أبداً، ولا يراها إلا كاتب المادة ورئيس التحرير.",
     )
-    correction = models.TextField("تصحيح منشور", blank=True, help_text="يظهر أسفل المادة إن وُجد.")
+    correction = models.TextField("تصحيح منشور", blank=True, help_text="يظهر أسفل المادة وفي «سجل التصحيحات».")
+    corrected_at = models.DateTimeField("تاريخ التصحيح", null=True, blank=True, editable=False)
 
     is_breaking = models.BooleanField("عاجل", default=False)
     is_featured = models.BooleanField("في الواجهة", default=False)

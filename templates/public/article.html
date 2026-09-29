@@ -78,7 +78,7 @@
     {% endif %}
 
     {% if article.source %}<p class="source-line">المصدر: {% if article.source_url %}<a href="{{ article.source_url }}" target="_blank" rel="noopener nofollow">{{ article.source }}</a>{% else %}{{ article.source }}{% endif %}</p>{% endif %}
-    {% if article.correction %}<div class="correction"><strong>تصحيح:</strong> {{ article.correction|linebreaksbr }}</div>{% endif %}
+    {% if article.correction %}<div class="correction"><strong>تصحيح{% if article.corrected_at %} ({{ article.corrected_at|ar_date_short }}){% endif %}:</strong> {{ article.correction|linebreaksbr }} <a href="{% url 'public:corrections' %}">سجل التصحيحات</a></div>{% endif %}
 
     {% if article.tags.all %}<div class="tags">{% for t in article.tags.all %}<a href="{{ t.get_absolute_url }}">#{{ t.name }}</a>{% endfor %}</div>{% endif %}
     <div class="byline" style="border-bottom:0">

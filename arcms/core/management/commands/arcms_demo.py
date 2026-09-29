@@ -287,6 +287,8 @@ class Command(BaseCommand):
                 published_by=chief,
                 reviewed_by=chief,
                 source_notes="مصدر أول: موظف في البلدية (لا يُذكر اسمه). تم التحقق عبر اتصال هاتفي." if i == 0 else "",
+                correction=data.get("correction", ""),
+                corrected_at=when + timedelta(minutes=50) if data.get("correction") else None,
             )
             if data.get("audio"):
                 from django.core.files.base import ContentFile
