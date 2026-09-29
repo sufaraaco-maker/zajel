@@ -478,3 +478,41 @@ class WireSourceForm(forms.ModelForm):
         except FeedError as exc:
             raise forms.ValidationError(str(exc)) from exc
         return url
+
+
+class AssignmentForm(forms.ModelForm):
+    class Meta:
+        from arcms.planning.models import Assignment
+
+        model = Assignment
+        fields = ["title", "brief", "category", "kind", "assignee", "due_at", "priority", "status"]
+        widgets = {"brief": forms.Textarea(attrs={"rows": 4, "class": "sensitive"}), "due_at": DateTimeLocal()}
+
+    def __init__(self, *args, **kwargs):
+        from arcms.accounts.models import User
+        from arcms.accounts.roles import ROLE_CAPABILITIES
+        from arcms.planning.models import Assignment
+
+        super().__init__(*args, **kwargs)
+        writers = [r for r, caps in ROLE_CAPABILITIES.items() if Cap.ARTICLE_CREATE in caps]
+        self.fields["assignee"].queryset = User.objects.filter(is_active=True, role__in=writers).order_by("display_name")
+        self.fields["assignee"].required = False
+        self.fields["kind"] = forms.ChoiceField(label="نوع المادة", choices=ArticleKind.choices, initial="news")
+        linked = bool(self.instance.pk and self.instance.article_id)
+        if linked:  # المرحلة تتبع المادة
+            del self.fields["status"]
+        else:
+            self.fields["status"].choices = [(s, lbl) for s, lbl in Assignment.Status.choices
+                                             if s in (Assignment.Status.IDEA, Assignment.Status.ASSIGNED,
+                                                      Assignment.Status.DROPPED)]
+
+    def clean(self):
+        from arcms.planning.models import Assignment
+
+        data = super().clean()
+        status = data.get("status")
+        if status == Assignment.Status.ASSIGNED and not data.get("assignee"):
+            self.add_error("assignee", "اختر من تكلّفه، أو اجعل المرحلة «فكرة».")
+        if status == Assignment.Status.IDEA and data.get("assignee"):
+            data["status"] = Assignment.Status.ASSIGNED
+        return data

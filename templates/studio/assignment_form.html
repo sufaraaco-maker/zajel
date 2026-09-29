@@ -1,0 +1,13 @@
+{% extends "studio/base.html" %}
+{% block title %}{% if obj %}تعديل مهمة{% else %}مهمة جديدة{% endif %}{% endblock %}
+{% block content %}
+<div class="page-title"><div><h1>{% if obj %}تعديل مهمة{% else %}مهمة تغطية جديدة{% endif %}</h1>{% if obj.article %}<p>مرتبطة بالمادة <a href="{% url 'studio:article_edit' obj.article.pk %}">«{{ obj.article.title }}»</a> ({{ obj.get_status_display }}).</p>{% endif %}</div><a class="btn" href="{% url 'studio:planning' %}">← الخطة</a></div>
+<form method="post" class="panel narrow">
+  {% csrf_token %}
+  {% for field in form %}{% include "studio/partials/field.html" with field=field %}{% endfor %}
+  <div class="btn-row"><button class="btn primary" type="submit">حفظ</button></div>
+</form>
+{% if obj and obj.status != 'dropped' and obj.status != 'done' %}
+<form method="post" action="{% url 'studio:assignment_action' obj.pk %}" data-confirm="إلغاء المهمة؟">{% csrf_token %}<input type="hidden" name="action" value="drop"><button class="btn sm danger" type="submit">إلغاء المهمة</button></form>
+{% endif %}
+{% endblock %}

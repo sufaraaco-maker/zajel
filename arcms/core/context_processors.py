@@ -66,6 +66,10 @@ def _studio(user) -> dict:
         from arcms.tips.models import Tip
 
         counts["tips"] = Tip.objects.filter(unread=True).count()
+    if Cap.ARTICLE_CREATE in caps:
+        from arcms.planning.models import Assignment
+
+        counts["assigned"] = Assignment.objects.filter(assignee=user, status=Assignment.Status.ASSIGNED).count()
     if Cap.WIRES in caps:
         from datetime import timedelta
 

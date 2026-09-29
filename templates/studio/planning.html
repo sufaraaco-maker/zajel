@@ -1,0 +1,35 @@
+{% extends "studio/base.html" %}
+{% block title %}خطة التغطية{% endblock %}
+{% block content %}
+<div class="page-title">
+  <div><h1>خطة التغطية</h1><p>{% if planner %}من يغطي ماذا ومتى. المرحلة تتحدث وحدها من المادة: تبدأ «قيد العمل» حين يفتح المكلَّف مسودته، و«سُلّمت» عند إرسالها للمراجعة، و«نُشرت» عند نشرها.{% else %}مهامك المكلَّف بها. ابدأ المادة من المهمة فيصلك التوجيه في ملاحظات التحرير.{% endif %}</p></div>
+  <div class="btn-row">
+    {% if planner %}
+    <form method="get" class="btn-row wire-filter"><select name="who" aria-label="المكلَّف" data-autosubmit><option value="">كل الطاقم</option><option value="mine"{% if who == 'mine' %} selected{% endif %}>مهامي</option>{% for u in team %}<option value="{{ u.pk }}"{% if who == u.pk|stringformat:"s" %} selected{% endif %}>{{ u }}</option>{% endfor %}</select><noscript><button class="btn">عرض</button></noscript></form>
+    <a class="btn" href="?dropped=1">الملغاة</a>
+    <a class="btn primary" href="{% url 'studio:assignment_new' %}">{{ "plus"|icon:16 }} مهمة جديدة</a>
+    {% endif %}
+  </div>
+</div>
+<div class="board">
+  {% for col in columns %}
+  <section class="board-col {{ col.status }}">
+    <h2>{{ col.label }} <span class="muted">{{ col.items|length }}</span></h2>
+    {% for a in col.items %}
+    <article class="task-card{% if a.is_overdue %} overdue{% endif %} p{{ a.priority }}">
+      <div class="task-top">{% if a.priority == 2 %}<span class="pill breaking">عاجلة</span>{% elif a.priority == 1 %}<span class="pill warn">مهمة</span>{% endif %}{% if a.category %}<span class="pill">{{ a.category.name }}</span>{% endif %}</div>
+      <h3>{% if planner %}<a href="{% url 'studio:assignment_edit' a.pk %}">{{ a.title }}</a>{% else %}{{ a.title }}{% endif %}</h3>
+      <div class="sub">{% if a.assignee %}{{ "user"|icon:13 }} {{ a.assignee }}{% else %}<span class="muted">بلا مكلَّف</span>{% endif %}{% if a.due_at %} · <time class="{% if a.is_overdue %}late{% endif %}" datetime="{{ a.due_at|isoformat }}" title="{{ a.due_at|ar_datetime }}">{% if a.is_overdue %}متأخرة {% endif %}{{ a.due_at|ar_due }}</time>{% endif %}</div>
+      <div class="btn-row">
+        {% if a.article %}<a class="btn sm" href="{% url 'studio:article_edit' a.article.pk %}">{{ "pen"|icon:13 }} المادة</a>
+        {% elif a.assignee == user or planner and not a.assignee %}<form method="post" action="{% url 'studio:assignment_start' a.pk %}">{% csrf_token %}<button class="btn sm primary" type="submit">ابدأ المادة</button></form>{% endif %}
+      </div>
+    </article>
+    {% empty %}<p class="empty small">—</p>{% endfor %}
+  </section>
+  {% endfor %}
+</div>
+{% if dropped is not None %}
+<section class="panel"><h2>الملغاة</h2><ul class="list">{% for a in dropped %}<li><span class="grow">{{ a.title }}<div class="sub">{{ a.assignee|default:"" }}</div></span><form method="post" action="{% url 'studio:assignment_action' a.pk %}">{% csrf_token %}<input type="hidden" name="action" value="restore"><button class="btn sm">إرجاع</button></form></li>{% empty %}<li class="empty">لا مهام ملغاة.</li>{% endfor %}</ul></section>
+{% endif %}
+{% endblock %}

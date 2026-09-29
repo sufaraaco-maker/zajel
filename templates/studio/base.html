@@ -24,6 +24,7 @@
         {% if nav_counts.review %}<span class="count" title="بانتظار مراجعتك">{{ nav_counts.review }}</span>{% elif nav_counts.returned %}<span class="count" title="أُعيدت إليك">{{ nav_counts.returned }}</span>{% endif %}</a>
       {% endif %}
       {% if "article.publish" in user_caps or "article.review" in user_caps %}<a href="{% url 'studio:calendar' %}" class="{% if '/studio/calendar' in p %}active{% endif %}">{{ "clock"|icon:18 }} التقويم التحريري</a>{% endif %}
+      {% if "planning.manage" in user_caps or "article.create" in user_caps %}<a href="{% url 'studio:planning' %}" class="{% if '/studio/planning' in p %}active{% endif %}">{{ "check"|icon:18 }} خطة التغطية{% if nav_counts.assigned %}<span class="count" title="مهام بانتظارك">{{ nav_counts.assigned }}</span>{% endif %}</a>{% endif %}
       {% if "wires.view" in user_caps %}<a href="{% url 'studio:wires' %}" class="{% if '/studio/wires' in p %}active{% endif %}">{{ "inbox"|icon:18 }} مكتب الوكالات{% if nav_counts.wires %}<span class="count" title="تنبيهات جديدة">{{ nav_counts.wires }}</span>{% endif %}</a>{% endif %}
       {% if "tips.manage" in user_caps %}<a href="{% url 'studio:tips' %}" class="{% if '/studio/tips' in p %}active{% endif %}">{{ "shield"|icon:18 }} صندوق المعلومات{% if nav_counts.tips %}<span class="count" title="بلاغات لم تُقرأ">{{ nav_counts.tips }}</span>{% endif %}</a>{% endif %}
       {% if "breaking.manage" in user_caps %}<a href="{% url 'studio:breaking' %}" class="{% if '/studio/breaking' in p %}active{% endif %}">{{ "bolt"|icon:18 }} العاجل</a>{% endif %}

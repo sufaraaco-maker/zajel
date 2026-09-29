@@ -386,3 +386,21 @@ form.inline { display: inline; }
 .wire-filter input[type=search] { width: 230px; }
 @media (max-width: 700px) { .wire-filter, .wire-filter input[type=search], .wire-filter select { width: 100%; } }
 .share-card img { width: 100%; height: auto; border-radius: 6px; display: block; margin-bottom: 8px; background: var(--line); }
+
+/* خطة التغطية */
+.board { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; align-items: start; margin-bottom: 18px; }
+.board-col { background: rgba(0,0,0,.03); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px; min-height: 140px; }
+.board-col h2 { font-size: .95rem; margin: 2px 4px 10px; display: flex; gap: 6px; }
+.board-col.done { opacity: .85; }
+.task-card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
+.task-card.p2 { border-inline-start: 4px solid var(--primary); }
+.task-card.p1 { border-inline-start: 4px solid #d99a00; }
+.task-card.overdue { background: var(--bad-bg); }
+.task-card h3 { font-size: .95rem; margin: 6px 0 4px; line-height: 1.6; }
+.task-card h3 a { color: inherit; }
+.task-card .sub { font-size: .8rem; color: var(--muted); margin-bottom: 6px; }
+.task-card time.late { color: var(--bad); font-weight: 700; }
+.task-top { display: flex; gap: 4px; flex-wrap: wrap; }
+.panel.narrow { max-width: 760px; }
+@media (max-width: 1100px) { .board { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .board { grid-template-columns: minmax(0, 1fr); } }

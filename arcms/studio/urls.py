@@ -10,6 +10,7 @@ from . import views_admin as admin
 from . import views_articles as articles
 from . import views_media as media
 from . import views_newsroom as newsroom
+from . import views_planning as planning
 from . import views_setup as setup_views
 from . import views_tips as tips_views
 from . import views_tools as tools
@@ -144,6 +145,11 @@ urlpatterns = [
     path("tips/<int:pk>/", tips_views.tip_detail, name="tip_detail"),
     path("tips/<int:pk>/delete/", tips_views.tip_delete, name="tip_delete"),
     path("tips/<int:pk>/files/<int:att>/", tips_views.tip_attachment, name="tip_attachment"),
+    path("planning/", planning.board, name="planning"),
+    path("planning/new/", planning.edit, name="assignment_new"),
+    path("planning/<int:pk>/", planning.edit, name="assignment_edit"),
+    path("planning/<int:pk>/start/", planning.start, name="assignment_start"),
+    path("planning/<int:pk>/action/", planning.action, name="assignment_action"),
     path("wires/", wires.desk, name="wires"),
     path("wires/action/", wires.action, name="wires_action"),
     path("wiresources/keywords/", wires.keywords, name="wire_keywords"),

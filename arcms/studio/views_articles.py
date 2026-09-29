@@ -61,6 +61,7 @@ def home(request):
         "my_drafts": mine.filter(status__in=[Status.DRAFT, Status.CHANGES]).order_by("-updated_at")[:8],
         "returned_count": mine.filter(status=Status.CHANGES).count(),
         "my_recent": mine.filter(status=Status.PUBLISHED).order_by("-published_at")[:5],
+        "my_tasks": _my_tasks(user),
     }
     if user.can(Cap.ARTICLE_REVIEW):
         review = Article.objects.filter(status=Status.IN_REVIEW).exclude(created_by=user).select_related("category", "created_by")
@@ -83,6 +84,13 @@ def home(request):
     ctx["worker_ok"] = WorkerHeartbeat.healthy()
     ctx["failed_jobs"] = Job.objects.filter(status=Job.Status.FAILED, finished_at__gte=timezone.now() - timedelta(days=2)).count()
     return render(request, "studio/home.html", ctx)
+
+
+def _my_tasks(user):
+    from arcms.planning.models import Assignment
+
+    return list(Assignment.objects.filter(assignee=user, status__in=Assignment.OPEN)
+                .select_related("category", "article").order_by("due_at", "-priority")[:6])
 
 
 @requires(*WRITE_CAPS)

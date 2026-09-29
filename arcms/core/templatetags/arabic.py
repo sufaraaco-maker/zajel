@@ -46,6 +46,26 @@ def ar_relative(value):
 
 
 @register.filter
+def ar_due(value):
+    """موعد مختصر: الماضي نسبياً («منذ ساعتين»)، واليوم وغداً بالساعة، وما بعدهما بالتاريخ القصير."""
+    if not value:
+        return ""
+    from django.utils import timezone
+
+    now = timezone.localtime()
+    local = timezone.localtime(value)
+    if local <= now:
+        return dates.relative_time(value, style=_style())
+    time = dates.format_time(value, _style())
+    days = (local.date() - now.date()).days
+    if days == 0:
+        return f"اليوم {time}"
+    if days == 1:
+        return f"غداً {time}"
+    return f"{dates.format_date(value, _style(), weekday=False)} {time}"
+
+
+@register.filter
 def ar_hijri(value):
     return dates.format_hijri(value, _style()) if value else ""
 

@@ -587,3 +587,11 @@
   }
   setInterval(function () { if (!busy()) window.location.reload(); }, seconds * 1000);
 })();
+
+// قوائم تصفية تُرسل نموذجها عند التغيير (دون معالجات مضمّنة تمنعها سياسة المحتوى)
+(function () {
+  "use strict";
+  Array.prototype.forEach.call(document.querySelectorAll("select[data-autosubmit]"), function (sel) {
+    sel.addEventListener("change", function () { if (sel.form) sel.form.submit(); });
+  });
+})();

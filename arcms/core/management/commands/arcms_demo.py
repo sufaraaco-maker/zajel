@@ -346,6 +346,7 @@ class Command(BaseCommand):
                 [HomeBlockArticle(block=picks, article=a, order=n) for n, a in enumerate(chosen)]
             )
         self._wires(site)
+        self._planning()
         from arcms.tips.services import add_newsroom_reply, create_tip
 
         tip, _ = create_tip(
@@ -375,6 +376,36 @@ class Command(BaseCommand):
                 link=f"https://example.org/agency/{n}", published_at=now - timedelta(minutes=4 + n * 23),
                 fetched_at=now - timedelta(minutes=3 + n * 23), search_text=blob, is_alert=any(w in blob for w in words),
             )
+
+    def _planning(self):
+        """خطة تغطية تجريبية بمراحل مختلفة، بعضها متأخر."""
+        from arcms.planning.models import Assignment
+
+        now = timezone.now()
+        desk = User.objects.get(username="deskhead")
+        reporter = User.objects.get(username="reporter")
+        editor = User.objects.get(username="editor")
+        cat = Category.objects.filter(name=self.brand["desk"]).first()
+        rows = [
+            ("مؤتمر صحفي لوزارة الصحة عن موسم الإنفلونزا", reporter, now + timedelta(hours=3), 1, "اسأل عن توفر اللقاحات في المراكز الريفية."),
+            ("جولة في سوق الخضار المركزي صباح الجمعة", reporter, now + timedelta(days=1), 0, "صور وفيديو قصير للمنصات."),
+            ("متابعة: نتائج امتحانات الثانوية العامة", editor, now - timedelta(hours=2), 2, "جهّز الرسوم البيانية مسبقاً."),
+            ("حوار مع مدير المكتبة العامة الجديدة", None, None, 0, "فكرة للأسبوع القادم."),
+            ("تقرير عن أزمة المواصلات صباحاً", editor, now + timedelta(hours=8), 1, ""),
+        ]
+        for title, who, due, priority, brief in rows:
+            Assignment.objects.create(
+                title=title, assignee=who, due_at=due, priority=priority, brief=brief, category=cat, created_by=desk,
+                status=Assignment.Status.ASSIGNED if who else Assignment.Status.IDEA,
+            )
+        draft = Article.objects.filter(status=Status.DRAFT).first()
+        if draft:
+            Assignment.objects.create(title=draft.title, assignee=draft.created_by, article=draft, category=draft.category,
+                                      created_by=desk, status=Assignment.Status.WORKING, due_at=now + timedelta(hours=5))
+        published = Article.objects.published().filter(created_by=reporter).first()
+        if published:
+            Assignment.objects.create(title=published.title, assignee=reporter, article=published, created_by=desk,
+                                      category=published.category, status=Assignment.Status.DONE)
 
     def _credits_page(self):
         """صفحة «مصادر الصور» في التذييل: نسبة كل صورة حقيقية لصاحبها وترخيصها."""

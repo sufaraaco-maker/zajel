@@ -33,6 +33,14 @@
     </ul>
   </section>
   {% endif %}
+  {% if my_tasks %}
+  <section class="panel">
+    <h2>{{ "check"|icon:18 }} مهامي<a class="more" href="{% url 'studio:planning' %}?who=mine">الخطة</a></h2>
+    <ul class="list">
+      {% for t in my_tasks %}<li><span class="pill{% if t.is_overdue %} fail{% elif t.status == 'assigned' %} warn{% endif %}">{% if t.is_overdue %}متأخرة{% else %}{{ t.get_status_display }}{% endif %}</span><div class="grow">{% if t.article %}<a href="{% url 'studio:article_edit' t.article.pk %}">{{ t.title }}</a>{% else %}{{ t.title }}{% endif %}<div class="sub">{% if t.due_at %}الموعد {{ t.due_at|ar_due }}{% endif %}{% if t.category %} · {{ t.category.name }}{% endif %}</div></div>{% if not t.article %}<form method="post" action="{% url 'studio:assignment_start' t.pk %}">{% csrf_token %}<button class="btn sm primary">ابدأ</button></form>{% endif %}</li>{% endfor %}
+    </ul>
+  </section>
+  {% endif %}
   <section class="panel">
     <h2>{{ "pen"|icon:18 }} مسوداتي<a class="more" href="{% url 'studio:articles' %}?mine=1">الكل</a></h2>
     <ul class="list">

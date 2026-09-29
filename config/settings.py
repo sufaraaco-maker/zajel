@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     "arcms.importer",
     "arcms.tips",
     "arcms.wires",
+    "arcms.planning",
     "arcms.studio",
     "arcms.public",
 ]
