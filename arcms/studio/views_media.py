@@ -102,7 +102,11 @@ def edit(request, pk: int):
             raise PermissionDenied
     form = MediaMetaForm(request.POST or None, instance=asset)
     if request.method == "POST" and form.is_valid():
-        form.save()
+        saved = form.save()
+        if {"focal_x", "focal_y"} & set(form.changed_data):
+            from arcms.content.imaging import recrop
+
+            recrop(saved)
         messages.success(request, "حُفظت بيانات الصورة.")
         return redirect("studio:media")
     return render(request, "studio/media_edit.html", {"asset": asset, "form": form})

@@ -2,7 +2,7 @@
   <div class="hero{% if b.block.layout == 'grid' %} no-latest{% elif b.block.layout == 'list' %} headlines{% endif %}">
     {% with a=b.lead %}{% if a %}
     <a class="hero-lead" href="{{ a.get_absolute_url }}">
-      {% if a.featured_image %}<img src="{{ a.featured_image.large }}" srcset="{{ a.featured_image.srcset }}" sizes="(max-width: 760px) 100vw, 60vw" alt="{{ a.featured_image.alt_text }}" fetchpriority="high">{% endif %}
+      {% if a.featured_image %}<img src="{{ a.featured_image.large }}" srcset="{{ a.featured_image.srcset }}" sizes="(max-width: 760px) 100vw, 60vw" alt="{{ a.featured_image.alt_text }}" fetchpriority="high"{% if a.featured_image.focal_style %} style="{{ a.featured_image.focal_style }}"{% endif %}>{% endif %}
       <div class="caption">
         {% if a.is_breaking %}<span class="kicker">عاجل</span>{% elif a.display_kicker %}<span class="kicker">{{ a.display_kicker }}</span>{% endif %}
         <h2>{{ a.title }}</h2>

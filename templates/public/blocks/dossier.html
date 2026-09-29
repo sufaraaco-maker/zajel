@@ -1,6 +1,6 @@
 <section class="section"{% if b.dossier.color %} style="--dossier: {{ b.dossier.color }}"{% endif %}>
   <div class="dossier-banner">
-    {% if b.dossier.cover %}<img src="{{ b.dossier.cover.card }}" alt="">{% endif %}
+    {% if b.dossier.cover %}<img src="{{ b.dossier.cover.card }}" alt=""{% if b.dossier.cover.focal_style %} style="{{ b.dossier.cover.focal_style }}"{% endif %}>{% endif %}
     <div class="info">
       <span class="kicker">ملف خاص</span>
       <h2><a href="{{ b.dossier.get_absolute_url }}">{{ b.dossier.title }}</a></h2>

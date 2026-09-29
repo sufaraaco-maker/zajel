@@ -595,3 +595,32 @@
     sel.addEventListener("change", function () { if (sel.form) sel.form.submit(); });
   });
 })();
+
+// نقطة التركيز: نقرة على الصورة تحدد ما يبقى في الإطار عند القص، مع معاينة فورية
+(function () {
+  "use strict";
+  var box = document.querySelector("[data-focal]");
+  if (!box) return;
+  var form = document.querySelector("form.panel");
+  var fx = form && form.querySelector("input[name=focal_x]");
+  var fy = form && form.querySelector("input[name=focal_y]");
+  if (!fx || !fy) return;
+  var dot = box.querySelector(".focal-dot");
+  function apply(x, y) {
+    dot.style.left = (x * 100) + "%";
+    dot.style.top = (y * 100) + "%";
+    Array.prototype.forEach.call(document.querySelectorAll(".focal-previews img"), function (img) {
+      img.style.objectPosition = (x * 100).toFixed(1) + "% " + (y * 100).toFixed(1) + "%";
+    });
+  }
+  apply(parseFloat(box.getAttribute("data-x")) || 0.5, parseFloat(box.getAttribute("data-y")) || 0.4);
+  box.addEventListener("click", function (e) {
+    var r = box.getBoundingClientRect();
+    // الإحداثيات من يسار الصورة وأعلاها بصرف النظر عن اتجاه الصفحة
+    var x = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+    var y = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height));
+    fx.value = x.toFixed(3);
+    fy.value = y.toFixed(3);
+    apply(x, y);
+  });
+})();

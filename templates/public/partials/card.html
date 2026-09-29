@@ -2,7 +2,7 @@
 {% if variant == 'overlay' or variant == 'reel' %}
 <article class="card {{ variant }}">
   <a class="thumb{% if not a.featured_image %} placeholder{% endif %}" href="{{ a.get_absolute_url }}">
-    {% if a.featured_image %}<img src="{{ a.featured_image.card }}" alt="{{ a.featured_image.alt_text }}" loading="lazy" width="800" height="450">{% else %}{{ "pigeon"|icon:36 }}{% endif %}
+    {% if a.featured_image %}<img src="{{ a.featured_image.card }}" alt="{{ a.featured_image.alt_text }}" loading="lazy" width="800" height="450"{% if a.featured_image.focal_style %} style="{{ a.featured_image.focal_style }}"{% endif %}>{% else %}{{ "pigeon"|icon:36 }}{% endif %}
     {% if variant == 'reel' or a.kind == 'video' or a.kind == 'short' %}<span class="badge">{{ "play"|icon:20 }}</span>{% endif %}
     <span class="overlay-caption">
       {% if a.display_kicker %}<span class="kicker">{{ a.display_kicker }}</span>{% endif %}
@@ -17,7 +17,7 @@
   {% if not no_image %}
   <a href="{{ a.get_absolute_url }}" tabindex="-1" aria-hidden="true">
     <div class="thumb{% if not a.featured_image %} placeholder{% endif %}">
-      {% if a.featured_image %}<img src="{% if variant == 'big' %}{{ a.featured_image.large }}{% else %}{{ a.featured_image.card }}{% endif %}" alt="{{ a.featured_image.alt_text }}" loading="lazy" width="800" height="450">{% else %}{{ "pigeon"|icon:36 }}{% endif %}
+      {% if a.featured_image %}<img src="{% if variant == 'big' %}{{ a.featured_image.large }}{% else %}{{ a.featured_image.card }}{% endif %}" alt="{{ a.featured_image.alt_text }}" loading="lazy" width="800" height="450"{% if a.featured_image.focal_style %} style="{{ a.featured_image.focal_style }}"{% endif %}>{% else %}{{ "pigeon"|icon:36 }}{% endif %}
       {% if a.kind == "video" or a.kind == "short" %}<span class="badge">{{ "play"|icon:20 }}</span>{% elif a.kind == "podcast" %}<span class="badge">{{ "headphones"|icon:18 }}</span>{% elif a.kind == "gallery" %}<span class="badge">{{ "camera"|icon:18 }}</span>{% elif a.kind == "infographic" %}<span class="badge">{{ "chart"|icon:18 }}</span>{% endif %}
     </div>
   </a>

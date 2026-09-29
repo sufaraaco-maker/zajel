@@ -452,7 +452,18 @@ class WhatsAppSubscriberForm(forms.ModelForm):
 class MediaMetaForm(forms.ModelForm):
     class Meta:
         model = MediaAsset
-        fields = ["title", "caption", "credit", "alt_text"]
+        fields = ["title", "caption", "credit", "alt_text", "focal_x", "focal_y"]
+        widgets = {"focal_x": forms.HiddenInput(), "focal_y": forms.HiddenInput()}
+
+    def _clean_unit(self, name):
+        value = self.cleaned_data.get(name)
+        return 0.5 if value is None else min(1.0, max(0.0, value))
+
+    def clean_focal_x(self):
+        return self._clean_unit("focal_x")
+
+    def clean_focal_y(self):
+        return self._clean_unit("focal_y")
 
 
 class WireSourceForm(forms.ModelForm):

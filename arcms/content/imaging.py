@@ -178,31 +178,49 @@ def _assert_clean(content: bytes) -> None:
         raise ImageRejected("تعذّر ضمان نزع البيانات المخفية؛ رُفضت الصورة احتياطاً.")
 
 
-def _rendition(img: Image.Image, width: int, height: int | None) -> Image.Image:
+def _rendition(img: Image.Image, width: int, height: int | None, focal=(0.5, 0.4)) -> Image.Image:
     if height:
-        return ImageOps.fit(img, (width, height), Image.Resampling.LANCZOS, centering=(0.5, 0.4))
+        return ImageOps.fit(img, (width, height), Image.Resampling.LANCZOS, centering=focal)
     if img.width <= width:
         return img.copy()
     ratio = width / img.width
     return img.resize((width, max(1, int(img.height * ratio))), Image.Resampling.LANCZOS)
 
 
-def build_renditions(clean: CleanImage, base_path: str) -> dict[str, str]:
+def _save_rendition(r: Image.Image, name: str, base_path: str) -> str:
+    buf = io.BytesIO()
+    if name == "social":
+        r.convert("RGB").save(buf, "JPEG", quality=84, optimize=True, progressive=True)
+        ext = "jpg"
+    else:
+        r.save(buf, "WEBP", quality=80, method=5)
+        ext = "webp"
+    return default_storage.save(f"{base_path}-{name}.{ext}", ContentFile(buf.getvalue()))
+
+
+def build_renditions(clean: CleanImage, base_path: str, focal=(0.5, 0.4)) -> dict[str, str]:
     img = Image.open(io.BytesIO(clean.content))
     img.load()
-    paths = {}
+    return {name: _save_rendition(_rendition(img, w, h, focal), name, base_path) for name, (w, h) in RENDITIONS.items()}
+
+
+def recrop(asset) -> None:
+    """يعيد بناء المقاسات ذات النسبة الثابتة بعد تغيير نقطة التركيز (الأخرى لا تُقصّ)."""
+    with asset.file.open("rb") as fh:
+        img = Image.open(io.BytesIO(fh.read()))
+        img.load()
+    renditions = dict(asset.renditions or {})
+    # اسم جديد في كل مرة، حتى لا تعرض المتصفحات والمنصات القصّ القديم من ذاكرتها
+    base = f"{asset.file.name.rsplit('.', 1)[0]}-{uuid.uuid4().hex[:6]}"
     for name, (w, h) in RENDITIONS.items():
-        r = _rendition(img, w, h)
-        buf = io.BytesIO()
-        if name == "social":
-            r.convert("RGB").save(buf, "JPEG", quality=84, optimize=True, progressive=True)
-            ext = "jpg"
-        else:
-            r.save(buf, "WEBP", quality=80, method=5)
-            ext = "webp"
-        path = default_storage.save(f"{base_path}-{name}.{ext}", ContentFile(buf.getvalue()))
-        paths[name] = path
-    return paths
+        if not h:
+            continue
+        old = renditions.get(name)
+        renditions[name] = _save_rendition(_rendition(img, w, h, asset.focal), name, base)
+        if old and old != renditions[name]:
+            default_storage.delete(old)
+    asset.renditions = renditions
+    asset.save(update_fields=["renditions"])
 
 
 def store_image(data: bytes, *, user=None, title: str = "", caption: str = "", credit: str = "", alt: str = ""):

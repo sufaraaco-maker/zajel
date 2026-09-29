@@ -4,7 +4,16 @@
 <div class="page-title"><div><h1>بيانات الصورة</h1><p><a href="{% url 'studio:media' %}">← مكتبة الوسائط</a></p></div></div>
 <div class="cols cols-2">
   <div class="panel">
-    <img src="{{ asset.large }}" alt="" style="width:100%;border-radius:6px">
+    <div class="focal-picker" data-focal data-x="{{ asset.focal_x|stringformat:'.3f' }}" data-y="{{ asset.focal_y|stringformat:'.3f' }}">
+      <img src="{{ asset.large }}" alt="" draggable="false">
+      <span class="focal-dot" aria-hidden="true"></span>
+    </div>
+    <p class="small muted">{{ "eye"|icon:14 }} انقر على أهم ما في الصورة (وجه، لافتة، حدث) لتبقى في الإطار حين تُقصّ للبطاقات والمشاركة.</p>
+    <div class="focal-previews">
+      <figure><div class="fp fp-wide"><img src="{{ asset.card }}" alt=""></div><figcaption>بطاقة</figcaption></figure>
+      <figure><div class="fp fp-square"><img src="{{ asset.card }}" alt=""></div><figcaption>مربعة</figcaption></figure>
+      <figure><div class="fp fp-tall"><img src="{{ asset.card }}" alt=""></div><figcaption>عمودية</figcaption></figure>
+    </div>
     <p class="small muted">{{ asset.width }}×{{ asset.height }} · {{ asset.size|filesizeformat }} · رُفعت {{ asset.created_at|ar_datetime }} بواسطة {{ asset.uploaded_by|default:"الاستيراد" }}</p>
     {% if asset.removed_metadata %}
     <div class="alert success">{{ "shield"|icon:18 }}<div><strong>نُزع من الملف الأصلي عند الرفع:</strong><ul style="margin:4px 0 0">{% for m in asset.removed_metadata %}<li>{{ m }}</li>{% endfor %}</ul><span class="small">لم تُحفظ هذه البيانات في أي مكان.</span></div></div>

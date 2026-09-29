@@ -21,7 +21,7 @@
       <div class="list-feed">
         {% for item in items %}
         <article class="card row">
-          {% if item.article.featured_image %}<a href="{{ item.article.get_absolute_url }}" tabindex="-1" aria-hidden="true"><div class="thumb"><img src="{{ item.article.featured_image.thumb }}" alt="" loading="lazy"></div></a>{% endif %}
+          {% if item.article.featured_image %}<a href="{{ item.article.get_absolute_url }}" tabindex="-1" aria-hidden="true"><div class="thumb"><img src="{{ item.article.featured_image.thumb }}" alt="" loading="lazy"{% if item.article.featured_image.focal_style %} style="{{ item.article.featured_image.focal_style }}"{% endif %}></div></a>{% endif %}
           <div>
             <h3><a href="{{ item.article.get_absolute_url }}">{{ item.title_html|safe }}</a></h3>
             <p style="-webkit-line-clamp:3">{{ item.snippet|safe }}</p>

@@ -172,6 +172,9 @@ class MediaAsset(models.Model):
     )
     created_at = models.DateTimeField(default=timezone.now, db_index=True)
     legacy_url = models.URLField(max_length=500, blank=True, db_index=True)
+    # نقطة التركيز (0..1 من اليسار ومن الأعلى): كل قصّ بنسبة ثابتة يتمركز حولها
+    focal_x = models.FloatField("نقطة التركيز أفقياً", default=0.5)
+    focal_y = models.FloatField("نقطة التركيز عمودياً", default=0.4)
 
     class Meta:
         ordering = ["-created_at"]
@@ -208,6 +211,19 @@ class MediaAsset(models.Model):
     @property
     def social(self) -> str:
         return self.rendition("social")
+
+    @property
+    def focal(self) -> tuple[float, float]:
+        clamp = lambda v: min(1.0, max(0.0, float(v)))  # noqa: E731
+        return clamp(self.focal_x), clamp(self.focal_y)
+
+    @property
+    def focal_style(self) -> str:
+        """object-position للصور المقصوصة في المتصفح (object-fit: cover)؛ فارغ إن كانت النقطة الافتراضية."""
+        fx, fy = self.focal
+        if (round(fx, 3), round(fy, 3)) == (0.5, 0.4):
+            return ""
+        return f"object-position:{fx * 100:.1f}% {fy * 100:.1f}%"
 
     @property
     def srcset(self) -> str:
