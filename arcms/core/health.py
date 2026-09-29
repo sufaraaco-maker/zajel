@@ -132,6 +132,26 @@ def run_checks(live: bool = False) -> list[Check]:
             add(Check("النسخ الاحتياطي", "warn", f"آخر نسخة ناجحة قديمة: {timezone.localtime(last.created_at):%Y-%m-%d %H:%M}"))
         else:
             add(Check("النسخ الاحتياطي", "ok", f"آخر نسخة: {last.filename}"))
+    from arcms.backups import offsite
+
+    if settings.ARCMS_BACKUP_PUBLIC_KEY:
+        if not offsite.configured():
+            add(Check("نسخة خارج الخادم", "warn", "النسخ على الخادم نفسه فقط؛ إن صودر الخادم أو تعطّل ضاعت معه.",
+                      "اضبط ARCMS_OFFSITE_* لتخزين متوافق مع S3."))
+        else:
+            last_remote = BackupRecord.objects.filter(offsite_status="ok").order_by("-created_at").first()
+            failed = BackupRecord.objects.filter(offsite_status="failed").order_by("-created_at").first()
+            if failed and (not last_remote or failed.created_at > last_remote.created_at):
+                add(Check("نسخة خارج الخادم", "fail", f"فشل رفع آخر نسخة: {failed.offsite_error[:120]}"))
+            elif last_remote:
+                add(Check("نسخة خارج الخادم", "ok", f"آخر نسخة بعيدة: {last_remote.offsite_key}"))
+            elif live:
+                try:
+                    add(Check("نسخة خارج الخادم", "ok", f"الوصول إلى الحاوية يعمل: {offsite.check()}"))
+                except offsite.OffsiteError as exc:
+                    add(Check("نسخة خارج الخادم", "fail", str(exc)))
+            else:
+                add(Check("نسخة خارج الخادم", "warn", "مضبوطة ولم تُرفع أي نسخة بعد."))
     backup_dir = Path(settings.ARCMS_BACKUP_DIR)
     if backup_dir.exists():
         free = shutil.disk_usage(backup_dir).free / 1024**3

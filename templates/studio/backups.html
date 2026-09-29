@@ -12,16 +12,19 @@
   <div class="kpi"><div class="label">مكان الحفظ</div><div class="small" style="direction:ltr;text-align:right">{{ backup_dir }}</div><div class="delta">يُحتفظ بآخر {{ keep }} نسخة</div></div>
   <div class="kpi"><div class="label">نسخة تلقائية</div><div class="value" style="font-size:1.1rem">يومياً</div><div class="delta">الساعة من ARCMS_BACKUP_HOUR (افتراضياً 3 فجراً)</div></div>
 </div>
+{% if offsite %}<div class="alert success">{{ "shield"|icon:18 }}<div><strong>نسخة خارج الخادم مفعّلة:</strong> تُرفع كل نسخة مشفّرة إلى <bdi dir="ltr">{{ offsite }}</bdi> بعد إنشائها. المزوّد لا يقرأ منها شيئاً.</div></div>
+{% else %}<div class="alert warning">{{ "alert"|icon:18 }}<div><strong>النسخ على هذا الخادم فقط.</strong> إن صودر الخادم أو تعطّل قرصه ضاعت معه. اضبط <code>ARCMS_OFFSITE_*</code> في ملف البيئة لرفع كل نسخة مشفّرة إلى تخزين متوافق مع S3 (AWS، Cloudflare R2، Backblaze، Wasabi، MinIO).</div></div>{% endif %}
 {% endif %}
 <div class="table-wrap"><table class="data">
-  <thead><tr><th>الملف</th><th>الحالة</th><th>أنشئت</th><th>المصدر</th><th class="num">الحجم</th><th>SHA-256</th><th></th></tr></thead>
+  <thead><tr><th>الملف</th><th>الحالة</th><th>أنشئت</th><th>المصدر</th><th class="num">الحجم</th><th>SHA-256</th><th>خارج الخادم</th><th></th></tr></thead>
   <tbody>{% for r in records %}<tr>
     <td dir="ltr" style="text-align:right">{{ r.filename }}</td>
     <td><span class="pill {% if r.status == 'ok' %}ok{% elif r.status == 'failed' %}fail{% else %}warn{% endif %}">{{ r.get_status_display }}</span>{% if r.error %}<div class="small" style="color:var(--bad)">{{ r.error|truncatechars:100 }}</div>{% endif %}</td>
     <td class="small">{{ r.created_at|ar_datetime }}</td><td class="small">{{ r.trigger }}</td>
     <td class="num">{{ r.size|filesizeformat }}</td><td class="small" dir="ltr" style="text-align:right">{{ r.sha256|truncatechars:20 }}</td>
+    <td class="small">{% if r.offsite_status == "ok" %}<span class="pill ok">رُفعت</span>{% elif r.offsite_status == "pending" %}<span class="pill warn">بالانتظار</span>{% elif r.offsite_status == "failed" %}<span class="pill fail" title="{{ r.offsite_error }}">فشل الرفع</span>{% else %}—{% endif %}</td>
     <td>{% if r.status == "ok" %}<a class="btn sm" href="{% url 'studio:backup_download' r.pk %}">{{ "download"|icon:14 }} تنزيل</a>{% endif %}</td>
-  </tr>{% empty %}<tr><td colspan="7" class="empty">لا نسخ بعد.</td></tr>{% endfor %}</tbody>
+  </tr>{% empty %}<tr><td colspan="8" class="empty">لا نسخ بعد.</td></tr>{% endfor %}</tbody>
 </table></div>
 <section class="panel small" style="margin-top:18px">
   <h2>الاستعادة</h2>

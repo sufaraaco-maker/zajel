@@ -16,6 +16,10 @@ class BackupRecord(models.Model):
     includes_media = models.BooleanField(default=True)
     trigger = models.CharField(max_length=20, default="manual")
     error = models.TextField(blank=True)
+    offsite_status = models.CharField(max_length=10, blank=True, default="")  # "" | pending | ok | failed
+    offsite_key = models.CharField(max_length=300, blank=True)
+    offsite_at = models.DateTimeField(null=True, blank=True)
+    offsite_error = models.TextField(blank=True)
     created_at = models.DateTimeField(default=timezone.now)
     finished_at = models.DateTimeField(null=True, blank=True)
 

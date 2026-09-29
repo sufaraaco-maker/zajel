@@ -453,6 +453,8 @@ def backups(request):
             "fingerprint": crypto.fingerprint(key) if key else "",
             "backup_dir": settings.ARCMS_BACKUP_DIR,
             "keep": settings.ARCMS_BACKUP_KEEP,
+            "offsite": f"{settings.ARCMS_OFFSITE_BUCKET}/{settings.ARCMS_OFFSITE_PREFIX}" if settings.ARCMS_OFFSITE_BUCKET
+            and settings.ARCMS_OFFSITE_ACCESS_KEY else "",
         },
     )
 
