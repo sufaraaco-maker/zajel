@@ -494,7 +494,7 @@ mark { background: color-mix(in srgb, var(--primary) 18%, transparent); color: i
 .tabs-inline button { border: 1px solid var(--line); background: var(--bg); color: var(--text); border-radius: 999px; padding: 4px 14px; font: 600 .85rem var(--font-ui); cursor: pointer; }
 .tabs-inline button[aria-selected="true"] { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
 .most-read.numbered { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 32px; }
-.most-read[hidden] { display: none; }
+.most-read[hidden], .mr-panel[hidden] { display: none; }
 .most-read.numbered li::before { content: counter(mr, decimal-leading-zero); font-size: 1.5rem; color: var(--muted); opacity: .6; min-width: 2.2ch; }
 .most-read.numbered.arabic-digits li::before { content: counter(mr, arabic-indic); }
 .most-read.numbered li:nth-child(-n+3)::before { color: var(--primary-text, var(--primary)); opacity: 1; }

@@ -243,12 +243,15 @@ class SiteSettings(models.Model):
         footer = self.footer_color or accent
         link = self.link_color or ""
         primary_dark = self.primary_dark_mode or c.for_dark_mode(primary)
-        # اللون الرئيسي حين يُستخدم نصاً (عناوين صغيرة، أوقات، روابط) يُغمَّق عند الحاجة ليُقرأ على الخلفية
-        primary_text = c.for_text_on(primary, page)
+        # اللون الرئيسي حين يُستخدم نصاً (عناوين صغيرة، أوقات، روابط) يُغمَّق عند الحاجة ليُقرأ على الخلفية،
+        # ويُقاس على أغمق سطح في الصفحة (البطاقات والخط الزمني) لا على الخلفية وحدها
+        surface2 = c.mix(page, "#000000", 0.075)
+        primary_text = c.for_text_on(primary, surface2)
+        primary_text_dark = c.for_text_on(primary_dark, c.DARK_SURFACE)
         return {
             "primary": primary, "on_primary": c.readable_on(primary),
             "accent": accent, "on_accent": c.readable_on(accent),
-            "page": page, "surface": c.mix(page, "#000000", 0.04), "surface2": c.mix(page, "#000000", 0.075),
+            "page": page, "surface": c.mix(page, "#000000", 0.04), "surface2": surface2,
             "line": c.mix(page, "#000000", 0.11),
             "header": header, "on_header": c.readable_on(header),
             "topbar": topbar, "on_topbar": c.muted_on(topbar),
@@ -256,9 +259,9 @@ class SiteSettings(models.Model):
             "breaking": breaking, "on_breaking": c.readable_on(breaking),
             "footer": footer, "on_footer": c.muted_on(footer), "footer_strong": c.readable_on(footer),
             "primary_text": primary_text,
-            "primary_text_dark": c.for_text_on(primary_dark, c.DARK_BG),
+            "primary_text_dark": primary_text_dark,
             "link": link or primary_text,
-            "link_dark": c.for_text_on(link, c.DARK_BG) if link else c.for_text_on(primary_dark, c.DARK_BG),
+            "link_dark": c.for_text_on(link, c.DARK_SURFACE) if link else primary_text_dark,
             "primary_dark": primary_dark, "on_primary_dark": c.readable_on(primary_dark),
             "custom_page": bool(self.page_color),
             "custom_header": bool(self.header_color),

@@ -9,6 +9,7 @@ HEX = re.compile(r"^#[0-9a-fA-F]{6}$")
 DARK_TEXT = "#111418"
 LIGHT_TEXT = "#ffffff"
 DARK_BG = "#0f1113"  # خلفية الوضع الداكن في الموقع
+DARK_SURFACE = "#1f2327"  # أفتح سطح في الوضع الداكن (البطاقات والخط الزمني): أصعب خلفية للنص الملوّن
 
 
 def is_hex(value: str) -> bool:

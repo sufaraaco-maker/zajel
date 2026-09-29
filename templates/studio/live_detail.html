@@ -33,7 +33,7 @@
     </section>
   </div>
   {% if settings_form %}
-  <aside class="editor-side">
+  <aside class="editor-side" aria-label="إعدادات التغطية">
     <form method="post" action="{% url 'studio:live_update' live.pk %}" class="panel">
       {% csrf_token %}
       <h2>إعدادات التغطية</h2>

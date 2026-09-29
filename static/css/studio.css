@@ -155,7 +155,8 @@ legend { font-weight: 700; padding: 0 6px; }
 .lock-banner { background: var(--warn-bg); color: var(--warn); border-radius: 6px; padding: 10px 14px; margin-bottom: 12px; display: flex; gap: 10px; align-items: center; }
 .featured-box { border: 2px dashed var(--line); border-radius: 6px; min-height: 140px; display: grid; place-items: center; text-align: center; color: var(--muted); cursor: pointer; overflow: hidden; position: relative; background: #fafaf8; }
 .featured-box img { width: 100%; display: block; }
-.featured-box .clear { position: absolute; top: 6px; inset-inline-start: 6px; }
+.image-field { position: relative; }
+.image-field > .clear { position: absolute; top: 8px; inset-inline-start: 8px; }
 .removed-meta { font-size: .78rem; color: var(--ok); margin-top: 6px; display: flex; gap: 4px; align-items: flex-start; }
 .action-box .btn { width: 100%; margin-bottom: 6px; }
 .notes { max-height: 360px; overflow-y: auto; }
@@ -372,7 +373,7 @@ label.theme-card:has(input:checked) { border-color: var(--t-primary, var(--prima
 .wire-card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; }
 .wire-card.is-alert { border-inline-start: 4px solid var(--primary); }
 .wire-card.handled { opacity: .72; }
-.wire-card h3 { margin: 6px 0 4px; font-size: 1.05rem; line-height: 1.6; }
+.wire-card h2 { margin: 6px 0 4px; font-size: 1.05rem; line-height: 1.6; }
 .wire-card p { margin: 0 0 8px; color: var(--muted); line-height: 1.8; }
 .wire-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: .85rem; }
 .wire-meta time { font-weight: 700; font-variant-numeric: tabular-nums; }

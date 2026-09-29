@@ -9,12 +9,12 @@
 <link rel="icon" href="{% if site.logo %}{{ site.logo.thumb }}{% else %}{% static 'img/icon-192.png' %}{% endif %}">
 </head>
 <body>
-<div class="auth-wrap">
+<main class="auth-wrap">
   <div class="auth-card">
     <div class="auth-brand">{% if site.logo %}<img class="auth-logo" src="{{ site.logo.url }}" alt="{{ site.name }}">{% else %}<span class="mark">{{ "pigeon"|icon:22 }}</span>{% endif %}<span>{% if not site.logo %}{{ site.name }}<br>{% endif %}<span class="small muted" style="font-weight:400">غرفة التحرير</span></span></div>
     {% for m in messages %}<div class="alert {{ m.tags }}">{{ m }}</div>{% endfor %}
     {% block content %}{% endblock %}
   </div>
-</div>
+</main>
 </body>
 </html>

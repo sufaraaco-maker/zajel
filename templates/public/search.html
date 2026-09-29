@@ -5,7 +5,7 @@
 <div class="search-page with-sidebar">
   <div>
     <div class="page-head"><h1>البحث في الأرشيف</h1></div>
-    <form class="big" method="get" role="search">
+    <form class="big" method="get" role="search" aria-label="البحث في الأرشيف">
       <label class="sr-only" for="q2">كلمات البحث</label>
       <input id="q2" type="search" name="q" value="{{ q }}" placeholder="اكتب كلمة أو أكثر…" autofocus>
       <button class="btn" type="submit">{{ "search"|icon:18 }} ابحث</button>
@@ -18,6 +18,7 @@
     <p class="search-hint">البحث يفهم العربية: «اعتقال» تجد «بالاعتقال» و«الاعتقالات»، ولا فرق بين «أ» و«ا» أو «ة» و«ه»، والتشكيل لا يؤثر. ضع العبارة بين «» للبحث عنها حرفياً.</p>
     {% if q %}
       <p class="meta" style="margin:14px 0">{% ar_count total "نتيجة واحدة" "نتيجتان" "نتائج" "نتيجة" as count_label %}{% if total %}{{ count_label }} لـ «{{ q }}»{% else %}لا نتائج لـ «{{ q }}». جرّب كلمات أقل أو أعمّ.{% endif %}</p>
+      <h2 class="sr-only">النتائج</h2>
       <div class="list-feed">
         {% for item in items %}
         <article class="card row">

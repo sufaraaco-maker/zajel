@@ -27,7 +27,7 @@
       <text class="axis-label" x="{{ chart.axis_x }}" y="{{ g.y }}" dy="4" text-anchor="start">{{ g.label }}</text>
     {% endfor %}
     {% for b in chart.bars %}
-      <rect class="hit" x="{{ b.hit_x }}" y="0" width="{{ b.hit_w }}" height="{{ chart.baseline }}" tabindex="0"
+      <rect class="hit" x="{{ b.hit_x }}" y="0" width="{{ b.hit_w }}" height="{{ chart.baseline }}" tabindex="0" role="img"
             data-label="{{ b.label }}" data-views="{{ b.views }}" data-visitors="{{ b.visitors }}" aria-label="{{ b.label }}: {{ b.views }} مشاهدة، {{ b.visitors }} زائر"/>
       {% if b.path %}<path class="col{% if b.is_last %} current{% endif %}" d="{{ b.path }}"/>{% endif %}
       {% if b.is_last %}<text class="value-label" x="{{ b.x }}" y="{{ b.y }}" dy="-6" text-anchor="middle">{{ b.value_label }}</text>{% endif %}

@@ -10,7 +10,7 @@
     <div class="form-row" data-block-field="pick_ids">
       <span class="label">المواد المختارة (بالترتيب)</span>
       {{ field }}
-      <input type="search" data-picker-search placeholder="ابحث عن مادة منشورة لإضافتها…">
+      <input type="search" data-picker-search placeholder="ابحث عن مادة منشورة لإضافتها…" aria-label="ابحث عن مادة منشورة لإضافتها">
       <div class="chips" data-picker-chips>{% for a in form.picks %}<span class="chip" data-id="{{ a.pk }}">{{ a.title|truncatechars:60 }}</span>{% endfor %}</div>
       <div class="help">إن لم تختر شيئاً تُعرض المواد المعلَّمة «في الواجهة» بعد الخبر الرئيسي.</div>
     </div>

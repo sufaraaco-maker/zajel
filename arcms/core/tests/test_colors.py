@@ -67,6 +67,19 @@ class SitePaletteTests(ArcmsTestCase):
         self.assertIn("--bg:#fbfaf7", html)
         self.assertIn(":root[data-theme=\"dark\"]{--primary:", html)
 
+    def test_colored_text_readable_on_every_surface(self):
+        """النص الملوّن (الأوقات والعناوين الصغيرة) يقع على البطاقات لا على الخلفية وحدها، في الوضعين."""
+        site = SiteSettings.load()
+        for primary in ("#1f7a3e", "#7a1f2b", "#ffd400", "#0a58ca", "#b0101c"):
+            for page in ("", "#f4efe6"):
+                site.primary_color, site.page_color = primary, page
+                p = site.palette()
+                for bg in (p["page"], p["surface"], p["surface2"]):
+                    self.assertGreaterEqual(colors.contrast(p["primary_text"], bg), 4.5, (primary, page, bg))
+                for bg in (colors.DARK_BG, "#171a1d", colors.DARK_SURFACE):
+                    self.assertGreaterEqual(colors.contrast(p["primary_text_dark"], bg), 4.5, (primary, bg))
+                    self.assertGreaterEqual(colors.contrast(p["link_dark"], bg), 4.5, (primary, bg))
+
     def test_header_class_follows_contrast(self):
         site = SiteSettings.load()
         site.header_color = "#0b1f3a"

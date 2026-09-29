@@ -16,7 +16,7 @@
 {% else %}<div class="alert warning">{{ "alert"|icon:18 }}<div><strong>النسخ على هذا الخادم فقط.</strong> إن صودر الخادم أو تعطّل قرصه ضاعت معه. اضبط <code>ARCMS_OFFSITE_*</code> في ملف البيئة لرفع كل نسخة مشفّرة إلى تخزين متوافق مع S3 (AWS، Cloudflare R2، Backblaze، Wasabi، MinIO).</div></div>{% endif %}
 {% endif %}
 <div class="table-wrap"><table class="data">
-  <thead><tr><th>الملف</th><th>الحالة</th><th>أنشئت</th><th>المصدر</th><th class="num">الحجم</th><th>SHA-256</th><th>خارج الخادم</th><th></th></tr></thead>
+  <thead><tr><th>الملف</th><th>الحالة</th><th>أنشئت</th><th>المصدر</th><th class="num">الحجم</th><th>SHA-256</th><th>خارج الخادم</th><th><span class="sr-only">إجراءات</span></th></tr></thead>
   <tbody>{% for r in records %}<tr>
     <td dir="ltr" style="text-align:right">{{ r.filename }}</td>
     <td><span class="pill {% if r.status == 'ok' %}ok{% elif r.status == 'failed' %}fail{% else %}warn{% endif %}">{{ r.get_status_display }}</span>{% if r.error %}<div class="small" style="color:var(--bad)">{{ r.error|truncatechars:100 }}</div>{% endif %}</td>

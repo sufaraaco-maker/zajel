@@ -3,12 +3,12 @@
 {% block content %}
 <div class="page-title">
   <div><h1>مكتبة الوسائط</h1><p>كل صورة تُرفع تُنزع منها إحداثيات GPS وبيانات الجهاز والمصوّر، ويُحفظ الملف باسم عشوائي.</p></div>
-  <form method="get" class="btn-row"><input type="search" name="q" value="{{ q }}" placeholder="ابحث في التعليقات والمصادر"><label class="check"><input type="checkbox" name="mine" value="1" {% if request.GET.mine %}checked{% endif %}> صوري</label><button class="btn">بحث</button></form>
+  <form method="get" class="btn-row"><input type="search" name="q" value="{{ q }}" placeholder="ابحث في التعليقات والمصادر" aria-label="بحث في الوسائط"><label class="check"><input type="checkbox" name="mine" value="1" {% if request.GET.mine %}checked{% endif %}> صوري</label><button class="btn">بحث</button></form>
 </div>
 <form method="post" action="{% url 'studio:media_upload' %}" enctype="multipart/form-data" class="panel">
   {% csrf_token %}
   <label class="dropzone" data-library-drop>{{ "upload"|icon:30 }}<br><strong>اسحب الصور هنا أو اضغط للاختيار</strong><br><span class="small">JPEG، PNG، WebP، HEIC (آيفون)… حتى 25 ميغابايت للصورة.</span><input type="file" name="file" accept="image/*" multiple hidden></label>
-  <div class="field-grid"><div><label class="label">التعليق</label><input type="text" name="caption"></div><div><label class="label">المصدر/المصوّر</label><input type="text" name="credit" placeholder="خاص / وكالات / اسم المصوّر"></div></div>
+  <div class="field-grid"><div><label class="label" for="up-caption">التعليق</label><input id="up-caption" type="text" name="caption"></div><div><label class="label" for="up-credit">المصدر/المصوّر</label><input id="up-credit" type="text" name="credit" placeholder="خاص / وكالات / اسم المصوّر"></div></div>
 </form>
 <div class="media-grid">
   {% for a in page %}

@@ -7,7 +7,7 @@
 </div>
 <div class="table-wrap">
 <table class="data">
-  <thead><tr>{% for attr, label in crud.columns %}<th>{{ label }}</th>{% endfor %}<th></th></tr></thead>
+  <thead><tr>{% for attr, label in crud.columns %}<th>{{ label }}</th>{% endfor %}<th><span class="sr-only">إجراءات</span></th></tr></thead>
   <tbody>
   {% for row in rows %}
     <tr>
@@ -24,7 +24,7 @@
   <h2>كلمات التنبيه</h2>
   <p class="muted small">كلمة أو عبارة في كل سطر. أي مادة وكالة يحوي عنوانها أو ملخصها إحداها تُعلَّم «تنبيه» وتظهر بعدد في القائمة الجانبية. المطابقة تتسامح مع الهمزات والتاء المربوطة وحروف الجر المتصلة («غزة» تطابق «بغزة»).</p>
   <form method="post" action="{% url 'studio:wire_keywords' %}">{% csrf_token %}
-    <textarea name="keywords" rows="6" placeholder="عاجل&#10;القدس&#10;وزير الخارجية">{{ keywords }}</textarea>
+    <textarea name="keywords" rows="6" aria-label="كلمات التنبيه" placeholder="عاجل&#10;القدس&#10;وزير الخارجية">{{ keywords }}</textarea>
     <div class="btn-row"><button class="btn primary" type="submit">حفظ الكلمات</button></div>
   </form>
 </section>

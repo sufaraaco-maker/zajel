@@ -1,11 +1,13 @@
 <section class="section {{ b.block.section_class }}">
   <div class="section-head">
     <h2 class="section-title">{{ b.title }}</h2>
-    <div class="tabs-inline" role="tablist">{% for label, items in b.tabs %}<button type="button" role="tab" data-tab="mr-{{ b.block.pk }}-{{ forloop.counter }}" aria-selected="{% if forloop.first %}true{% else %}false{% endif %}">{{ label }}</button>{% endfor %}</div>
+    <div class="tabs-inline" role="tablist">{% for label, items in b.tabs %}<button type="button" role="tab" id="mr-{{ b.block.pk }}-{{ forloop.counter }}-tab" aria-controls="mr-{{ b.block.pk }}-{{ forloop.counter }}" data-tab="mr-{{ b.block.pk }}-{{ forloop.counter }}" aria-selected="{% if forloop.first %}true{% else %}false{% endif %}">{{ label }}</button>{% endfor %}</div>
   </div>
   {% for label, items in b.tabs %}
-  <ol class="most-read numbered{% if site.digits == 'arabic' %} arabic-digits{% endif %}" id="mr-{{ b.block.pk }}-{{ forloop.counter }}" role="tabpanel"{% if not forloop.first %} hidden{% endif %}>
-    {% for a in items %}<li><a href="{{ a.get_absolute_url }}">{{ a.title }}</a></li>{% endfor %}
-  </ol>
+  <div class="mr-panel" id="mr-{{ b.block.pk }}-{{ forloop.counter }}" role="tabpanel" aria-labelledby="mr-{{ b.block.pk }}-{{ forloop.counter }}-tab"{% if not forloop.first %} hidden{% endif %}>
+    <ol class="most-read numbered{% if site.digits == 'arabic' %} arabic-digits{% endif %}">
+      {% for a in items %}<li><a href="{{ a.get_absolute_url }}">{{ a.title }}</a></li>{% endfor %}
+    </ol>
+  </div>
   {% endfor %}
 </section>

@@ -111,19 +111,26 @@
   }
 
   // --- حقول الصور (الصورة الرئيسية، الغلاف، صورة الكاتب…) ---
+  // زر «إزالة» خارج المربع لا داخله: المربع نفسه زر، ولا تتداخل الأزرار (لقارئ الشاشة ولوحة المفاتيح)
   function showAsset(box, a) {
+    var wrap = box.parentNode;
     box.innerHTML = "";
-    var img = el("img", { src: a.card, alt: "" });
-    box.appendChild(img);
-    var clear = el("button", { type: "button", "class": "btn sm clear" }, "إزالة");
-    clear.addEventListener("click", function (e) {
-      e.stopPropagation();
+    box.appendChild(el("img", { src: a.card, alt: "" }));
+    if (!box.hasAttribute("data-label")) box.setAttribute("data-label", box.getAttribute("aria-label") || "");
+    box.setAttribute("aria-label", "غيّر الصورة");
+    var old = wrap.querySelector(":scope > .clear");
+    if (old) old.remove();
+    var clear = el("button", { type: "button", "class": "btn sm clear" }, "إزالة الصورة");
+    clear.addEventListener("click", function () {
       document.getElementById(box.getAttribute("data-image-field")).value = "";
       box.innerHTML = '<span class="placeholder-text">اختر صورة أو ارفع جديدة</span>';
+      box.setAttribute("aria-label", box.getAttribute("data-label"));
+      clear.remove();
+      box.focus();
       markDirty();
     });
-    box.appendChild(clear);
-    var meta = box.parentNode.querySelector("[data-removed-meta]");
+    wrap.appendChild(clear);
+    var meta = wrap.parentNode.querySelector("[data-removed-meta]");
     if (meta) {
       meta.hidden = !(a.removed && a.removed.length);
       meta.querySelector("span").textContent = "نُزع من هذه الصورة: " + (a.removed || []).join("، ");
@@ -132,6 +139,9 @@
     if (cap && !cap.value && a.caption) cap.value = a.caption;
   }
   $$("[data-image-field]").forEach(function (box) {
+    var wrap = el("div", { "class": "image-field" });
+    box.parentNode.insertBefore(wrap, box);
+    wrap.appendChild(box);
     var input = document.getElementById(box.getAttribute("data-image-field"));
     var initial = box.getAttribute("data-initial");
     if (initial) fetch("/studio/media/picker/?id=" + initial, { credentials: "same-origin" }).then(function (r) { return r.json(); }).then(function (d) { if (d.items[0]) showAsset(box, d.items[0]); });
@@ -178,6 +188,7 @@
     });
     quill.format("direction", "rtl");
     quill.format("align", "right");
+    labelToolbar(holder);
     var wc = $("[data-wordcount]");
     var count = function () {
       if (!wc) return;
@@ -187,6 +198,26 @@
     count();
     quill.on("text-change", function () { markDirty(); count(); });
     if (form && hidden) form.addEventListener("submit", function () { hidden.value = quill.root.innerHTML === "<p><br></p>" ? "" : quill.root.innerHTML; dirty = false; });
+  }
+  // أسماء عربية لأزرار شريط المحرر (Quill يسمّيها بالإنجليزية وقوائمه المنسدلة بلا اسم)
+  var TOOL_LABELS = {
+    ".ql-bold": "عريض", ".ql-italic": "مائل", ".ql-underline": "تسطير", ".ql-link": "رابط",
+    ".ql-blockquote": "اقتباس", '.ql-list[value="ordered"]': "قائمة مرقمة", '.ql-list[value="bullet"]': "قائمة نقطية",
+    ".ql-image": "صورة من المكتبة", ".ql-video": "فيديو", ".ql-clean": "إزالة التنسيق",
+    ".ql-header .ql-picker-label": "نوع الفقرة", ".ql-align .ql-picker-label": "المحاذاة"
+  };
+  function labelToolbar(holder) {
+    var bar = holder.previousElementSibling;
+    if (!bar || !bar.classList.contains("ql-toolbar")) return;
+    bar.setAttribute("role", "toolbar");
+    bar.setAttribute("aria-label", "تنسيق المتن");
+    Object.keys(TOOL_LABELS).forEach(function (sel) {
+      $$(sel, bar).forEach(function (n) { n.setAttribute("aria-label", TOOL_LABELS[sel]); n.setAttribute("title", TOOL_LABELS[sel]); });
+    });
+    var body = holder.querySelector(".ql-editor");
+    body.setAttribute("role", "textbox");
+    body.setAttribute("aria-multiline", "true");
+    body.setAttribute("aria-label", "المتن");
   }
   if (typeof Quill !== "undefined") initQuill();
   else window.addEventListener("load", initQuill);

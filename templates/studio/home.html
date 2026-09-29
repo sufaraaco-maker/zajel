@@ -61,7 +61,7 @@
   <section class="panel">
     <h2>{{ "eye"|icon:18 }} نُشر مؤخراً</h2>
     <ul class="list">
-      {% for a in recent_published %}<li><div class="grow"><a href="{% url 'studio:article_edit' a.pk %}">{{ a.title }}</a><div class="sub">{{ a.published_at|ar_relative }} · {{ a.published_by|default:"" }} · {{ a.view_count|ar_compact }} مشاهدة</div></div><a class="btn sm" href="{{ a.get_absolute_url }}" target="_blank" rel="noopener">{{ "eye"|icon:14 }}</a></li>
+      {% for a in recent_published %}<li><div class="grow"><a href="{% url 'studio:article_edit' a.pk %}">{{ a.title }}</a><div class="sub">{{ a.published_at|ar_relative }} · {{ a.published_by|default:"" }} · {{ a.view_count|ar_compact }} مشاهدة</div></div><a class="btn sm" href="{{ a.get_absolute_url }}" target="_blank" rel="noopener" aria-label="عرض في الموقع" title="عرض في الموقع">{{ "eye"|icon:14 }}</a></li>
       {% empty %}<li class="empty">لم يُنشر شيء بعد.</li>{% endfor %}
     </ul>
   </section>

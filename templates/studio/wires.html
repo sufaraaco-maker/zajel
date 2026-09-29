@@ -7,8 +7,8 @@
     <form method="get" class="btn-row wire-filter">
       <input type="hidden" name="tab" value="{{ tab }}">
       <select name="source" aria-label="المصدر"><option value="">كل المصادر</option>{% for s in sources %}<option value="{{ s.pk }}"{% if source == s.pk|stringformat:"s" %} selected{% endif %}>{{ s.name }}</option>{% endfor %}</select>
-      <input type="search" name="q" value="{{ q }}" placeholder="ابحث في الوكالات…">
-      <button class="btn" type="submit">{{ "search"|icon:16 }}</button>
+      <input type="search" name="q" value="{{ q }}" placeholder="ابحث في الوكالات…" aria-label="بحث في الوكالات">
+      <button class="btn" type="submit" aria-label="بحث">{{ "search"|icon:16 }}</button>
     </form>
     {% if "wires.manage" in user_caps %}<a class="btn" href="{% url 'studio:wiresources_list' %}">{{ "gear"|icon:16 }} المصادر وكلمات التنبيه</a>{% endif %}
   </div>
@@ -23,14 +23,14 @@
   {% for w in page %}
   <article class="wire-card{% if w.is_alert %} is-alert{% endif %}{% if w.status != 'new' %} handled{% endif %}">
     <div class="wire-meta">
-      {% if w.status == 'new' %}<input type="checkbox" name="ids" value="{{ w.pk }}" form="wire-bulk" aria-label="تحديد">{% endif %}
+      {% if w.status == 'new' %}<input type="checkbox" name="ids" value="{{ w.pk }}" form="wire-bulk" aria-label="تحديد: {{ w.title }}">{% endif %}
       <time datetime="{{ w.when|isoformat }}" title="{{ w.when|ar_date }}">{{ w.when|ar_time }}</time>
       <span class="pill">{{ w.source.name }}</span>
       {% if w.is_alert %}<span class="pill breaking">تنبيه</span>{% endif %}
       {% if w.status == 'adopted' %}<span class="pill ok">اعتُمد{% if w.handled_by %} — {{ w.handled_by }}{% endif %}</span>{% elif w.status == 'ignored' %}<span class="pill">تُجوهل</span>{% endif %}
       <span class="muted small">{{ w.when|ar_relative }}</span>
     </div>
-    <h3>{{ w.title }}</h3>
+    <h2>{{ w.title }}</h2>
     {% if w.summary %}<p>{{ w.summary|truncatechars:320 }}</p>{% endif %}
     {% if w.body or w.summary|length > 320 %}<details><summary>النص الكامل</summary><div class="wire-body">{% if w.body %}{{ w.body|safe }}{% else %}<p>{{ w.summary }}</p>{% endif %}</div></details>{% endif %}
     <div class="btn-row">

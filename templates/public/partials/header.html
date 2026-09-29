@@ -1,5 +1,5 @@
 {% load static %}
-<div class="topbar">
+<div class="topbar" role="region" aria-label="روابط عامة">
   <div class="container">
     <div class="topbar-links">
       <span class="masthead-date">{{ now|masthead_date }}</span>
@@ -33,7 +33,7 @@
     {% endif %}
     <div class="header-tools">
       {% if site.header_cta_label and site.safe_cta_url %}<a class="btn header-cta" href="{{ site.safe_cta_url }}">{{ site.header_cta_label }}</a>{% endif %}
-      <form class="search-form" action="{% url 'public:search' %}" method="get" role="search">
+      <form class="search-form" action="{% url 'public:search' %}" method="get" role="search" aria-label="بحث الموقع">
         <label class="sr-only" for="q">ابحث في الموقع</label>
         <input id="q" type="search" name="q" placeholder="ابحث في الأخبار…" value="{{ q|default:'' }}">
         <button type="submit" aria-label="بحث">{{ "search"|icon:18 }}</button>
