@@ -246,3 +246,48 @@
     });
   });
 })();
+
+// استطلاعات القرّاء: تصويت دون إعادة تحميل، وإظهار النتائج لمن صوّت (الصفحات قد تكون مخزّنة مؤقتاً)
+(function () {
+  "use strict";
+  function digits(n) {
+    var arabic = document.documentElement.getAttribute("data-digits") === "arabic";
+    return arabic ? String(n).replace(/[0-9]/g, function (d) { return "٠١٢٣٤٥٦٧٨٩"[d]; }) : String(n);
+  }
+  function show(box, data, mine) {
+    if (data) {
+      data.results.forEach(function (r) {
+        var bar = box.querySelector('.poll-bar[data-option="' + r.id + '"]');
+        if (!bar) return;
+        bar.querySelector("[data-pct]").textContent = digits(r.pct);
+        bar.querySelector("[data-fill]").style.width = r.pct + "%";
+        if (String(r.id) === String(mine)) bar.classList.add("mine");
+      });
+      var t = box.querySelector("[data-total]");
+      if (t && data.total_label) t.textContent = data.total_label;
+    }
+    box.querySelector(".poll-form").hidden = true;
+    box.querySelector(".poll-results").hidden = false;
+  }
+  Array.prototype.forEach.call(document.querySelectorAll("[data-poll]"), function (box) {
+    var id = box.getAttribute("data-poll");
+    if (document.cookie.indexOf("arcms_poll_" + id + "=1") !== -1) show(box, null, null);
+    var form = box.querySelector(".poll-form");
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var choice = form.querySelector("input[name=option]:checked");
+      var err = form.querySelector(".poll-error");
+      if (!choice) return;
+      var btn = form.querySelector("button");
+      btn.disabled = true;
+      fetch(form.action, { method: "POST", credentials: "same-origin", headers: { "Accept": "application/json" },
+                           body: new FormData(form) })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          if (data.ok || !data.error || /من قبل|أُغلق/.test(data.error)) { show(box, data, choice.value); return; }
+          err.textContent = data.error; err.hidden = false; btn.disabled = false;
+        })
+        .catch(function () { form.submit(); });
+    });
+  });
+})();

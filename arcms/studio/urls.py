@@ -11,6 +11,7 @@ from . import views_articles as articles
 from . import views_media as media
 from . import views_newsroom as newsroom
 from . import views_planning as planning
+from . import views_polls as polls
 from . import views_setup as setup_views
 from . import views_tips as tips_views
 from . import views_tools as tools
@@ -150,6 +151,10 @@ urlpatterns = [
     path("planning/<int:pk>/", planning.edit, name="assignment_edit"),
     path("planning/<int:pk>/start/", planning.start, name="assignment_start"),
     path("planning/<int:pk>/action/", planning.action, name="assignment_action"),
+    path("polls/", polls.poll_list, name="polls"),
+    path("polls/new/", polls.poll_edit, name="poll_new"),
+    path("polls/<int:pk>/", polls.poll_edit, name="poll_edit"),
+    path("polls/<int:pk>/delete/", polls.poll_delete, name="poll_delete"),
     path("wires/", wires.desk, name="wires"),
     path("wires/action/", wires.action, name="wires_action"),
     path("wiresources/keywords/", wires.keywords, name="wire_keywords"),

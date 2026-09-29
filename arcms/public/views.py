@@ -57,6 +57,8 @@ RATE_LIMITS = {
     "newsletter-ip": (30, 3600),
     "newsletter-mail": (3, 86400),
     "contact": (10, 3600),
+    # لكل عنوان في كل استطلاع: سخيّ لأن شبكات الجوال تجمع آلاف القرّاء خلف عنوان واحد
+    "poll": (40, 3600),
 }
 
 
@@ -130,6 +132,10 @@ def article_detail(request, pk: int, slug: str = ""):
         return redirect(article.get_absolute_url(), permanent=True)
     gallery = list(article.gallery_items.select_related("media")) if article.kind == ArticleKind.GALLERY else []
     body = render_embeds(article.body)
+    if "[poll:" in body:
+        from arcms.polls.services import render_shortcodes
+
+        body = render_shortcodes(body, request)
     if article.dateline:
         # مكان الخبر يسبق أول فقرة على السطر نفسه، كما في الصحف: «غزة - خاص: ...»
         from django.utils.html import escape
@@ -419,6 +425,55 @@ def _back(request) -> str:
     if ref and url_has_allowed_host_and_scheme(ref, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
         return ref
     return "/"
+
+
+def _same_origin(request) -> bool:
+    """التصويت من صفحات الموقع نفسه فقط (بديل رمز CSRF في الصفحات المخزّنة مؤقتاً)."""
+    host = request.get_host()
+    origin = request.META.get("HTTP_ORIGIN")
+    if origin:
+        return url_has_allowed_host_and_scheme(origin + "/", allowed_hosts={host}, require_https=request.is_secure())
+    ref = request.META.get("HTTP_REFERER", "")
+    return bool(ref) and url_has_allowed_host_and_scheme(ref, allowed_hosts={host}, require_https=request.is_secure())
+
+
+@csrf_exempt
+@require_POST
+def poll_vote(request, pk: int):
+    from arcms.polls import services
+    from arcms.polls.models import Poll
+
+    poll = get_object_or_404(Poll, pk=pk)
+    wants_json = "application/json" in request.META.get("HTTP_ACCEPT", "")
+    if not _same_origin(request):
+        return JsonResponse({"error": "طلب من خارج الموقع."}, status=403)
+    ok, error = False, ""
+    if services.voted(request, poll):
+        error = "سُجّل صوتك في هذا الاستطلاع من قبل."
+    elif not poll.is_active:
+        error = "أُغلق هذا الاستطلاع."
+    elif _limited("poll", f"{client_ip(request)}:{poll.pk}"):
+        error = "أصوات كثيرة من شبكتك خلال وقت قصير. حاول لاحقاً."
+    else:
+        option = request.POST.get("option", "")
+        ok = option.isdigit() and services.record_vote(poll, int(option))
+        if not ok:
+            error = "اختر أحد الخيارات."
+    poll.refresh_from_db()
+    if wants_json:
+        from arcms.arabic.numbers import count_phrase, to_digits
+
+        label = to_digits(count_phrase(poll.total_votes, "صوت واحد", "صوتان", "أصوات", "صوتاً"), SiteSettings.load().digits)
+        resp = JsonResponse({"ok": ok, "error": error, "total": poll.total_votes, "total_label": label,
+                             "results": poll.results()}, status=200 if ok or not error else 400)
+    else:
+        (messages.success if ok else messages.error)(request, "شكراً، سُجّل صوتك." if ok else error)
+        resp = redirect(_back(request).split("#")[0] + f"#poll-{poll.pk}")
+    if ok:
+        # علامة في متصفح القارئ فقط (لا معرّف فيها) تمنع التصويت المتكرر وتُظهر النتائج
+        resp.set_cookie(services.cookie_name(poll.pk), "1", max_age=90 * 86400, samesite="Lax",
+                        secure=request.is_secure(), httponly=False)
+    return resp
 
 
 @require_POST

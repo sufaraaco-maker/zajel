@@ -121,6 +121,15 @@ def build_blocks() -> list[dict]:
             ctx["platforms"] = _platforms(block)
             if not ctx["platforms"]:
                 continue
+        elif block.kind == HomeBlock.Kind.POLL:
+            from arcms.polls.models import Poll
+            from arcms.polls.services import render_poll
+
+            poll = (Poll.objects.filter(is_open=True).filter(Q(closes_at__isnull=True) | Q(closes_at__gt=timezone.now()))
+                    .prefetch_related("options").first())
+            if poll is None:
+                continue
+            ctx["poll_html"] = render_poll(poll)
         elif block.kind in (HomeBlock.Kind.NEWSLETTER, HomeBlock.Kind.HTML):
             pass
         else:

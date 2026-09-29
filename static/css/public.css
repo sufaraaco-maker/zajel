@@ -662,3 +662,24 @@ mark { background: color-mix(in srgb, var(--primary) 18%, transparent); color: i
 .correction-item h2 a { color: inherit; }
 .correction-item .correction { margin: 10px 0 0; }
 :root[data-theme="dark"] .correction-item .correction { background: #2b2410; color: #f0dca0; }
+
+/* استطلاعات القرّاء */
+.poll { border: 1px solid var(--line); border-radius: calc(var(--radius) * 1.4); padding: 20px 22px; background: var(--surface); margin: 24px 0; }
+.poll-head h3 { margin: 6px 0 4px; font-family: var(--font-head); font-size: 1.25rem; line-height: 1.5; }
+.poll-head p { margin: 0 0 8px; color: var(--muted); }
+.poll-label { display: inline-block; background: var(--primary); color: var(--on-primary); font-size: .8rem; font-weight: 700; padding: 2px 10px; border-radius: 999px; }
+.poll-option { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius); margin: 8px 0; cursor: pointer; background: var(--bg); }
+.poll-option:hover { border-color: var(--primary-text, var(--primary)); }
+.poll-option input { accent-color: var(--primary); width: 18px; height: 18px; }
+.poll-actions { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
+.poll .btn { background: var(--primary); color: var(--on-primary); border: 0; padding: 9px 22px; border-radius: var(--radius); font: inherit; font-weight: 700; cursor: pointer; }
+.poll-error { color: #b0101c; font-size: .9rem; }
+.poll-bar { margin: 10px 0; }
+.poll-bar-top { display: flex; justify-content: space-between; gap: 10px; font-size: .95rem; margin-bottom: 4px; }
+.poll-track { height: 10px; background: var(--surface-2, #eee); border-radius: 999px; overflow: hidden; }
+.poll-track span { display: block; height: 100%; background: var(--primary); border-radius: inherit; transition: width .6s ease; }
+.poll-bar.mine .poll-bar-top span { font-weight: 700; }
+.poll-total { color: var(--muted); font-size: .9rem; margin: 10px 0 0; }
+.poll-note { color: var(--muted); font-size: .78rem; margin: 12px 0 0; }
+.poll-section .poll { max-width: 720px; margin-inline: auto; }
+.poll [hidden] { display: none !important; }

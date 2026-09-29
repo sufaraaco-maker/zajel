@@ -1,0 +1,18 @@
+{% extends "studio/base.html" %}
+{% block title %}الاستطلاعات{% endblock %}
+{% block content %}
+<div class="page-title">
+  <div><h1>استطلاعات القرّاء</h1><p>ضع رمز الاستطلاع (مثل <code dir="ltr">[poll:3]</code>) في سطر مستقل داخل متن أي مادة ليظهر فيها، أو أضف كتلة «استطلاع القرّاء» إلى الصفحة الرئيسية فيظهر آخر استطلاع مفتوح. لا يُحفظ من صوّت ولا عنوانه.</p></div>
+  <a class="btn primary" href="{% url 'studio:poll_new' %}">{{ "plus"|icon:16 }} استطلاع جديد</a>
+</div>
+<div class="cols cols-2">
+{% for p in page %}
+  <section class="panel">
+    <h2>{% if p.is_active %}<span class="pill ok">مفتوح</span>{% else %}<span class="pill">مغلق</span>{% endif %} <a href="{% url 'studio:poll_edit' p.pk %}">{{ p.question }}</a></h2>
+    {% for r in p.results %}<div class="bar-row"><span class="grow">{{ r.text }}</span><span class="bar"><span style="width:{{ r.pct }}%"></span></span><strong class="num">{{ r.pct }}٪</strong><span class="muted small num">{{ r.votes }}</span></div>{% endfor %}
+    <p class="small muted">{{ p.total_votes }} صوتاً · رمز التضمين <code dir="ltr">{{ p.shortcode }}</code>{% if p.closes_at %} · يُغلق {{ p.closes_at|ar_datetime }}{% endif %}</p>
+  </section>
+{% empty %}<div class="panel empty">لا استطلاعات بعد.</div>{% endfor %}
+</div>
+{% include "studio/partials/pagination.html" %}
+{% endblock %}

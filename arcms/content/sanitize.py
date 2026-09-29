@@ -86,6 +86,7 @@ def render_embeds(html: str) -> str:
 def plain_text(html: str) -> str:
     # مسافة مكان نهاية كل كتلة، حتى لا تلتصق الجمل عند نزع الوسوم.
     html = re.sub(r"</(p|h\d|li|div|blockquote|figcaption|td|tr)>|<br\s*/?>", " ", html or "")
+    html = re.sub(r"\[poll:\d+\]", " ", html)
     text = nh3.clean(html, tags=set())
     import html as _html
 

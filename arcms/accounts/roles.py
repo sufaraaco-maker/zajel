@@ -51,6 +51,7 @@ class Cap:
     IMPORT = "import.run"
     TIPS = "tips.manage"
     PLANNING = "planning.manage"
+    POLLS = "polls.manage"
     WIRES = "wires.view"
     WIRES_MANAGE = "wires.manage"
 
@@ -84,6 +85,7 @@ CAPABILITY_LABELS = {
     Cap.IMPORT: "استيراد الأرشيف",
     Cap.TIPS: "صندوق المعلومات الآمن",
     Cap.PLANNING: "خطة التغطية وتكليف الطاقم",
+    Cap.POLLS: "استطلاعات القرّاء",
     Cap.WIRES: "مكتب الوكالات (القراءة والاعتماد كمسودة)",
     Cap.WIRES_MANAGE: "مصادر الوكالات وكلمات التنبيه",
 }
@@ -97,6 +99,7 @@ _DESK_HEAD = _EDITOR | {
     Cap.BREAKING,
     Cap.LIVE_MANAGE,
     Cap.DIST_SEND,
+    Cap.POLLS,
 }
 _CHIEF = _DESK_HEAD | {
     Cap.ARTICLE_DELETE,

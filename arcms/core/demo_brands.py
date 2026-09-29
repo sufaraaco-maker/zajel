@@ -389,6 +389,7 @@ BRANDS = {
         "category_map": {}, "skip": set(), "articles": [],
         "dossier": {"title": "ملف خاص: موسم الزيتون", "tags": ["الزيتون"], "color": "#1c6b3a", "photo": "olive trees grove",
                     "description": "كل ما نشرناه عن موسم الزيتون: الحصاد، والأسعار، وحكايات المزارعين."},
+        "poll": ("ما أكثر ما تريد أن نغطيه هذا الشهر؟", ["الأسرى والمعتقلون", "الاقتصاد والأسعار", "التعليم والجامعات", "الثقافة والتراث"]),
         "platforms": "telegram | 1.2 مليون\nwhatsapp | 480 ألف\nx | 350 ألف\nfacebook | 2.1 مليون\ninstagram | 900 ألف\nyoutube | 610 ألف",
     },
     "sonbola": {
@@ -426,6 +427,7 @@ BRANDS = {
             }),
             ("kind", "بودكاست", {"article_kind": "podcast", "layout": "carousel", "count": 8}),
             ("most_read", "الأكثر قراءة", {"count": 10}),
+            ("poll", "رأيك", {}),
             ("newsletter", "نشرة الصباح", {"subtitle": "كل يوم في السابعة", "background": "muted"}),
             ("platforms", "تابعنا على", {}),
         ],
@@ -447,6 +449,7 @@ BRANDS = {
         "dossier": {"title": "ملف خاص: موسم الحصاد", "tags": ["القمح", "الزيتون", "الزراعة"], "color": "#8a6d1c",
                     "photo": "wheat ears close up",
                     "description": "من البذار إلى الحصاد: الأسعار والمطر وحكايات المزارعين في موسم هو الأفضل منذ عقد."},
+        "poll": ("هل تتوقع أن تنخفض أسعار الخبز بعد موسم الحصاد؟", ["نعم، بوضوح", "انخفاض طفيف", "لن تتغير", "سترتفع"]),
         "platforms": "whatsapp | 620 ألف\nfacebook | 1.4 مليون\ninstagram | 510 ألف\nyoutube | 230 ألف\ntelegram | 180 ألف\nx | 95 ألف",
     },
     "ofoq": {
@@ -482,6 +485,7 @@ BRANDS = {
                 "button_label": "اشترك في القناة", "background": "primary",
             }),
             ("most_read", "الأكثر قراءة", {"count": 10}),
+            ("poll", "رأي القرّاء", {"background": "muted"}),
             ("kind", "بودكاست", {"article_kind": "podcast", "layout": "carousel", "count": 8}),
             ("platforms", "أفق 24 على المنصات", {}),
             ("newsletter", "أفق في بريدك", {"subtitle": "ملخص المساء", "background": "primary"}),
@@ -504,6 +508,7 @@ BRANDS = {
         "dossier": {"title": "ملف خاص: المناخ يتغيّر", "tags": ["المناخ"], "color": "#7a1f2b",
                     "photo": "sand dunes desert landscape",
                     "description": "القمم والاتفاقات والأنهار التي تجف والطاقة التي تتجدد: تغطيتنا الكاملة لأزمة المناخ."},
+        "poll": ("هل يكفي صندوق التكيّف الجديد لمواجهة أزمة المناخ؟", ["نعم", "خطوة أولى غير كافية", "لا", "لا أعرف"]),
         "platforms": "youtube | 2.4 مليون\nx | 1.1 مليون\nfacebook | 3.2 مليون\ninstagram | 780 ألف\ntelegram | 260 ألف\ntiktok | 1.9 مليون",
     },
 }

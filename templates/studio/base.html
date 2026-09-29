@@ -29,6 +29,7 @@
       {% if "tips.manage" in user_caps %}<a href="{% url 'studio:tips' %}" class="{% if '/studio/tips' in p %}active{% endif %}">{{ "shield"|icon:18 }} صندوق المعلومات{% if nav_counts.tips %}<span class="count" title="بلاغات لم تُقرأ">{{ nav_counts.tips }}</span>{% endif %}</a>{% endif %}
       {% if "breaking.manage" in user_caps %}<a href="{% url 'studio:breaking' %}" class="{% if '/studio/breaking' in p %}active{% endif %}">{{ "bolt"|icon:18 }} العاجل</a>{% endif %}
       {% if "live.post" in user_caps or "live.manage" in user_caps %}<a href="{% url 'studio:live_list' %}" class="{% if '/studio/live' in p %}active{% endif %}">{{ "live"|icon:18 }} التغطيات المباشرة</a>{% endif %}
+      {% if "polls.manage" in user_caps %}<a href="{% url 'studio:polls' %}" class="{% if '/studio/polls' in p %}active{% endif %}">{{ "chart"|icon:18 }} الاستطلاعات</a>{% endif %}
       {% if "media.upload" in user_caps %}<a href="{% url 'studio:media' %}" class="{% if '/studio/media' in p %}active{% endif %}">{{ "image"|icon:18 }} مكتبة الوسائط</a>{% endif %}
       {% if "analytics.view" in user_caps %}<a href="{% url 'studio:analytics' %}" class="{% if '/studio/analytics' in p %}active{% endif %}">{{ "chart"|icon:18 }} الجمهور</a>{% endif %}
 

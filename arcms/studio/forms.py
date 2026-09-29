@@ -516,3 +516,55 @@ class AssignmentForm(forms.ModelForm):
         if status == Assignment.Status.IDEA and data.get("assignee"):
             data["status"] = Assignment.Status.ASSIGNED
         return data
+
+
+class PollForm(forms.ModelForm):
+    options_text = forms.CharField(
+        label="الخيارات", widget=forms.Textarea(attrs={"rows": 5}),
+        help_text="خيار في كل سطر (بين خيارين وثمانية). بعد بدء التصويت يمكن تعديل نص الخيار وإضافة خيارات، لا حذفها.",
+    )
+
+    class Meta:
+        from arcms.polls.models import Poll
+
+        model = Poll
+        fields = ["question", "description", "is_open", "closes_at", "show_results_before_vote"]
+        widgets = {"closes_at": DateTimeLocal()}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance.pk:
+            self.fields["options_text"].initial = "\n".join(self.instance.options.values_list("text", flat=True))
+
+    def clean_options_text(self):
+        lines = [" ".join(line.split())[:150] for line in self.cleaned_data["options_text"].splitlines()]
+        lines = [line for line in lines if line]
+        if not 2 <= len(lines) <= 8:
+            raise forms.ValidationError("اكتب بين خيارين وثمانية خيارات، كل خيار في سطر.")
+        if len(set(lines)) != len(lines):
+            raise forms.ValidationError("الخيارات مكررة.")
+        if self.instance.pk and self.instance.total_votes and len(lines) < self.instance.options.count():
+            raise forms.ValidationError("بدأ التصويت: لا يمكن حذف خيارات (عدّل نصها أو أضف جديدة).")
+        return lines
+
+    def save(self, commit=True):
+        poll = super().save(commit=commit)
+        if commit:
+            self.sync_options(poll)
+        return poll
+
+    def sync_options(self, poll):
+        """الخيارات بترتيب الأسطر: يُعدَّل نص الموجود ويُضاف الجديد، فتبقى الأصوات مع خياراتها."""
+        from arcms.polls.models import PollOption
+
+        existing = list(poll.options.all())
+        for order, text in enumerate(self.cleaned_data["options_text"]):
+            if order < len(existing):
+                opt = existing[order]
+                if (opt.text, opt.order) != (text, order):
+                    opt.text, opt.order = text, order
+                    opt.save(update_fields=["text", "order"])
+            else:
+                PollOption.objects.create(poll=poll, text=text, order=order)
+        for extra in existing[len(self.cleaned_data["options_text"]):]:
+            extra.delete()  # يصل هنا فقط إن لم يبدأ التصويت

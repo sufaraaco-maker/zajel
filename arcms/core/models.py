@@ -397,6 +397,7 @@ class HomeBlock(models.Model):
         STATS = "stats", "أرقام وإحصاءات"
         PLATFORMS = "platforms", "منصاتنا على التواصل"
         NEWSLETTER = "newsletter", "الاشتراك في النشرة"
+        POLL = "poll", "استطلاع القرّاء (آخر استطلاع مفتوح)"
         AD = "ad", "مساحة إعلانية"
         HTML = "html", "محتوى حر"
 

@@ -22,6 +22,7 @@ urlpatterns = [
     path("type/<slug:kind>/", views.kind_list, name="kind"),
     path("latest/", views.latest_list, name="latest"),
     path("corrections/", views.corrections_list, name="corrections"),
+    path("poll/<int:pk>/vote", views.poll_vote, name="poll_vote"),
     path("search", views.search_view, name="search"),
     path("live/", views.live_list, name="live_list"),
     re_path(r"^live/(?P<slug>[^/]+)/entries\.json$", views.live_entries_json, name="live_entries"),

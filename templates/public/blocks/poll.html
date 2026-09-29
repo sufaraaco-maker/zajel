@@ -1,0 +1,4 @@
+<section class="section poll-section{% if b.block.background %} bg-{{ b.block.background }}{% endif %}">
+  {% if b.block.title %}<h2 class="section-title"><span>{{ b.block.title }}</span></h2>{% endif %}
+  {{ b.poll_html }}
+</section>

@@ -1,0 +1,11 @@
+{% extends "studio/base.html" %}
+{% block title %}{% if obj %}تعديل استطلاع{% else %}استطلاع جديد{% endif %}{% endblock %}
+{% block content %}
+<div class="page-title"><div><h1>{% if obj %}تعديل الاستطلاع{% else %}استطلاع جديد{% endif %}</h1>{% if obj %}<p>{{ obj.total_votes }} صوتاً حتى الآن · رمز التضمين <code dir="ltr">{{ obj.shortcode }}</code></p>{% endif %}</div><a class="btn" href="{% url 'studio:polls' %}">← الاستطلاعات</a></div>
+<form method="post" class="panel narrow">
+  {% csrf_token %}
+  {% for field in form %}{% include "studio/partials/field.html" with field=field %}{% endfor %}
+  <div class="btn-row"><button class="btn primary" type="submit">حفظ</button></div>
+</form>
+{% if obj %}<form method="post" action="{% url 'studio:poll_delete' obj.pk %}" data-confirm="حذف الاستطلاع ونتائجه نهائياً؟">{% csrf_token %}<button class="btn sm danger" type="submit">حذف الاستطلاع</button></form>{% endif %}
+{% endblock %}

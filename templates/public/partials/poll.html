@@ -1,0 +1,12 @@
+{% load arabic %}<div class="poll" id="poll-{{ poll.pk }}" data-poll="{{ poll.pk }}">
+  <div class="poll-head"><span class="poll-label">استطلاع</span><h3>{{ poll.question }}</h3>{% if poll.description %}<p>{{ poll.description }}</p>{% endif %}</div>
+  <form class="poll-form" method="post" action="{% url 'public:poll_vote' poll.pk %}"{% if show_results %} hidden{% endif %}>
+    {% for r in results %}<label class="poll-option"><input type="radio" name="option" value="{{ r.id }}" required> <span>{{ r.text }}</span></label>{% endfor %}
+    <div class="poll-actions"><button class="btn" type="submit">صوّت</button><span class="poll-error" role="alert" hidden></span></div>
+  </form>
+  <div class="poll-results"{% if not show_results %} hidden{% endif %} aria-live="polite">
+    {% for r in results %}<div class="poll-bar" data-option="{{ r.id }}"><div class="poll-bar-top"><span>{{ r.text }}</span><strong><span data-pct>{{ r.pct|ar_digits }}</span>٪</strong></div><div class="poll-track"><span data-fill style="width:{{ r.pct }}%"></span></div></div>{% endfor %}
+    <p class="poll-total"><span data-total>{% if poll.total_votes %}{% ar_count poll.total_votes "صوت واحد" "صوتان" "أصوات" "صوتاً" %}{% else %}لا أصوات بعد{% endif %}</span>{% if not poll.is_active %} · أُغلق الاستطلاع{% endif %}</p>
+  </div>
+  <p class="poll-note">استطلاع غير علمي يعبّر عن آراء من شاركوا فيه، ولا نحفظ من صوّت.</p>
+</div>

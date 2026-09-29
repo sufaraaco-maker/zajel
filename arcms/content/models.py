@@ -455,6 +455,7 @@ class Article(models.Model):
         import re
 
         spaced = re.sub(r"</(p|h\d|li|div|blockquote|figcaption)>|<br\s*/?>", " ", self.body or "")
+        spaced = re.sub(r"\[poll:\d+\]", " ", spaced)  # رموز التضمين ليست نصاً
         text = " ".join(strip_tags(spaced).split())
         return text[:220] + ("…" if len(text) > 220 else "")
 

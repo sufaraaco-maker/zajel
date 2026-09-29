@@ -347,6 +347,7 @@ class Command(BaseCommand):
             )
         self._wires(site)
         self._planning()
+        self._poll()
         from arcms.tips.services import add_newsroom_reply, create_tip
 
         tip, _ = create_tip(
@@ -406,6 +407,20 @@ class Command(BaseCommand):
         if published:
             Assignment.objects.create(title=published.title, assignee=reporter, article=published, created_by=desk,
                                       category=published.category, status=Assignment.Status.DONE)
+
+    def _poll(self):
+        """استطلاع مفتوح بأصوات تجريبية، يظهر في كتلة «رأيك»."""
+        from arcms.polls.models import Poll, PollOption
+
+        question, options = self.brand["poll"]
+        poll = Poll.objects.create(question=question, created_by=User.objects.get(username="chief"))
+        rnd = random.Random(7)
+        total = 0
+        for n, text in enumerate(options):
+            votes = rnd.randint(40, 900)
+            total += votes
+            PollOption.objects.create(poll=poll, text=text, order=n, votes=votes)
+        Poll.objects.filter(pk=poll.pk).update(total_votes=total)
 
     def _credits_page(self):
         """صفحة «مصادر الصور» في التذييل: نسبة كل صورة حقيقية لصاحبها وترخيصها."""
