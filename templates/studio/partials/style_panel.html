@@ -1,0 +1,6 @@
+<section class="panel style-panel" data-style-panel data-style-url="{% url 'studio:api_style' %}"{% if style_body %} data-style-body{% endif %}{% if style_inputs %} data-style-inputs='{{ style_inputs }}'{% endif %} aria-labelledby="style-h">
+  <h2 id="style-h">{{ "check"|icon:18 }} التدقيق <span class="badge" data-style-count hidden></span></h2>
+  <p class="small muted" data-style-status role="status">يدقّق الترقيم والهمزات والأخطاء الشائعة{% if site.style_rules %} ومصطلحات دليل الأسلوب{% endif %} أثناء الكتابة.</p>
+  <ol class="style-issues" data-style-list></ol>
+  <div class="btn-row"><button type="button" class="btn sm primary" data-style-fixall hidden></button><button type="button" class="btn sm" data-style-run>دقّق الآن</button>{% if "style.manage" in user_caps %}<a class="btn sm" href="{% url 'studio:style' %}">دليل الأسلوب</a>{% endif %}</div>
+</section>

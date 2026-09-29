@@ -4,6 +4,7 @@ from django import forms
 from django.utils import timezone
 
 from arcms.accounts.roles import Cap
+from arcms.arabic import style
 from arcms.content.models import (
     Article,
     ArticleKind,
@@ -350,7 +351,8 @@ class AdSlotForm(forms.ModelForm):
 class SiteSettingsForm(forms.ModelForm):
     class Meta:
         model = SiteSettings
-        exclude = ["updated_at"]
+        # دليل الأسلوب له صفحته وصلاحيته؛ لو بقي هنا لمسحه حفظ الإعدادات لأن القالب لا يعرضه.
+        exclude = ["updated_at", "style_rules", "style_disabled"]
         widgets = {
             "logo": forms.HiddenInput(),
             "logo_dark": forms.HiddenInput(),
@@ -579,3 +581,36 @@ class PollForm(forms.ModelForm):
                 PollOption.objects.create(poll=poll, text=text, order=order)
         for extra in existing[len(self.cleaned_data["options_text"]):]:
             extra.delete()  # يصل هنا فقط إن لم يبدأ التصويت
+
+
+class StyleGuideForm(forms.ModelForm):
+    checks = forms.MultipleChoiceField(
+        label="الفحوص المفعّلة", required=False, widget=forms.CheckboxSelectMultiple,
+        choices=list(style.CHECKS.items()),
+    )
+
+    class Meta:
+        model = SiteSettings
+        fields = ["style_rules"]
+        widgets = {"style_rules": forms.Textarea(attrs={"rows": 16, "dir": "rtl", "spellcheck": "false",
+                                                        "placeholder": "مسئول* => مسؤول | نكتب الهمزة على الواو"})}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        disabled = set(self.instance.style_disabled or [])
+        self.fields["checks"].initial = [k for k in style.CHECKS if k not in disabled]
+
+    def clean_style_rules(self):
+        value = self.cleaned_data["style_rules"].replace("\r\n", "\n")
+        if len(value) > 60_000:
+            raise forms.ValidationError("الدليل أطول من المسموح (60 ألف حرف).")
+        self.rule_errors = style.parse_rules(value)[1]
+        return value
+
+    def save(self, commit=True):
+        obj = super().save(commit=False)
+        obj.style_disabled = [k for k in style.CHECKS if k not in set(self.cleaned_data.get("checks") or [])]
+        if commit:
+            obj.save(update_fields=["style_rules", "style_disabled", "updated_at"])
+        return obj
+

@@ -165,6 +165,11 @@ class SiteSettings(models.Model):
         "بطاقات المشاركة بهوية الموقع", default=True,
         help_text="صورة بالعنوان وشعار الموقع وألوانه تظهر عند مشاركة الروابط، وتُرسل مع المادة والعاجل إلى تيليجرام.",
     )
+    style_rules = models.TextField(
+        "دليل الأسلوب", blank=True,
+        help_text="سطر لكل قاعدة: «الخطأ => الصواب | ملاحظة». بلا بديل تصبح تنبيهاً فقط.",
+    )
+    style_disabled = models.JSONField("فحوص الأسلوب المعطلة", default=list, blank=True)
     analytics_enabled = models.BooleanField("قياس الجمهور", default=True)
     analytics_respect_dnt = models.BooleanField("احترام «عدم التتبع» في المتصفح", default=True)
     newsletter_enabled = models.BooleanField("النشرة اليومية", default=True)

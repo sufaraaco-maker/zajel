@@ -13,6 +13,7 @@ from . import views_newsroom as newsroom
 from . import views_planning as planning
 from . import views_polls as polls
 from . import views_setup as setup_views
+from . import views_style as style_views
 from . import views_tips as tips_views
 from . import views_tools as tools
 from . import views_wires as wires
@@ -97,6 +98,8 @@ urlpatterns = [
     path("articles/<int:pk>/revisions/<int:rev>/", articles.article_revision, name="article_revision"),
     path("api/tags", articles.api_tags, name="api_tags"),
     path("api/articles", articles.api_articles, name="api_articles"),
+    path("api/style", style_views.api_style, name="api_style"),
+    path("style/", style_views.style_guide, name="style"),
     path("media/", media.library, name="media"),
     path("media/upload/", media.upload, name="media_upload"),
     path("media/picker/", media.picker, name="media_picker"),

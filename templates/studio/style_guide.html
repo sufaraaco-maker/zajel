@@ -1,0 +1,44 @@
+{% extends "studio/base.html" %}
+{% block title %}دليل الأسلوب{% endblock %}
+{% block content %}
+<div class="page-title"><div><h1>دليل الأسلوب</h1><p>مصطلحات المؤسسة المفضلة والمتجنبة، والفحوص التي تظهر للمحررين في لوحة «التدقيق» بجانب كل مادة. المدقق يقترح ولا يغيّر شيئاً بنفسه.</p></div></div>
+<div class="cols cols-2">
+  <form method="post" class="panel style-rules">
+    {% csrf_token %}
+    <h2>{{ "list"|icon:18 }} قواعد المؤسسة <span class="muted small">({{ rule_count }} قاعدة)</span></h2>
+    {% if rule_errors %}<div class="alert warning small"><strong>أسطر لا تُطبَّق:</strong><ul>{% for e in rule_errors|slice:":10" %}<li>{{ e }}</li>{% endfor %}</ul></div>{% endif %}
+    <div class="form-row">
+      <label for="{{ form.style_rules.id_for_label }}">سطر لكل قاعدة</label>
+      {{ form.style_rules }}
+      {% if form.style_rules.errors %}<ul class="errors"><li>{{ form.style_rules.errors.0 }}</li></ul>{% endif %}
+    </div>
+    <details class="help-box" open>
+      <summary class="small">طريقة الكتابة</summary>
+      <table class="data small">
+        <tbody>
+          <tr><td><code dir="rtl">مسئول => مسؤول</code></td><td>تُقترح «مسؤول» مكان «مسئول»، ومع السوابق: «المسئول» ← «المسؤول»، «للمسئول» ← «للمسؤول».</td></tr>
+          <tr><td><code dir="rtl">مسئول* => مسؤول</code></td><td>النجمة تشمل ما يتصل بالكلمة: «مسئولين» ← «مسؤولين».</td></tr>
+          <tr><td><code dir="rtl">تم | ملاحظة</code></td><td>بلا بديل: تنبيه فقط، مع الملاحظة التي تظهر للمحرر.</td></tr>
+          <tr><td><code dir="rtl"># تعليق</code></td><td>يُهمل السطر.</td></tr>
+        </tbody>
+      </table>
+      <p class="small muted">المطابقة تتجاهل التشكيل والتطويل، ولا تتجاهل الهمزات (فالقاعدة «مسئول => مسؤول» لا تعلّم «مسؤول» نفسها).</p>
+    </details>
+    <fieldset class="form-row">
+      <legend class="label">{{ form.checks.label }}</legend>
+      {% for box in form.checks %}<label class="check">{{ box.tag }} {{ box.choice_label }}</label>{% endfor %}
+    </fieldset>
+    <div class="btn-row"><button class="btn primary" type="submit">حفظ الدليل</button></div>
+  </form>
+  <div>
+    <section class="panel">
+      <h2>{{ "pen"|icon:18 }} جرّب المدقق</h2>
+      <div class="form-row">
+        <label for="style-try">نص للتجربة (بالقواعد المحفوظة)</label>
+        <textarea id="style-try" rows="7" data-style-field="sample" data-style-label="نص التجربة">قالت الوزارة , إن الإنتخابات ستجري في موعدها ,وأضاف المسئول :"هاذا قرار نهائي" او على الاقل الى حين.</textarea>
+      </div>
+    </section>
+    {% include "studio/partials/style_panel.html" %}
+  </div>
+</div>
+{% endblock %}

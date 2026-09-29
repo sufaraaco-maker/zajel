@@ -108,6 +108,14 @@ def with_fake_gps(jpeg: bytes) -> bytes:
     return buf.getvalue()
 
 
+DEMO_STYLE_RULES = """# دليل أسلوب تجريبي: عدّله من «دليل الأسلوب» في غرفة التحرير
+مسئول* => مسؤول | نكتب الهمزة على الواو
+تم | «تمّ» مع المصدر أضعف من الفعل: «اعتُقل» لا «تمّ اعتقاله»
+قام ب* | «قام بـ» زائدة غالباً: «زار» لا «قام بزيارة»
+أكد على => أكد | «أكّد» يتعدى بنفسه
+"""
+
+
 class Command(BaseCommand):
     help = "ينشئ موقعاً تجريبياً كاملاً للتجربة المحلية (لا تشغّله على خادم الإنتاج)."
 
@@ -149,6 +157,7 @@ class Command(BaseCommand):
             site.header_cta_url = "/tips/"
             site.app_android_url = "https://play.google.com/store/apps/details?id=org.example.news"
             site.app_ios_url = "https://apps.apple.com/app/id0000000000"
+            site.style_rules = DEMO_STYLE_RULES
             site.save()
             from arcms.core.presets import apply_theme, create_blocks
 

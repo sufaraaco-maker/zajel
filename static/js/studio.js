@@ -393,6 +393,155 @@
       }, 250);
     });
   }
+
+  // --- مدقق الأسلوب: ملاحظات الترقيم والهمزات ودليل المؤسسة، والتصحيح بنقرة ---
+  var stylePanel = $("[data-style-panel]");
+  if (stylePanel) {
+    var OBJ = "\uFFFC";  // كل عنصر مضمَّن في المحرر (صورة، فيديو) يُحتسب محرفاً واحداً
+    var styleList = $("[data-style-list]", stylePanel), styleStatus = $("[data-style-status]", stylePanel);
+    var styleCount = $("[data-style-count]", stylePanel), fixAllBtn = $("[data-style-fixall]", stylePanel);
+    var ignored = {}, styleTimer = null, styleSeq = 0, lastIssues = {};
+    var sources = {};
+    var addSource = function (name, input, label) {
+      if (!input) return;
+      sources[name] = { input: input, label: label };
+      input.addEventListener("input", function () { scheduleStyle(1500); });
+    };
+    // [[الاسم، معرّف الحقل، عنوانه]…] من القالب، أو حقول تحمل data-style-field
+    JSON.parse(stylePanel.getAttribute("data-style-inputs") || "[]").forEach(function (f) {
+      addSource(f[0], document.getElementById(f[1]), f[2]);
+    });
+    $$("[data-style-field]").forEach(function (input) {
+      addSource(input.getAttribute("data-style-field"), input, input.getAttribute("data-style-label") || "");
+    });
+    var deltaText = function (delta) {
+      return delta.ops.map(function (op) { return typeof op.insert === "string" ? op.insert : OBJ; }).join("");
+    };
+    var bodyAvailable = function () { return stylePanel.hasAttribute("data-style-body") && quill; };
+    var collect = function () {
+      var fields = {};
+      Object.keys(sources).forEach(function (k) { fields[k] = sources[k].input.value; });
+      if (bodyAvailable()) fields.body = deltaText(quill.getContents());
+      return fields;
+    };
+    var editable = function (name) {
+      if (name === "body") return bodyAvailable() && quill.isEnabled();
+      return sources[name] && !sources[name].input.disabled && !sources[name].input.readOnly;
+    };
+    var fieldLabel = function (name) { return name === "body" ? "المتن" : (sources[name] ? sources[name].label : ""); };
+    var shown = function (text) { return text.trim() ? text : text.replace(/[ \t\u00a0]/g, "␣"); };
+
+    // يطبّق التصحيح إن لم يتغير النص منذ الفحص؛ وإلا يعيد الفحص
+    var applyFix = function (name, it) {
+      if (it.fix === null || !editable(name)) return false;
+      if (name === "body") {
+        var len = it.end - it.start;
+        if (deltaText(quill.getContents(it.start, len)) !== it.text) return false;
+        var fmt = quill.getFormat(it.start, len);
+        quill.deleteText(it.start, len, "user");
+        if (it.fix) quill.insertText(it.start, it.fix, fmt, "user");
+        return true;
+      }
+      var input = sources[name].input;
+      if (input.value.slice(it.start, it.end) !== it.text) return false;
+      input.value = input.value.slice(0, it.start) + it.fix + input.value.slice(it.end);
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      return true;
+    };
+    var reveal = function (name, it) {
+      if (name === "body") {
+        if (bodyAvailable()) { quill.focus(); quill.setSelection(it.start, it.end - it.start, "user"); }
+        return;
+      }
+      var input = sources[name].input;
+      input.focus();
+      try { input.setSelectionRange(it.start, it.end); } catch (e) { /* حقول لا تدعم التحديد */ }
+    };
+
+    var renderStyle = function (data) {
+      lastIssues = data.fields || {};
+      styleList.innerHTML = "";
+      var total = 0, fixable = 0;
+      Object.keys(lastIssues).forEach(function (name) {
+        lastIssues[name].forEach(function (it) {
+          var key = name + "|" + it.rule + "|" + it.text;
+          if (ignored[key]) return;
+          total += 1;
+          var canFix = it.fix !== null && editable(name);
+          if (canFix) fixable += 1;
+          var li = el("li", { "class": "style-issue rule-" + it.rule });
+          li.appendChild(el("div", { "class": "where" }, fieldLabel(name) + " · " + it.label));
+          var ctx = el("button", { type: "button", "class": "ctx", title: "أظهر الموضع" });
+          ctx.appendChild(document.createTextNode((it.before.length >= 20 ? "…" : "") + it.before));
+          ctx.appendChild(el("mark", {}, shown(it.text)));
+          ctx.appendChild(document.createTextNode(it.after + (it.after.length >= 20 ? "…" : "")));
+          ctx.addEventListener("click", function () { reveal(name, it); });
+          li.appendChild(ctx);
+          li.appendChild(el("div", { "class": "msg" }, it.message));
+          var row = el("div", { "class": "btn-row" });
+          if (canFix) {
+            var fixText = it.fix.trim() ? "صحّح ← " + it.fix.trim() : (it.fix ? "صحّح المسافة" : "احذف");
+            var fb = el("button", { type: "button", "class": "btn sm primary" }, fixText);
+            fb.addEventListener("click", function () {
+              if (!applyFix(name, it)) styleStatus.textContent = "تغيّر النص منذ الفحص؛ أُعيد التدقيق.";
+              runStyle();
+            });
+            row.appendChild(fb);
+          }
+          var ib = el("button", { type: "button", "class": "btn sm" }, "تجاهل");
+          ib.addEventListener("click", function () { ignored[key] = true; renderStyle({ fields: lastIssues }); });
+          row.appendChild(ib);
+          li.appendChild(row);
+          styleList.appendChild(li);
+        });
+      });
+      styleCount.textContent = total ? String(total) : "";
+      styleCount.hidden = !total;
+      fixAllBtn.hidden = fixable < 2;
+      fixAllBtn.textContent = "صحّح الكل (" + fixable + ")";
+      styleStatus.textContent = total ? "" : "لا ملاحظات على النص.";
+    };
+
+    var runStyle = function () {
+      clearTimeout(styleTimer);
+      var fields = collect();
+      if (!Object.keys(fields).some(function (k) { return fields[k].trim(); })) { renderStyle({ fields: {} }); return; }
+      var seq = ++styleSeq;
+      stylePanel.setAttribute("aria-busy", "true");
+      post(stylePanel.getAttribute("data-style-url"), { fields: fields }, true)
+        .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+        .then(function (res) {
+          if (seq !== styleSeq) return;
+          if (!res.ok) { styleStatus.textContent = res.d.error || "تعذّر التدقيق."; return; }
+          renderStyle(res.d);
+        })
+        .catch(function () { if (seq === styleSeq) styleStatus.textContent = "تعذّر الاتصال بالمدقق."; })
+        .then(function () { stylePanel.removeAttribute("aria-busy"); });
+    };
+    var scheduleStyle = function (ms) { clearTimeout(styleTimer); styleTimer = setTimeout(runStyle, ms); };
+
+    fixAllBtn.addEventListener("click", function () {
+      var failed = 0;
+      Object.keys(lastIssues).forEach(function (name) {
+        // من الآخر إلى الأول كي لا تتزحزح مواضع ما لم يُصحَّح بعد
+        lastIssues[name].slice().reverse().forEach(function (it) {
+          if (it.fix === null || ignored[name + "|" + it.rule + "|" + it.text]) return;
+          if (!applyFix(name, it)) failed += 1;
+        });
+      });
+      if (failed) styleStatus.textContent = "تغيّر بعض النص منذ الفحص؛ أُعيد التدقيق.";
+      runStyle();
+    });
+    $("[data-style-run]", stylePanel).addEventListener("click", runStyle);
+    var hookQuill = function () {
+      if (!bodyAvailable()) return;
+      quill.on("text-change", function (d, o, source) { if (source === "user") scheduleStyle(1500); });
+      scheduleStyle(300);
+    };
+    if (quill) hookQuill();
+    else window.addEventListener("load", function () { setTimeout(hookQuill, 0); });
+    if (!stylePanel.hasAttribute("data-style-body")) scheduleStyle(300);
+  }
 })();
 
 // --- تلميحات الرسم البياني: القيمة أولاً ثم التسمية، وعلى التركيز بلوحة المفاتيح كما على المرور ---

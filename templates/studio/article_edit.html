@@ -87,6 +87,8 @@
     <section class="panel"><h2>{{ "pen"|icon:18 }} مادة جديدة</h2><button class="btn primary block" type="submit" form="article-form" name="action" value="save">حفظ كمسودة</button><p class="small muted">بعد الحفظ تظهر أزرار الإرسال للمراجعة أو النشر.</p></section>
     {% endif %}
 
+    {% include "studio/partials/style_panel.html" with style_body=True style_inputs='[["kicker","id_kicker","العنوان الصغير"],["title","id_title","العنوان"],["subtitle","id_subtitle","العنوان الفرعي"],["excerpt","id_excerpt","الموجز"],["image_caption","id_image_caption","تعليق الصورة"]]' %}
+
     {% if stats %}
     <section class="panel viz">
       <h2>{{ "chart"|icon:18 }} جمهور هذه المادة</h2>

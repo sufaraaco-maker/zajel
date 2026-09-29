@@ -54,6 +54,7 @@ class Cap:
     POLLS = "polls.manage"
     WIRES = "wires.view"
     WIRES_MANAGE = "wires.manage"
+    STYLE = "style.manage"
 
 
 CAPABILITY_LABELS = {
@@ -88,6 +89,7 @@ CAPABILITY_LABELS = {
     Cap.POLLS: "استطلاعات القرّاء",
     Cap.WIRES: "مكتب الوكالات (القراءة والاعتماد كمسودة)",
     Cap.WIRES_MANAGE: "مصادر الوكالات وكلمات التنبيه",
+    Cap.STYLE: "دليل الأسلوب ومدقق التحرير",
 }
 
 _WRITER = {Cap.ARTICLE_CREATE, Cap.ARTICLE_EDIT_OWN, Cap.ARTICLE_SUBMIT, Cap.MEDIA_UPLOAD}
@@ -111,6 +113,7 @@ _CHIEF = _DESK_HEAD | {
     Cap.DIST_MANAGE,
     Cap.TIPS,
     Cap.WIRES_MANAGE,
+    Cap.STYLE,
 }
 _SOCIAL = {Cap.ANALYTICS, Cap.DIST_SEND, Cap.DIST_MANAGE, Cap.MEDIA_UPLOAD, Cap.BREAKING}
 _ADMIN = set(CAPABILITY_LABELS)
