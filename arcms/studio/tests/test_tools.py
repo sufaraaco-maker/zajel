@@ -186,3 +186,18 @@ class WhiteLabelTests(ArcmsTestCase):
         self.assertContains(self.client.get(reverse("accounts:login")), logo.url)
         login(self.client, make_user("chief", Role.CHIEF))
         self.assertContains(self.client.get(reverse("studio:home")), logo.thumb)
+
+
+class SetupWizardColorTests(ArcmsTestCase):
+    def test_chosen_identity_colors_override_theme(self):
+        from arcms.core.models import SiteSettings
+
+        login(self.client, make_user("root", Role.ADMIN))
+        site = SiteSettings.load()
+        self.client.post(reverse("studio:setup"), {
+            "name": site.name, "short_name": site.short_name, "tagline": site.tagline, "description": "",
+            "theme": "modern-blue", "primary_color": "#ffc400", "accent_color": site.accent_color,
+        })
+        site = SiteSettings.objects.get(pk=1)
+        self.assertEqual(site.primary_color, "#ffc400")  # اختيار المستخدم
+        self.assertEqual(site.header_style, "compact")  # بقية المظهر

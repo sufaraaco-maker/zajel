@@ -20,6 +20,9 @@
   {% csrf_token %}
   {% if form.errors %}<div class="alert error">راجع الحقول المعلَّمة.</div>{% endif %}
   {% for title, fields in form.sections %}
+  {% if title == form.COLOR_SECTION %}
+  {% include "studio/partials/brand_colors.html" %}
+  {% else %}
   <fieldset>
     <legend>{{ title }}</legend>
     <div class="field-grid">
@@ -31,6 +34,7 @@
     </div>
     {% if title == "التاريخ والأرقام" %}<p class="small muted">معاينة: {{ now|masthead_date }} · {{ now|ar_time }}</p>{% endif %}
   </fieldset>
+  {% endif %}
   {% endfor %}
   <button class="btn primary" type="submit">حفظ الإعدادات</button>
 </form>

@@ -1,0 +1,11 @@
+{# ألوان الهوية وخطوطها لكل مؤسسة، محسوبة على الخادم (مع لون نص مقروء لكل خلفية). #}{% with p=site.palette %}<style>
+:root{--primary:{{ p.primary }};--on-primary:{{ p.on_primary }};--accent:{{ p.accent }};--on-accent:{{ p.on_accent }};
+--topbar-bg:{{ p.topbar }};--topbar-fg:{{ p.on_topbar }};--nav-bg:{{ p.nav }};--nav-fg:{{ p.on_nav }};
+--breaking:{{ p.breaking }};--on-breaking:{{ p.on_breaking }};--footer-bg:{{ p.footer }};--footer-fg:{{ p.on_footer }};--footer-strong:{{ p.footer_strong }};
+--link:{{ p.link }};--primary-text:{{ p.primary_text }};{% if p.custom_header or site.header_dark %}--header-bg:{{ p.header }};--header-fg:{{ p.on_header }};{% endif %}
+{% if p.custom_page %}--bg:{{ p.page }};--surface:{{ p.surface }};--surface-2:{{ p.surface2 }};--line:{{ p.line }};{% endif %}
+--radius:{% if site.corner_style == 'sharp' %}2px{% elif site.corner_style == 'round' %}14px{% else %}6px{% endif %};
+--font-head:{{ site.heading_font|safe }};--font-body:{{ site.body_font|safe }}}
+:root[data-theme="dark"]{--primary:{{ p.primary_dark }};--on-primary:{{ p.on_primary_dark }};--link:{{ p.link_dark }};--primary-text:{{ p.primary_text_dark }};--bg:#0f1113;--surface:#171a1d;--surface-2:#1f2327;--line:#2a2f34}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--primary:{{ p.primary_dark }};--on-primary:{{ p.on_primary_dark }};--link:{{ p.link_dark }};--primary-text:{{ p.primary_text_dark }};--bg:#0f1113;--surface:#171a1d;--surface-2:#1f2327;--line:#2a2f34}}
+</style>{% endwith %}

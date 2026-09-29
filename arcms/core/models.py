@@ -69,9 +69,29 @@ class SiteSettings(models.Model):
         on_delete=models.SET_NULL,
         related_name="+",
     )
-    primary_color = models.CharField("اللون الرئيسي", max_length=7, default="#b0101c", validators=[hex_color])
-    accent_color = models.CharField("لون التمييز", max_length=7, default="#111418", validators=[hex_color])
+    primary_color = models.CharField(
+        "اللون الرئيسي", max_length=7, default="#b0101c", validators=[hex_color],
+        help_text="لون الهوية: الأزرار والتسميات وعناوين الأقسام وشريط القائمة.",
+    )
+    accent_color = models.CharField(
+        "اللون الثانوي", max_length=7, default="#111418", validators=[hex_color],
+        help_text="لون داكن مرافق: الشريط العلوي والتذييل والكتل الداكنة.",
+    )
     header_dark = models.BooleanField("ترويسة داكنة", default=False)
+    # ألوان اختيارية لكل منطقة. الفارغ = تلقائي من اللونين الأساسيين.
+    topbar_color = models.CharField("الشريط العلوي", max_length=7, blank=True, validators=[hex_color])
+    header_color = models.CharField("خلفية الترويسة", max_length=7, blank=True, validators=[hex_color])
+    nav_color = models.CharField("شريط القائمة", max_length=7, blank=True, validators=[hex_color])
+    breaking_color = models.CharField("شارة العاجل", max_length=7, blank=True, validators=[hex_color])
+    footer_color = models.CharField("التذييل", max_length=7, blank=True, validators=[hex_color])
+    link_color = models.CharField("الروابط داخل المقالات", max_length=7, blank=True, validators=[hex_color])
+    page_color = models.CharField(
+        "خلفية الصفحة", max_length=7, blank=True, validators=[hex_color], help_text="لون فاتح؛ الوضع الداكن مستقل."
+    )
+    primary_dark_mode = models.CharField(
+        "اللون الرئيسي في الوضع الداكن", max_length=7, blank=True, validators=[hex_color],
+        help_text="تلقائياً يُفتَّح اللون الرئيسي حتى يُقرأ على الخلفية الداكنة.",
+    )
     font_headings = models.CharField("خط العناوين", max_length=10, choices=FONT_CHOICES, default="plex")
     font_body = models.CharField("خط المتن", max_length=10, choices=FONT_CHOICES, default="naskh")
 
@@ -197,6 +217,62 @@ class SiteSettings(models.Model):
             hijri=self.show_hijri,
             hijri_adjust=self.hijri_adjust,
         )
+
+    COLOR_AREAS = ("topbar_color", "header_color", "nav_color", "breaking_color", "footer_color", "link_color",
+                   "page_color", "primary_dark_mode")
+
+    def palette(self) -> dict:
+        """كل ألوان الموقع بعد ملء التلقائي، مع لون النص المقروء على كل خلفية."""
+        from arcms.core import colors as c
+
+        primary = self.primary_color if c.is_hex(self.primary_color) else "#b0101c"
+        accent = self.accent_color if c.is_hex(self.accent_color) else "#111418"
+        page = self.page_color if c.is_hex(self.page_color) else "#ffffff"
+        header = self.header_color if c.is_hex(self.header_color) else (accent if self.header_dark else page)
+        topbar = self.topbar_color or accent
+        nav = self.nav_color or primary
+        breaking = self.breaking_color or primary
+        footer = self.footer_color or accent
+        link = self.link_color or ""
+        primary_dark = self.primary_dark_mode or c.for_dark_mode(primary)
+        # اللون الرئيسي حين يُستخدم نصاً (عناوين صغيرة، أوقات، روابط) يُغمَّق عند الحاجة ليُقرأ على الخلفية
+        primary_text = c.for_text_on(primary, page)
+        return {
+            "primary": primary, "on_primary": c.readable_on(primary),
+            "accent": accent, "on_accent": c.readable_on(accent),
+            "page": page, "surface": c.mix(page, "#000000", 0.04), "surface2": c.mix(page, "#000000", 0.075),
+            "line": c.mix(page, "#000000", 0.11),
+            "header": header, "on_header": c.readable_on(header),
+            "topbar": topbar, "on_topbar": c.muted_on(topbar),
+            "nav": nav, "on_nav": c.readable_on(nav),
+            "breaking": breaking, "on_breaking": c.readable_on(breaking),
+            "footer": footer, "on_footer": c.muted_on(footer), "footer_strong": c.readable_on(footer),
+            "primary_text": primary_text,
+            "primary_text_dark": c.for_text_on(primary_dark, c.DARK_BG),
+            "link": link or primary_text,
+            "link_dark": c.for_text_on(link, c.DARK_BG) if link else c.for_text_on(primary_dark, c.DARK_BG),
+            "primary_dark": primary_dark, "on_primary_dark": c.readable_on(primary_dark),
+            "custom_page": bool(self.page_color),
+            "custom_header": bool(self.header_color),
+        }
+
+    def color_warnings(self) -> list[str]:
+        """تنبيهات تباين لما قد يصعب قراءته (لا تمنع الحفظ)."""
+        from arcms.core import colors as c
+
+        p = self.palette()
+        warnings = []
+        if self.link_color and c.contrast(p["link"], p["page"]) < 4.5:
+            warnings.append("لون الروابط قريب من خلفية الصفحة؛ قد يصعب تمييز الروابط داخل المقالات.")
+        if c.contrast(p["primary"], p["page"]) < 3:
+            warnings.append("اللون الرئيسي فاتح على خلفية الصفحة: خطوط عناوين الأقسام ستكون باهتة، "
+                            "والنصوص الملوّنة تُغمَّق تلقائياً لتُقرأ. يُفضَّل شريط قائمة بلون أغمق.")
+        if c.contrast(p["page"], "#16181b") < 7:
+            warnings.append("خلفية الصفحة ليست فاتحة بما يكفي لنص المقالات الداكن.")
+        for key, label in (("nav", "شريط القائمة"), ("breaking", "شارة العاجل"), ("primary", "الأزرار")):
+            if c.contrast(p[key], p["on_" + key]) < 3:
+                warnings.append(f"{label}: لون متوسط الإضاءة لا يُقرأ عليه الأبيض ولا الداكن جيداً.")
+        return warnings
 
     @property
     def heading_font(self) -> str:

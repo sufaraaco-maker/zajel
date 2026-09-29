@@ -160,5 +160,7 @@ def apply_theme(site, key: str) -> bool:
     for field, value in theme.items():
         if field != "label":
             setattr(site, field, value)
+    for field in site.COLOR_AREAS:  # ألوان المناطق تعود تلقائية فيبقى المظهر متسقاً
+        setattr(site, field, "")
     site.save()
     return True

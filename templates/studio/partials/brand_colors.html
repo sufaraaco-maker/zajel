@@ -1,0 +1,42 @@
+{# قسم الألوان في إعدادات الموقع: حقول، ومعاينة حيّة، وألوان مقترحة من الشعار، وتنبيهات التباين. #}
+{% with p=site.palette %}
+<fieldset class="brand-colors">
+  <legend>{{ title }}</legend>
+  <p class="small muted">اختر لونين للهوية، ثم خصّص أي منطقة إن أردت. الحقل الفارغ «تلقائي» يُشتق من اللونين، ولون النص فوق كل خلفية يُختار تلقائياً ليبقى مقروءاً (أبيض على الداكن، وداكن على الفاتح).</p>
+  {% if color_warnings %}<div class="alert warning">{{ "alert"|icon:18 }}<ul style="margin:0;padding-inline-start:18px">{% for w in color_warnings %}<li>{{ w }}</li>{% endfor %}</ul></div>{% endif %}
+  <div class="brand-grid">
+    <div>
+      <div class="form-row">
+        <span class="label">ألوان من شعارك</span>
+        {% if logo_palette %}
+        <div class="swatches">{% for c in logo_palette %}
+          <div class="swatch-pick"><span class="chip-color" style="background: {{ c.hex }}; color: {{ c.on }}" dir="ltr">{{ c.hex }}</span>
+            <button type="button" class="btn sm" data-set-color="id_primary_color" data-value="{{ c.hex }}">رئيسي</button>
+            <button type="button" class="btn sm" data-set-color="id_accent_color" data-value="{{ c.hex }}">ثانوي</button>
+          </div>{% endfor %}</div>
+        {% else %}<p class="small muted">ارفع الشعار في قسم «الهوية» واحفظ، فتظهر هنا ألوانه مقترحة للهوية.</p>{% endif %}
+      </div>
+      <div class="field-grid">
+        {% for field in fields %}{% include "studio/partials/field.html" %}{% endfor %}
+      </div>
+    </div>
+    <div class="brand-preview-wrap">
+      <span class="label">معاينة حيّة</span>
+      <div class="bp" data-brand-preview style="--pv-primary: {{ p.primary }}; --pv-on-primary: {{ p.on_primary }}; --pv-accent: {{ p.accent }}; --pv-on-accent: {{ p.on_accent }}; --pv-topbar: {{ p.topbar }}; --pv-on-topbar: {{ p.on_topbar }}; --pv-header: {{ p.header }}; --pv-on-header: {{ p.on_header }}; --pv-nav: {{ p.nav }}; --pv-on-nav: {{ p.on_nav }}; --pv-breaking: {{ p.breaking }}; --pv-on-breaking: {{ p.on_breaking }}; --pv-footer: {{ p.footer }}; --pv-on-footer: {{ p.on_footer }}; --pv-link: {{ p.link }}; --pv-page: {{ p.page }}; --pv-surface: {{ p.surface }}; --pv-primary-dark: {{ p.primary_dark }}; --pv-on-primary-dark: {{ p.on_primary_dark }}">
+        <div class="bp-topbar"><span>الثلاثاء 29 أيلول</span><span>من نحن · English</span></div>
+        <div class="bp-header"><strong class="bp-logo">{{ site.short_name }}</strong><span class="bp-cta">أرسل خبراً</span></div>
+        <div class="bp-nav"><span>الرئيسية</span><span>أخبار</span><span>تقارير</span><span>فيديو</span></div>
+        <div class="bp-ticker"><span class="bp-breaking">عاجل</span><span>نص خبر عاجل يمر هنا…</span></div>
+        <div class="bp-body">
+          <div class="bp-title">آخر الأخبار</div>
+          <div class="bp-card"><div class="bp-thumb"></div><div><span class="bp-kicker">تقرير</span><strong>عنوان مادة في الموقع</strong><p>فقرة فيها <a>رابط داخل المقالة</a> كما يراه القارئ.</p></div></div>
+          <div class="bp-band"><span>بالأرقام</span><strong>84493+</strong></div>
+          <div class="bp-dark-band">كتلة داكنة (فيديو)</div>
+        </div>
+        <div class="bp-footer"><span>© {{ site.name }}</span><strong>روابط التذييل</strong></div>
+      </div>
+      <div class="bp-dark"><span>في الوضع الداكن:</span><span class="bp-dark-btn">زر</span><span class="bp-dark-link">عنوان ملوّن</span></div>
+    </div>
+  </div>
+</fieldset>
+{% endwith %}

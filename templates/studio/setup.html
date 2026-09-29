@@ -24,11 +24,17 @@
     </div>
   </fieldset>
   <fieldset>
-    <legend>3. بنية الموقع</legend>
+    <legend>3. ألوان الهوية</legend>
+    <p class="small muted">المظهر الجاهز نقطة بداية؛ لونا هويتك هنا يتقدّمان عليه. ولكل منطقة في الموقع (القائمة، العاجل، التذييل…) لونها في <a href="{% url 'studio:settings' %}">إعدادات الموقع</a> مع معاينة حيّة.</p>
+    {% if logo_palette %}<div class="swatches" style="margin-bottom:10px">{% for c in logo_palette %}<div class="swatch-pick"><span class="chip-color" style="background: {{ c.hex }}; color: {{ c.on }}" dir="ltr">{{ c.hex }}</span><button type="button" class="btn sm" data-set-color="id_primary_color" data-value="{{ c.hex }}">رئيسي</button><button type="button" class="btn sm" data-set-color="id_accent_color" data-value="{{ c.hex }}">ثانوي</button></div>{% endfor %}</div>{% endif %}
+    <div class="field-grid">{% include "studio/partials/field.html" with field=form.primary_color %}{% include "studio/partials/field.html" with field=form.accent_color %}</div>
+  </fieldset>
+  <fieldset>
+    <legend>4. بنية الموقع</legend>
     {% include "studio/partials/field.html" with field=form.structure %}
   </fieldset>
   <fieldset>
-    <legend>4. المنصات والتواصل</legend>
+    <legend>5. المنصات والتواصل</legend>
     <div class="field-grid">
       {% for name in "telegram whatsapp x_twitter facebook instagram youtube tiktok alt_language_url contact_email header_cta_label header_cta_url"|split_words %}{% with field=form|getfield:name %}{% include "studio/partials/field.html" %}{% endwith %}{% endfor %}
     </div>

@@ -355,17 +355,23 @@ class SiteSettingsForm(forms.ModelForm):
             "logo": forms.HiddenInput(),
             "logo_dark": forms.HiddenInput(),
             "default_share_image": forms.HiddenInput(),
-            "primary_color": forms.TextInput(attrs={"type": "color"}),
-            "accent_color": forms.TextInput(attrs={"type": "color"}),
+            "primary_color": forms.TextInput(attrs={"type": "color", "data-brand": "primary"}),
+            "accent_color": forms.TextInput(attrs={"type": "color", "data-brand": "accent"}),
+            **{
+                name: forms.TextInput(attrs={"data-color-optional": name, "placeholder": "تلقائي", "dir": "ltr",
+                                             "maxlength": 7, "data-brand": name.replace("_color", "").replace("_mode", "")})
+                for name in SiteSettings.COLOR_AREAS
+            },
             "description": forms.Textarea(attrs={"rows": 2}),
             "footer_about": forms.Textarea(attrs={"rows": 3}),
             "custom_head_html": forms.Textarea(attrs={"rows": 4, "dir": "ltr"}),
         }
 
+    COLOR_SECTION = "الألوان والهوية البصرية"
     SECTIONS = (
         ("الهوية", ["name", "short_name", "tagline", "description", "logo", "logo_dark", "default_share_image"]),
-        ("الألوان والخطوط والشكل", ["primary_color", "accent_color", "header_dark", "font_headings", "font_body",
-                                    "corner_style"]),
+        (COLOR_SECTION, ["primary_color", "accent_color", "header_dark", *SiteSettings.COLOR_AREAS]),
+        ("الخطوط والشكل", ["font_headings", "font_body", "corner_style"]),
         ("الترويسة والتذييل", ["header_style", "header_cta_label", "header_cta_url", "app_ios_url", "app_android_url"]),
         ("التاريخ والأرقام", ["month_style", "digits", "clock", "show_hijri", "hijri_adjust"]),
         ("شريط العاجل", ["ticker_enabled", "ticker_label", "ticker_hours"]),
@@ -380,6 +386,20 @@ class SiteSettingsForm(forms.ModelForm):
 
     def clean_header_cta_url(self):
         return _clean_link(self.cleaned_data.get("header_cta_url"))
+
+    def clean(self):
+        data = super().clean()
+        for name in SiteSettings.COLOR_AREAS + ("primary_color", "accent_color"):
+            value = (data.get(name) or "").strip().lower()
+            if name in data:
+                data[name] = value
+        page = data.get("page_color")
+        if page:
+            from arcms.core.colors import is_light
+
+            if not is_light(page):
+                self.add_error("page_color", "خلفية الصفحة يجب أن تكون فاتحة (نص المقالات داكن). للوضع الداكن زر مستقل عند القارئ.")
+        return data
 
     def sections(self):
         for title, names in self.SECTIONS:

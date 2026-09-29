@@ -471,3 +471,103 @@
     }
   }
 })();
+
+// --- الألوان والهوية البصرية: منتقي لون لكل حقل اختياري، واقتراحات الشعار، ومعاينة حيّة ---
+(function () {
+  "use strict";
+  var preview = document.querySelector("[data-brand-preview]");
+  var form = preview ? preview.closest("form") : null;
+  if (!form) return;
+  var HEX = /^#[0-9a-fA-F]{6}$/;
+  function rgb(h) { h = h.replace("#", ""); return [0, 2, 4].map(function (i) { return parseInt(h.substr(i, 2), 16); }); }
+  function hex(c) { return "#" + c.map(function (v) { v = Math.max(0, Math.min(255, Math.round(v))); return (v < 16 ? "0" : "") + v.toString(16); }).join(""); }
+  function lum(h) {
+    return rgb(h).map(function (c) { c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); })
+      .reduce(function (acc, c, i) { return acc + c * [0.2126, 0.7152, 0.0722][i]; }, 0);
+  }
+  function contrast(a, b) { var x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); }
+  function readable(bg) { return contrast(bg, "#ffffff") >= contrast(bg, "#111418") ? "#ffffff" : "#111418"; }
+  function mix(a, b, t) { var x = rgb(a), y = rgb(b); return hex(x.map(function (v, i) { return v + (y[i] - v) * t; })); }
+  function muted(bg) { return mix(readable(bg), bg, 0.22); }
+  function forDark(h) {
+    var c = h;
+    for (var s = 1; s <= 10 && contrast(c, "#0f1113") < 3; s++) c = mix(h, "#ffffff", s * 0.08);
+    return c;
+  }
+  function forTextOn(h, bg) {
+    var target = lum(bg) > 0.4 ? "#000000" : "#ffffff", c = h;
+    for (var s = 1; s <= 12 && contrast(c, bg) < 4.5; s++) c = mix(h, target, s * 0.07);
+    return c;
+  }
+  function val(name) {
+    var el = form.querySelector('[name="' + name + '"]');
+    var v = el ? (el.value || "").trim() : "";
+    return HEX.test(v) ? v.toLowerCase() : "";
+  }
+
+  // منتقي لون بجانب كل حقل اختياري، وزر «تلقائي» يفرغه
+  Array.prototype.forEach.call(form.querySelectorAll("[data-color-optional]"), function (text) {
+    var box = document.createElement("div");
+    box.className = "color-opt";
+    text.parentNode.insertBefore(box, text);
+    var picker = document.createElement("input");
+    picker.type = "color";
+    picker.setAttribute("aria-label", "اختر اللون");
+    var auto = document.createElement("button");
+    auto.type = "button";
+    auto.className = "btn sm";
+    auto.textContent = "تلقائي";
+    box.appendChild(picker);
+    box.appendChild(text);
+    box.appendChild(auto);
+    function syncPicker() { picker.value = HEX.test(text.value) ? text.value : "#999999"; picker.style.opacity = text.value ? 1 : 0.45; }
+    picker.addEventListener("input", function () { text.value = picker.value; syncPicker(); update(); });
+    text.addEventListener("input", function () { syncPicker(); update(); });
+    auto.addEventListener("click", function () { text.value = ""; syncPicker(); update(); });
+    syncPicker();
+  });
+
+  // ألوان الشعار: ضغطة تضعها في الرئيسي أو الثانوي
+  Array.prototype.forEach.call(form.querySelectorAll("[data-set-color]"), function (btn) {
+    btn.addEventListener("click", function () {
+      var target = document.getElementById(btn.getAttribute("data-set-color"));
+      if (!target) return;
+      target.value = btn.getAttribute("data-value");
+      target.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+  });
+
+  function update() {
+    var primary = val("primary_color") || "#b0101c";
+    var accent = val("accent_color") || "#111418";
+    var page = val("page_color") || "#ffffff";
+    var darkHeader = form.querySelector('[name="header_dark"]');
+    var header = val("header_color") || (darkHeader && darkHeader.checked ? accent : page);
+    var p = {
+      primary: primary, accent: accent, page: page, header: header,
+      topbar: val("topbar_color") || accent, nav: val("nav_color") || primary,
+      breaking: val("breaking_color") || primary, footer: val("footer_color") || accent,
+      link: val("link_color") || forTextOn(primary, page), "primary-dark": val("primary_dark_mode") || forDark(primary)
+    };
+    var s = preview.style;
+    Object.keys(p).forEach(function (k) { s.setProperty("--pv-" + k, p[k]); });
+    ["primary", "accent", "header", "nav", "breaking", "primary-dark"].forEach(function (k) { s.setProperty("--pv-on-" + k, readable(p[k])); });
+    s.setProperty("--pv-on-topbar", muted(p.topbar));
+    s.setProperty("--pv-on-footer", muted(p.footer));
+    s.setProperty("--pv-surface", mix(page, "#000000", 0.04));
+  }
+  form.addEventListener("input", update);
+  form.addEventListener("change", update);
+})();
+
+// أزرار ألوان الشعار في معالج الإعداد (خارج صفحة المعاينة)
+(function () {
+  "use strict";
+  if (document.querySelector("[data-brand-preview]")) return;
+  Array.prototype.forEach.call(document.querySelectorAll("[data-set-color]"), function (btn) {
+    btn.addEventListener("click", function () {
+      var target = document.getElementById(btn.getAttribute("data-set-color"));
+      if (target) { target.value = btn.getAttribute("data-value"); target.dispatchEvent(new Event("input", { bubbles: true })); }
+    });
+  });
+})();

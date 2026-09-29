@@ -5,7 +5,7 @@
 <title>{% block title %}الدخول{% endblock %} · {{ site.short_name }}</title>
 <link rel="stylesheet" href="{% static 'css/fonts.css' %}">
 <link rel="stylesheet" href="{% static 'css/studio.css' %}">
-<style>:root{--primary:{{ site.primary_color }}}</style>
+<style>:root{--primary:{{ site.palette.primary }};--on-primary:{{ site.palette.on_primary }}}</style>
 <link rel="icon" href="{% if site.logo %}{{ site.logo.thumb }}{% else %}{% static 'img/icon-192.png' %}{% endif %}">
 </head>
 <body>

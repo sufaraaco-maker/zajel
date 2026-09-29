@@ -33,10 +33,23 @@ class SetupForm(forms.ModelForm):
 
     class Meta:
         model = SiteSettings
-        fields = ["name", "short_name", "tagline", "description", "logo", "logo_dark", *SOCIAL_FIELDS,
-                  "alt_language_url", "contact_email", "header_cta_label", "header_cta_url"]
+        fields = ["name", "short_name", "tagline", "description", "logo", "logo_dark", "primary_color", "accent_color",
+                  *SOCIAL_FIELDS, "alt_language_url", "contact_email", "header_cta_label", "header_cta_url"]
         widgets = {"logo": forms.HiddenInput(), "logo_dark": forms.HiddenInput(),
+                   "primary_color": forms.TextInput(attrs={"type": "color"}),
+                   "accent_color": forms.TextInput(attrs={"type": "color"}),
                    "description": forms.Textarea(attrs={"rows": 2})}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for name in ("primary_color", "accent_color"):
+            self.fields[name].required = False
+
+    def clean_primary_color(self):
+        return (self.cleaned_data.get("primary_color") or self.instance.primary_color).lower()
+
+    def clean_accent_color(self):
+        return (self.cleaned_data.get("accent_color") or self.instance.accent_color).lower()
 
     def clean_header_cta_url(self):
         from .forms import _clean_link
@@ -55,8 +68,20 @@ def setup(request):
             call_command("arcms_setup", preset=form.cleaned_data["structure"], force=True, stdout=StringIO())
             done.append(f"بنية «{PRESETS[form.cleaned_data['structure']]['label']}»")
         if form.cleaned_data["theme"]:
-            apply_theme(SiteSettings.objects.get(pk=site.pk), form.cleaned_data["theme"])
+            themed = SiteSettings.objects.get(pk=site.pk)
+            apply_theme(themed, form.cleaned_data["theme"])
             done.append(f"مظهر «{THEMES[form.cleaned_data['theme']]['label']}»")
+            # ألوان الهوية التي اختارها المستخدم بنفسه تتقدّم على ألوان المظهر
+            custom = {
+                f: form.cleaned_data[f]
+                for f in ("primary_color", "accent_color")
+                if (form.data.get(f) or "").lower() not in ("", (form.initial.get(f) or "").lower())
+            }
+            if custom:
+                for field, value in custom.items():
+                    setattr(themed, field, value)
+                themed.save()
+                done.append("ألوان الهوية")
         # رابط بطاقة الترويج للقناة يتبع رابط تيليجرام ما لم يُضبط غيره
         if site.telegram:
             HomeBlock.objects.filter(kind=HomeBlock.Kind.PROMO, link="").update(link=site.telegram)
@@ -69,4 +94,7 @@ def setup(request):
         ("بريد التواصل", bool(site.contact_email)),
         ("كتل الصفحة الرئيسية", HomeBlock.objects.filter(is_active=True).exists()),
     ]
-    return render(request, "studio/setup.html", {"form": form, "themes": THEMES, "presets": PRESETS, "steps": steps})
+    from .views_admin import logo_palette
+
+    return render(request, "studio/setup.html", {"form": form, "themes": THEMES, "presets": PRESETS, "steps": steps,
+                                                 "logo_palette": logo_palette(site)})

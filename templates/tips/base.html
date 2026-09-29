@@ -9,9 +9,7 @@
 <meta name="theme-color" content="{{ site.primary_color }}">
 <link rel="stylesheet" href="{% static 'css/fonts.css' %}">
 <link rel="stylesheet" href="{% static 'css/public.css' %}">
-<style>
-:root{--primary:{{ site.primary_color }};--accent:{{ site.accent_color }};--radius:{% if site.corner_style == 'sharp' %}2px{% elif site.corner_style == 'round' %}14px{% else %}6px{% endif %}}
-</style>
+{% include "public/partials/brand_vars.html" %}
 <script src="{% static 'js/theme-init.js' %}"></script>
 </head>
 {# صفحات المصادر بلا قوائم ولا شريط عاجل ولا سكربت الموقع ولا قياس: أقل ما يمكن تحميله. #}

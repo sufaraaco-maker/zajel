@@ -53,10 +53,32 @@ def site_settings(request):
         return redirect("studio:settings")
     form = SiteSettingsForm(request.POST or None, instance=obj)
     if request.method == "POST" and form.is_valid():
-        form.save()
+        site = form.save()
         messages.success(request, "حُفظت إعدادات الموقع.")
+        for warning in site.color_warnings():
+            messages.warning(request, warning)
         return redirect("studio:settings")
-    return render(request, "studio/settings.html", {"form": form, "themes": THEMES})
+    return render(request, "studio/settings.html",
+                  {"form": form, "themes": THEMES, "logo_palette": logo_palette(obj), "color_warnings": obj.color_warnings()})
+
+
+def logo_palette(site) -> list[dict]:
+    """ألوان مقترحة من الشعار، مع لون النص المقروء على كل منها."""
+    from arcms.core import colors
+
+    result = []
+    for logo in (site.logo, site.logo_dark):
+        if not logo or not logo.file:
+            continue
+        try:
+            with logo.file.open("rb") as fh:
+                hexes = colors.palette_from_image(fh)
+        except (OSError, ValueError):
+            continue
+        for value in hexes:
+            if value not in [r["hex"] for r in result]:
+                result.append({"hex": value, "on": colors.readable_on(value), "light": colors.is_light(value)})
+    return result[:8]
 
 
 # --- بنّاء الصفحة الرئيسية ---
