@@ -51,6 +51,7 @@ class ArticleForm(forms.ModelForm):
             "kind", "kicker", "title", "subtitle", "excerpt", "dateline", "body",
             "category", "extra_categories", "authors", "dossiers",
             "featured_image", "image_caption", "hide_featured_image", "video_url", "audio",
+            "claim", "claimant", "claim_date", "claim_url", "verdict",
             "source", "source_url", "source_notes", "correction",
             "is_breaking", "is_featured", "is_exclusive", "priority", "featured_until",
             "allow_indexing", "seo_title", "seo_description",
@@ -70,6 +71,10 @@ class ArticleForm(forms.ModelForm):
             "featured_image": forms.HiddenInput(),
             "featured_until": DateTimeLocal(),
             "seo_description": forms.Textarea(attrs={"rows": 2}),
+            "claim": forms.Textarea(attrs={"rows": 3}),
+            "verdict": forms.RadioSelect,
+            "claim_date": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
+            "claim_url": forms.URLInput(attrs={"dir": "ltr", "placeholder": "https://web.archive.org/…"}),
         }
 
     def __init__(self, *args, user=None, **kwargs):
@@ -122,6 +127,13 @@ class ArticleForm(forms.ModelForm):
         from arcms.arabic.text import clean_headline
 
         return clean_headline(self.cleaned_data["title"])
+
+    def clean(self):
+        data = super().clean()
+        # الحكم يخص مواد التدقيق وحدها؛ يُمحى إن تغيّر النوع فلا تظهر شارته على خبر عادي
+        if data.get("kind") and data["kind"] != ArticleKind.FACTCHECK:
+            data["verdict"] = ""
+        return data
 
     def save_tags(self, article: Article) -> None:
         raw = self.cleaned_data.get("tag_names", "")

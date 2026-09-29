@@ -692,3 +692,18 @@ img[data-sensitive] { filter: blur(28px) saturate(.5); transform: scale(1.15); }
 .sensitive-veil:focus-visible { outline: 3px solid #fff; outline-offset: -6px; }
 .has-sensitive { position: relative; overflow: hidden; }
 .sensitive-tag { position: absolute; top: 8px; inset-inline-start: 8px; z-index: 1; background: rgba(0, 0, 0, .75); color: #fff; font-size: .75rem; font-weight: 700; padding: 2px 9px; border-radius: 999px; }
+
+/* تدقيق المعلومات: ألوان الأحكام ثابتة لا تتبع الهوية، ويُقرأ عليها الأبيض (5:1 فأكثر) */
+.v-false { --v: #b3261e; } .v-misleading { --v: #b8410c; } .v-context { --v: #946200; } .v-unproven { --v: #57606a; }
+.v-partly { --v: #0f766e; } .v-true { --v: #15803d; } .v-satire { --v: #7e22ce; }
+.verdict-chip { display: inline-block; background: var(--v); color: #fff; font-weight: 700; font-size: .78rem; line-height: 1.7; padding: 0 9px; border-radius: 999px; margin-inline-end: 6px; vertical-align: middle; }
+.verdict-box { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 20px; align-items: start; margin: 0 0 24px; padding: 16px 18px; background: var(--surface); border: 1px solid var(--line); border-inline-start: 6px solid var(--v); border-radius: var(--radius); }
+.verdict-box .claim-label { font-size: .8rem; font-weight: 700; color: var(--muted); }
+.verdict-box blockquote { margin: 2px 0 6px; font-family: var(--font-head); font-size: 1.12rem; font-weight: 700; line-height: 1.7; }
+.verdict-box .claim-meta { font-size: .85rem; color: var(--muted); }
+.verdict-stamp { grid-column: 2; grid-row: 1 / span 3; align-self: center; min-width: 116px; padding: 10px 18px; background: var(--v); color: #fff; border-radius: var(--radius); text-align: center; font-family: var(--font-head); font-size: 1.3rem; font-weight: 800; }
+.verdict-stamp small { display: block; font-size: .75rem; font-weight: 500; }
+@media (max-width: 640px) {
+  .verdict-box { grid-template-columns: 1fr; }
+  .verdict-stamp { grid-column: auto; grid-row: auto; justify-self: start; }
+}

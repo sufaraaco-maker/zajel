@@ -282,6 +282,28 @@ class ArticleKind(models.TextChoices):
     CARTOON = "cartoon", "كاريكاتير"
     PODCAST = "podcast", "بودكاست"
     SHORT = "short", "فيديو قصير"
+    FACTCHECK = "factcheck", "تدقيق معلومات"
+
+
+class Verdict(models.TextChoices):
+    """حكم مادة التدقيق على الادعاء، بمقياس ClaimReview (1 زائف … 5 صحيح)."""
+
+    FALSE = "false", "زائف"
+    MISLEADING = "misleading", "مضلل"
+    CONTEXT = "context", "خارج السياق"
+    UNPROVEN = "unproven", "غير مثبت"
+    PARTLY = "partly", "صحيح جزئياً"
+    TRUE = "true", "صحيح"
+    SATIRE = "satire", "ساخر"
+
+
+# غير المثبت والساخر لا رقم لهما على المقياس؛ يُكتفى بالاسم.
+VERDICT_RATING = {"false": 1, "misleading": 2, "context": 3, "partly": 4, "true": 5}
+# ألوان ثابتة لا تتبع الهوية، يُقرأ عليها الأبيض بتباين 5:1 فأكثر (مكررة في public.css وstudio.css)
+VERDICT_COLORS = {
+    "false": "#b3261e", "misleading": "#b8410c", "context": "#946200", "unproven": "#57606a",
+    "partly": "#0f766e", "true": "#15803d", "satire": "#7e22ce",
+}
 
 
 KIND_PLURALS = {
@@ -298,6 +320,7 @@ KIND_PLURALS = {
     "cartoon": "كاريكاتير",
     "podcast": "بودكاست",
     "short": "فيديو قصير",
+    "factcheck": "تدقيق المعلومات",
 }
 
 
@@ -358,6 +381,16 @@ class Article(models.Model):
         help_text="MP3 أو M4A أو OGG حتى 60 ميغابايت. يُشغَّل من خادمكم دون أي منصة خارجية.",
     )
     gallery = models.ManyToManyField(MediaAsset, through="GalleryItem", blank=True, related_name="galleries")
+    # تدقيق المعلومات: الادعاء المتداول وحكم الفريق عليه (يظهر صندوقاً أعلى المادة وبيانات ClaimReview)
+    claim = models.TextField("الادعاء", blank=True, help_text="نص الادعاء المتداول باختصار، كما ورد.")
+    claimant = models.CharField("مصدر الادعاء", max_length=200, blank=True,
+                                help_text="حساب أو صفحة أو شخص، أو «منشورات متداولة».")
+    claim_date = models.DateField("تاريخ ظهور الادعاء", null=True, blank=True)
+    claim_url = models.URLField(
+        "رابط الادعاء", blank=True, max_length=500,
+        help_text="يُفضَّل رابط نسخة مؤرشفة لا المنشور الأصلي، كي لا يزيد التدقيق انتشاره.",
+    )
+    verdict = models.CharField("الحكم", max_length=12, choices=Verdict.choices, blank=True)
 
     source = models.CharField("المصدر", max_length=150, blank=True)
     source_url = models.URLField("رابط المصدر", blank=True)

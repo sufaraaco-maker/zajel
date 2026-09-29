@@ -15,7 +15,7 @@ from arcms.accounts.roles import Cap, Role
 from arcms.audit.models import Action
 from arcms.audit.services import record
 
-from .models import Article, ArticleRevision, EditorialNote, Status
+from .models import Article, ArticleKind, ArticleRevision, EditorialNote, Status
 
 
 class WorkflowError(Exception):
@@ -72,6 +72,8 @@ def publish_block_reason(user, article: Article) -> str | None:
         return "لا يمكن نشر مادة بلا عنوان."
     if article.category_id is None:
         return "اختر قسماً للمادة قبل النشر."
+    if article.kind == ArticleKind.FACTCHECK and not (article.claim.strip() and article.verdict):
+        return "مادة التدقيق تحتاج نص الادعاء والحكم عليه قبل النشر."
     if not SiteSettings.load().require_review:
         return None
     if user.role in (Role.CHIEF, Role.ADMIN) or user.is_superuser:

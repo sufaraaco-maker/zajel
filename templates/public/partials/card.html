@@ -5,7 +5,7 @@
     {% if a.featured_image %}<img{% if a.featured_image.sensitive %} data-sensitive{% endif %} src="{{ a.featured_image.card }}" alt="{{ a.featured_image.alt_text }}" loading="lazy" width="800" height="450"{% if a.featured_image.focal_style %} style="{{ a.featured_image.focal_style }}"{% endif %}>{% else %}{{ "pigeon"|icon:36 }}{% endif %}
     {% if variant == 'reel' or a.kind == 'video' or a.kind == 'short' %}<span class="badge">{{ "play"|icon:20 }}</span>{% endif %}
     <span class="overlay-caption">
-      {% if a.display_kicker %}<span class="kicker">{{ a.display_kicker }}</span>{% endif %}
+      {% if a.verdict %}<span class="verdict-chip v-{{ a.verdict }}">{{ a.get_verdict_display }}</span>{% endif %}{% if a.display_kicker %}<span class="kicker">{{ a.display_kicker }}</span>{% endif %}
       <strong>{{ a.title }}</strong>
       {% if excerpt and a.summary %}<p>{{ a.summary|truncatechars:170 }}</p>{% endif %}
       {% if variant == 'overlay' %}<time datetime="{{ a.published_at|isoformat }}">{{ a.published_at|ar_relative }}</time>{% endif %}
@@ -23,7 +23,7 @@
   </a>
   {% endif %}
   <div>
-    {% if a.is_breaking %}<span class="kicker breaking-tag">عاجل</span>{% elif a.display_kicker %}<span class="kicker{% if variant == 'row' %} outline{% endif %}">{{ a.display_kicker }}</span>{% endif %}
+    {% if a.verdict %}<span class="verdict-chip v-{{ a.verdict }}">{{ a.get_verdict_display }}</span>{% endif %}{% if a.is_breaking %}<span class="kicker breaking-tag">عاجل</span>{% elif a.display_kicker %}<span class="kicker{% if variant == 'row' %} outline{% endif %}">{{ a.display_kicker }}</span>{% endif %}
     <h3><a href="{{ a.get_absolute_url }}">{{ a.title }}</a></h3>
     {% if excerpt %}<p>{{ a.summary }}</p>{% endif %}
     <div class="meta">

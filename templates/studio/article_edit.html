@@ -46,6 +46,18 @@
         <div class="help">{{ form.audio.help_text }} تُنزع من MP3 وسوم ID3 (اسم المعدّ والبرنامج والصورة المضمَّنة).</div>
         {% if form.audio.errors %}<ul class="errors"><li>{{ form.audio.errors.0 }}</li></ul>{% endif %}
       </div>
+      <fieldset class="factcheck-fields" data-kind-only="factcheck">
+        <legend>{{ "check"|icon:16 }} الادعاء والحكم</legend>
+        <div class="form-row"><label for="{{ form.claim.id_for_label }}">{{ form.claim.label }}</label>{{ form.claim }}<div class="help">{{ form.claim.help_text }}</div>{% if form.claim.errors %}<ul class="errors"><li>{{ form.claim.errors.0 }}</li></ul>{% endif %}</div>
+        <div class="field-grid">
+          <div class="form-row"><label for="{{ form.claimant.id_for_label }}">{{ form.claimant.label }}</label>{{ form.claimant }}</div>
+          <div class="form-row"><label for="{{ form.claim_date.id_for_label }}">{{ form.claim_date.label }}</label>{{ form.claim_date }}</div>
+        </div>
+        <div class="form-row"><label for="{{ form.claim_url.id_for_label }}">{{ form.claim_url.label }}</label>{{ form.claim_url }}<div class="help">{{ form.claim_url.help_text }}</div>{% if form.claim_url.errors %}<ul class="errors"><li>{{ form.claim_url.errors.0 }}</li></ul>{% endif %}</div>
+        <div class="form-row"><span class="label" id="verdict-l">{{ form.verdict.label }}</span>
+          <div class="checks-inline verdict-picker" role="radiogroup" aria-labelledby="verdict-l">{% for radio in form.verdict %}{% if radio.data.value %}<label class="chip v-{{ radio.data.value }}">{{ radio.tag }} {{ radio.choice_label }}</label>{% endif %}{% endfor %}</div>
+        </div>
+      </fieldset>
       <div class="form-row">
         <span class="label">المتن</span>
         <div id="editor">{{ form.body.value|default:''|safe }}</div>
@@ -87,7 +99,7 @@
     <section class="panel"><h2>{{ "pen"|icon:18 }} مادة جديدة</h2><button class="btn primary block" type="submit" form="article-form" name="action" value="save">حفظ كمسودة</button><p class="small muted">بعد الحفظ تظهر أزرار الإرسال للمراجعة أو النشر.</p></section>
     {% endif %}
 
-    {% include "studio/partials/style_panel.html" with style_body=True style_inputs='[["kicker","id_kicker","العنوان الصغير"],["title","id_title","العنوان"],["subtitle","id_subtitle","العنوان الفرعي"],["excerpt","id_excerpt","الموجز"],["image_caption","id_image_caption","تعليق الصورة"]]' %}
+    {% include "studio/partials/style_panel.html" with style_body=True style_inputs='[["kicker","id_kicker","العنوان الصغير"],["title","id_title","العنوان"],["subtitle","id_subtitle","العنوان الفرعي"],["excerpt","id_excerpt","الموجز"],["image_caption","id_image_caption","تعليق الصورة"],["claim","id_claim","الادعاء"]]' %}
 
     {% if stats %}
     <section class="panel viz">

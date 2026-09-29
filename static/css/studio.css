@@ -435,3 +435,9 @@ form.inline { display: inline; }
 .style-issue .msg { font-size: .85rem; margin-bottom: 6px; }
 .style-rules textarea { font-family: var(--font-body); line-height: 2; }
 .style-rules .help-box code { white-space: nowrap; }
+
+/* تدقيق المعلومات في المحرر */
+.factcheck-fields legend { font-weight: 700; }
+.verdict-picker .chip { border-inline-start: 4px solid var(--v); }
+.v-false { --v: #b3261e; } .v-misleading { --v: #b8410c; } .v-context { --v: #946200; } .v-unproven { --v: #57606a; }
+.v-partly { --v: #0f766e; } .v-true { --v: #15803d; } .v-satire { --v: #7e22ce; }

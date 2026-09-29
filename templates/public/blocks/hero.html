@@ -4,7 +4,7 @@
     <a class="hero-lead" href="{{ a.get_absolute_url }}">
       {% if a.featured_image %}<img{% if a.featured_image.sensitive %} data-sensitive{% endif %} src="{{ a.featured_image.large }}" srcset="{{ a.featured_image.srcset }}" sizes="(max-width: 760px) 100vw, 60vw" alt="{{ a.featured_image.alt_text }}" fetchpriority="high"{% if a.featured_image.focal_style %} style="{{ a.featured_image.focal_style }}"{% endif %}>{% endif %}
       <div class="caption">
-        {% if a.is_breaking %}<span class="kicker">عاجل</span>{% elif a.display_kicker %}<span class="kicker">{{ a.display_kicker }}</span>{% endif %}
+        {% if a.verdict %}<span class="verdict-chip v-{{ a.verdict }}">{{ a.get_verdict_display }}</span>{% endif %}{% if a.is_breaking %}<span class="kicker">عاجل</span>{% elif a.display_kicker %}<span class="kicker">{{ a.display_kicker }}</span>{% endif %}
         <h2>{{ a.title }}</h2>
         {% if a.subtitle %}<p>{{ a.subtitle }}</p>{% endif %}
         <div class="meta">{% if a.category %}<span>{{ a.category.name }}</span>{% endif %}<time datetime="{{ a.published_at|isoformat }}">{{ a.published_at|ar_relative }}</time></div>

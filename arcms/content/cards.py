@@ -20,6 +20,8 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps, features
 
 from arcms.core import colors
 
+from .models import VERDICT_COLORS
+
 FONT_DIR = Path(__file__).resolve().parent / "card_fonts"
 FONT_FILES = {
     "plex": "ibm-plex-sans-arabic-bold.ttf",
@@ -227,8 +229,11 @@ def render_article(article, site, fmt: str = "wide") -> bytes:
     font, size, lines = fit(article.title, site.font_headings, w - 2 * margin, max_lines, big, small)
     top = _headline(draw, lines, font, size, right=right, bottom=h - bar - int(margin * 0.9))
     kicker = "عاجل" if breaking else (article.display_kicker or (article.category.name if article.category_id else ""))
+    bg, fg = (p["breaking"], p["on_breaking"]) if breaking else (p["primary"], p["on_primary"])
+    verdict = getattr(article, "verdict", "")
+    if verdict and not breaking:  # بطاقة التدقيق تحمل الحكم بلونه: «زائف» أوضح ما يُشارك
+        kicker, bg, fg = article.get_verdict_display(), VERDICT_COLORS.get(verdict, p["primary"]), "#ffffff"
     if kicker:
-        bg, fg = (p["breaking"], p["on_breaking"]) if breaking else (p["primary"], p["on_primary"])
         pill_font = _font(site.font_headings, pill_size)
         pill_h = int(pill_size * 1.25) + 2 * int(pill_size * 0.28)
         _pill(draw, kicker[:40], right=right, top=top - pill_h - int(size * 0.3), font=pill_font, bg=_rgb(bg), fg=_rgb(fg))
@@ -284,7 +289,7 @@ def article_version(article, site) -> str:
         VERSION, article.title, article.display_kicker or "", str(article.category_id or ""),
         str(article.share_image.pk if article.share_image else ""),
         "%.3f,%.3f" % article.share_image.focal if article.share_image else "",
-        str(article.is_breaking), _site_key(site),
+        str(article.is_breaking), getattr(article, "verdict", ""), _site_key(site),
     ])
     return hashlib.sha1(raw.encode("utf-8")).hexdigest()[:10]
 

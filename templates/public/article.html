@@ -63,6 +63,15 @@
       </figure>
     {% endif %}
 
+    {% if article.kind == "factcheck" and article.verdict and article.claim %}
+    <aside class="verdict-box v-{{ article.verdict }}" aria-label="نتيجة التدقيق">
+      <div class="claim-label">الادعاء</div>
+      <blockquote>«{{ article.claim }}»</blockquote>
+      <div class="claim-meta">{% if article.claimant %}{{ article.claimant }}{% endif %}{% if article.claim_date %}{% if article.claimant %} · {% endif %}{{ article.claim_date|ar_date }}{% endif %}{% if article.claim_url %}{% if article.claimant or article.claim_date %} · {% endif %}<a href="{{ article.claim_url }}" rel="nofollow noopener noreferrer" target="_blank">مصدر الادعاء</a>{% endif %}</div>
+      <div class="verdict-stamp"><small>الحكم</small>{{ article.get_verdict_display }}</div>
+    </aside>
+    {% endif %}
+
     <div class="article-body">
       {% with parts=body_html|body_split:3 %}
         {{ parts.0 }}

@@ -26,6 +26,7 @@ from arcms.arabic.highlight import snippet
 from arcms.content import search as search_mod
 from arcms.content.models import (
     KIND_PLURALS,
+    VERDICT_RATING,
     Article,
     ArticleKind,
     Author,
@@ -157,7 +158,7 @@ def article_detail(request, pk: int, slug: str = ""):
             "canonical": absolute_url(article.get_absolute_url()),
             "ad_inline": AdSlot.live_for("article_inline"),
             "ad_end": AdSlot.live_for("article_end"),
-            "json_ld": json_script_safe(_news_article_ld(article)),
+            "json_ld": json_script_safe(_article_ld(article)),
             "track_article": article.pk,
             "track_category": article.category_id or "",
         }
@@ -172,6 +173,40 @@ def _share_card(article: Article) -> str:
 
     url = article_card_url(article, SiteSettings.load())
     return absolute_url(url) if url else ""
+
+
+def _article_ld(a: Article):
+    """بيانات جوجل المنظمة: NewsArticle، ومعه ClaimReview لمواد التدقيق (يظهر الحكم في نتائج البحث)."""
+    news = _news_article_ld(a)
+    review = _claim_review_ld(a)
+    return [news, review] if review else news
+
+
+def _claim_review_ld(a: Article) -> dict | None:
+    if a.kind != ArticleKind.FACTCHECK or not (a.claim.strip() and a.verdict):
+        return None
+    site = SiteSettings.load()
+    rating = {"@type": "Rating", "alternateName": a.get_verdict_display()}
+    if a.verdict in VERDICT_RATING:
+        rating.update(ratingValue=VERDICT_RATING[a.verdict], bestRating=5, worstRating=1)
+    claim = {"@type": "Claim"}
+    if a.claimant:
+        claim["author"] = {"@type": "Organization", "name": a.claimant}
+    if a.claim_date:
+        claim["datePublished"] = a.claim_date.isoformat()
+    if a.claim_url:
+        claim["appearance"] = {"@type": "CreativeWork", "url": a.claim_url}
+    return {
+        "@context": "https://schema.org",
+        "@type": "ClaimReview",
+        "url": absolute_url(a.get_absolute_url()),
+        "claimReviewed": " ".join(a.claim.split())[:500],
+        "author": {"@type": "NewsMediaOrganization", "name": site.name, "url": settings.SITE_URL},
+        "datePublished": (a.published_at or a.updated_at).date().isoformat(),
+        "inLanguage": "ar",
+        "reviewRating": rating,
+        "itemReviewed": claim,
+    }
 
 
 def _news_article_ld(a: Article) -> dict:
