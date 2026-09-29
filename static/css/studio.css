@@ -365,3 +365,22 @@ label.theme-card:has(input:checked) { border-color: var(--t-primary, var(--prima
 .bp-dark-btn { background: var(--pv-primary-dark); color: var(--pv-on-primary-dark); padding: 2px 10px; border-radius: 4px; font-weight: 700; }
 .bp-dark-link { color: var(--pv-primary-dark); font-weight: 700; }
 @media (max-width: 1000px) { .brand-grid { grid-template-columns: minmax(0, 1fr); } .brand-preview-wrap { position: static; } }
+
+/* مكتب الوكالات */
+.wire-list { display: grid; gap: 10px; margin-bottom: 14px; }
+.wire-card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; }
+.wire-card.is-alert { border-inline-start: 4px solid var(--primary); }
+.wire-card.handled { opacity: .72; }
+.wire-card h3 { margin: 6px 0 4px; font-size: 1.05rem; line-height: 1.6; }
+.wire-card p { margin: 0 0 8px; color: var(--muted); line-height: 1.8; }
+.wire-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: .85rem; }
+.wire-meta time { font-weight: 700; font-variant-numeric: tabular-nums; }
+.wire-card details { margin: 0 0 8px; }
+.wire-card details summary { cursor: pointer; color: var(--primary); font-size: .9rem; }
+.wire-body { line-height: 1.9; padding-top: 6px; }
+.wire-body img { max-width: 100%; height: auto; }
+.wire-bulk { margin-bottom: 14px; }
+form.inline { display: inline; }
+.wire-filter select { width: auto; min-width: 150px; }
+.wire-filter input[type=search] { width: 230px; }
+@media (max-width: 700px) { .wire-filter, .wire-filter input[type=search], .wire-filter select { width: 100%; } }

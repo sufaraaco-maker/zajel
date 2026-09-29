@@ -1,0 +1,31 @@
+{% extends "studio/base.html" %}
+{% block title %}{{ crud.title }}{% endblock %}
+{% block content %}
+<div class="page-title">
+  <div><h1>{{ crud.title }}</h1><p>{{ crud.help_text }}</p></div>
+  <div class="btn-row"><a class="btn" href="{% url 'studio:wires' %}">مكتب الوكالات</a><a class="btn primary" href="{{ new_url }}">{{ "plus"|icon:16 }} إضافة مصدر</a></div>
+</div>
+<div class="table-wrap">
+<table class="data">
+  <thead><tr>{% for attr, label in crud.columns %}<th>{{ label }}</th>{% endfor %}<th></th></tr></thead>
+  <tbody>
+  {% for row in rows %}
+    <tr>
+      {% for cell in row.cells %}<td{% if forloop.first %} class="title-cell"{% endif %}>{% if forloop.first %}<a href="{{ row.edit_url }}">{{ cell }}</a>{% elif forloop.counter == 5 and cell %}{{ cell|ar_relative }}{% else %}{{ cell }}{% endif %}</td>{% endfor %}
+      <td class="num"><form method="post" action="{% url 'studio:wire_poll' row.obj.pk %}" class="inline">{% csrf_token %}<button class="btn sm" type="submit">اجلب الآن</button></form> <a class="btn sm" href="{{ row.edit_url }}">تعديل</a></td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="{{ crud.columns|length|add:1 }}" class="empty">لا مصادر بعد. أضف رابط خلاصة RSS أو Atom من موقع الوكالة.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+<section class="panel">
+  <h2>كلمات التنبيه</h2>
+  <p class="muted small">كلمة أو عبارة في كل سطر. أي مادة وكالة يحوي عنوانها أو ملخصها إحداها تُعلَّم «تنبيه» وتظهر بعدد في القائمة الجانبية. المطابقة تتسامح مع الهمزات والتاء المربوطة وحروف الجر المتصلة («غزة» تطابق «بغزة»).</p>
+  <form method="post" action="{% url 'studio:wire_keywords' %}">{% csrf_token %}
+    <textarea name="keywords" rows="6" placeholder="عاجل&#10;القدس&#10;وزير الخارجية">{{ keywords }}</textarea>
+    <div class="btn-row"><button class="btn primary" type="submit">حفظ الكلمات</button></div>
+  </form>
+</section>
+{% endblock %}

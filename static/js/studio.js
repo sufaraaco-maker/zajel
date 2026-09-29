@@ -571,3 +571,19 @@
     });
   });
 })();
+
+// مكتب الوكالات: تحديث تلقائي ما لم يكن المحرر في منتصف عمل (تحديد، نص مفتوح، كتابة)
+(function () {
+  "use strict";
+  var list = document.querySelector("[data-autorefresh]");
+  if (!list) return;
+  var seconds = parseInt(list.getAttribute("data-autorefresh"), 10) || 60;
+  function busy() {
+    var active = document.activeElement;
+    return document.hidden ||
+      document.querySelector(".wire-card input[type=checkbox]:checked, .wire-card details[open]") ||
+      (active && /INPUT|TEXTAREA|SELECT/.test(active.tagName)) ||
+      String(window.getSelection ? window.getSelection() : "").length > 0;
+  }
+  setInterval(function () { if (!busy()) window.location.reload(); }, seconds * 1000);
+})();

@@ -452,3 +452,28 @@ class MediaMetaForm(forms.ModelForm):
     class Meta:
         model = MediaAsset
         fields = ["title", "caption", "credit", "alt_text"]
+
+
+class WireSourceForm(forms.ModelForm):
+    class Meta:
+        from arcms.wires.models import WireSource
+
+        model = WireSource
+        fields = ["name", "feed_url", "credit", "category", "poll_minutes", "is_active"]
+        widgets = {"feed_url": forms.URLInput(attrs={"dir": "ltr"})}
+
+    def clean_poll_minutes(self):
+        value = self.cleaned_data.get("poll_minutes") or 5
+        if not 2 <= value <= 240:
+            raise forms.ValidationError("بين دقيقتين و240 دقيقة.")
+        return value
+
+    def clean_feed_url(self):
+        from arcms.wires.feeds import FeedError, check_url
+
+        url = (self.cleaned_data.get("feed_url") or "").strip()
+        try:
+            check_url(url)
+        except FeedError as exc:
+            raise forms.ValidationError(str(exc)) from exc
+        return url

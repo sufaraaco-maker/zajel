@@ -4,6 +4,7 @@ from django.urls import path
 from arcms.accounts.roles import Cap
 from arcms.content.models import Author, Category, Dossier, Page, Tag
 from arcms.core.models import AdSlot, MenuItem
+from arcms.wires.models import WireSource
 
 from . import views_admin as admin
 from . import views_articles as articles
@@ -12,8 +13,9 @@ from . import views_newsroom as newsroom
 from . import views_setup as setup_views
 from . import views_tips as tips_views
 from . import views_tools as tools
+from . import views_wires as wires
 from .base import Crud
-from .forms import AdSlotForm, AuthorForm, CategoryForm, DossierForm, MenuItemForm, PageForm, TagForm
+from .forms import AdSlotForm, AuthorForm, CategoryForm, DossierForm, MenuItemForm, PageForm, TagForm, WireSourceForm
 
 app_name = "studio"
 
@@ -66,6 +68,18 @@ ads = Crud(
               "ولا يضيفها إلا مدير النظام.",
     queryset=lambda: AdSlot.objects.order_by("placement", "name"),
     form_takes_user=True,
+)
+
+wiresources = Crud(
+    model=WireSource, form=WireSourceForm, cap=Cap.WIRES_MANAGE, name="wiresources", title="مصادر الوكالات",
+    singular="المصدر",
+    columns=[("name", "المصدر"), ("category", "القسم"), ("poll_minutes", "كل (دقيقة)"), ("status_label", "الحالة"),
+             ("last_ok_at", "آخر جلب ناجح")],
+    queryset=lambda: WireSource.objects.select_related("category"),
+    template_list="studio/wire_sources.html",
+    list_extra=wires.sources_extra,
+    public_url=False,
+    help_text="خلاصات RSS أو Atom من الوكالات. تُجلب تلقائياً من العامل الخلفي وتصل إلى «مكتب الوكالات».",
 )
 
 urlpatterns = [
@@ -128,6 +142,11 @@ urlpatterns = [
     path("tips/<int:pk>/", tips_views.tip_detail, name="tip_detail"),
     path("tips/<int:pk>/delete/", tips_views.tip_delete, name="tip_delete"),
     path("tips/<int:pk>/files/<int:att>/", tips_views.tip_attachment, name="tip_attachment"),
+    path("wires/", wires.desk, name="wires"),
+    path("wires/action/", wires.action, name="wires_action"),
+    path("wiresources/keywords/", wires.keywords, name="wire_keywords"),
+    path("wiresources/<int:pk>/poll/", wires.poll_now, name="wire_poll"),
+    *wiresources.urls(),
     *categories.urls(),
     *tags.urls(),
     *authors.urls(),

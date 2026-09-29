@@ -37,7 +37,16 @@ from arcms.content.models import (
     Tag,
 )
 from arcms.core.demo_brands import BRANDS
-from arcms.core.demo_data import ARTICLES, AUTHORS, BREAKING, EXTRA_ARTICLES, LIVE, silent_mp3
+from arcms.core.demo_data import (
+    ARTICLES,
+    AUTHORS,
+    BREAKING,
+    EXTRA_ARTICLES,
+    LIVE,
+    WIRE_ITEMS,
+    WIRE_KEYWORDS,
+    silent_mp3,
+)
 from arcms.core.demo_photos import CommonsPhotos, credits_html, query_for
 from arcms.core.models import HomeBlock, MenuItem, SiteSettings
 
@@ -334,6 +343,7 @@ class Command(BaseCommand):
             HomeBlockArticle.objects.bulk_create(
                 [HomeBlockArticle(block=picks, article=a, order=n) for n, a in enumerate(chosen)]
             )
+        self._wires(site)
         from arcms.tips.services import add_newsroom_reply, create_tip
 
         tip, _ = create_tip(
@@ -342,6 +352,27 @@ class Command(BaseCommand):
             files=[with_fake_gps(make_art(4242, "#3b3f46"))],
         )
         add_newsroom_reply(tip, chief, "شكراً لك. هل تعرف الجهة المنفّذة؟ ولا ترسل صوراً من النافذة نفسها مرة أخرى.")
+
+    def _wires(self, site):
+        """مكتب وكالات تجريبي: مصدر معطّل (لا جلب من الشبكة) بمواد وكلمات تنبيه."""
+        from arcms.arabic.normalize import normalize
+        from arcms.wires.models import WireItem, WireKeyword, WireSource
+
+        now = timezone.now()
+        source = WireSource.objects.create(
+            name="وكالة الأنباء (تجريبية)", feed_url="https://example.org/agency/rss.xml", credit="وكالة الأنباء",
+            category=Category.objects.filter(name=self.brand["desk"]).first(), is_active=False,
+        )
+        for word in WIRE_KEYWORDS:
+            WireKeyword.objects.get_or_create(word=word)
+        words = [normalize(w) for w in WIRE_KEYWORDS]
+        for n, (title, summary) in enumerate(WIRE_ITEMS):
+            blob = normalize(f"{title} {summary}")
+            WireItem.objects.create(
+                source=source, guid_hash=hashlib.sha256(f"demo-{n}".encode()).hexdigest(), title=title, summary=summary,
+                link=f"https://example.org/agency/{n}", published_at=now - timedelta(minutes=4 + n * 23),
+                fetched_at=now - timedelta(minutes=3 + n * 23), search_text=blob, is_alert=any(w in blob for w in words),
+            )
 
     def _credits_page(self):
         """صفحة «مصادر الصور» في التذييل: نسبة كل صورة حقيقية لصاحبها وترخيصها."""

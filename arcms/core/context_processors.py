@@ -66,4 +66,12 @@ def _studio(user) -> dict:
         from arcms.tips.models import Tip
 
         counts["tips"] = Tip.objects.filter(unread=True).count()
+    if Cap.WIRES in caps:
+        from datetime import timedelta
+
+        from arcms.wires.models import WireItem
+
+        counts["wires"] = WireItem.objects.filter(
+            is_alert=True, status=WireItem.Status.NEW, fetched_at__gte=timezone.now() - timedelta(hours=12)
+        ).count()
     return {"user_caps": caps, "nav_counts": counts}

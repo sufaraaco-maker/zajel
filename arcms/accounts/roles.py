@@ -50,6 +50,8 @@ class Cap:
     BACKUPS = "backups.manage"
     IMPORT = "import.run"
     TIPS = "tips.manage"
+    WIRES = "wires.view"
+    WIRES_MANAGE = "wires.manage"
 
 
 CAPABILITY_LABELS = {
@@ -80,10 +82,12 @@ CAPABILITY_LABELS = {
     Cap.BACKUPS: "النسخ الاحتياطي",
     Cap.IMPORT: "استيراد الأرشيف",
     Cap.TIPS: "صندوق المعلومات الآمن",
+    Cap.WIRES: "مكتب الوكالات (القراءة والاعتماد كمسودة)",
+    Cap.WIRES_MANAGE: "مصادر الوكالات وكلمات التنبيه",
 }
 
 _WRITER = {Cap.ARTICLE_CREATE, Cap.ARTICLE_EDIT_OWN, Cap.ARTICLE_SUBMIT, Cap.MEDIA_UPLOAD}
-_REPORTER = _WRITER | {Cap.LIVE_POST, Cap.TAGS}
+_REPORTER = _WRITER | {Cap.LIVE_POST, Cap.TAGS, Cap.WIRES}
 _EDITOR = _REPORTER | {Cap.ARTICLE_EDIT_ANY, Cap.ARTICLE_REVIEW, Cap.ANALYTICS}
 _DESK_HEAD = _EDITOR | {
     Cap.ARTICLE_PUBLISH,
@@ -101,6 +105,7 @@ _CHIEF = _DESK_HEAD | {
     Cap.PAGES,
     Cap.DIST_MANAGE,
     Cap.TIPS,
+    Cap.WIRES_MANAGE,
 }
 _SOCIAL = {Cap.ANALYTICS, Cap.DIST_SEND, Cap.DIST_MANAGE, Cap.MEDIA_UPLOAD, Cap.BREAKING}
 _ADMIN = set(CAPABILITY_LABELS)

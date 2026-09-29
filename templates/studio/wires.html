@@ -1,0 +1,47 @@
+{% extends "studio/base.html" %}
+{% block title %}مكتب الوكالات{% endblock %}
+{% block content %}
+<div class="page-title">
+  <div><h1>مكتب الوكالات</h1><p>ما تبثه الوكالات لحظة بلحظة. اعتمد المادة مسودةً فتُنسب إلى مصدرها تلقائياً، أو تجاهلها. المواد التي تحوي كلمات التنبيه تتصدر.</p></div>
+  <div class="btn-row">
+    <form method="get" class="btn-row wire-filter">
+      <input type="hidden" name="tab" value="{{ tab }}">
+      <select name="source" aria-label="المصدر"><option value="">كل المصادر</option>{% for s in sources %}<option value="{{ s.pk }}"{% if source == s.pk|stringformat:"s" %} selected{% endif %}>{{ s.name }}</option>{% endfor %}</select>
+      <input type="search" name="q" value="{{ q }}" placeholder="ابحث في الوكالات…">
+      <button class="btn" type="submit">{{ "search"|icon:16 }}</button>
+    </form>
+    {% if "wires.manage" in user_caps %}<a class="btn" href="{% url 'studio:wiresources_list' %}">{{ "gear"|icon:16 }} المصادر وكلمات التنبيه</a>{% endif %}
+  </div>
+</div>
+{% for s in failing %}<div class="alert warning">تعذّر آخر جلب من «{{ s.name }}»: {{ s.last_error }}</div>{% endfor %}
+{% if not sources %}<div class="panel empty">لا مصادر بعد.{% if "wires.manage" in user_caps %} <a href="{% url 'studio:wiresources_new' %}">أضف خلاصة وكالة</a>.{% else %} يضيفها رئيس التحرير.{% endif %}</div>{% endif %}
+<div class="tabs">
+  {% for value, label in tabs %}<a href="?tab={{ value }}{% if source %}&source={{ source }}{% endif %}{% if q %}&q={{ q|urlencode }}{% endif %}" class="{% if tab == value %}active{% endif %}">{{ label }}{% if value == 'new' %} ({{ counts.new }}){% elif value == 'alerts' and counts.alerts %} <span class="pill breaking">{{ counts.alerts }}</span>{% endif %}</a>{% endfor %}
+</div>
+<form method="post" action="{% url 'studio:wires_action' %}" id="wire-bulk">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><input type="hidden" name="action" value="ignore"></form>
+<div class="wire-list" data-autorefresh="60">
+  {% for w in page %}
+  <article class="wire-card{% if w.is_alert %} is-alert{% endif %}{% if w.status != 'new' %} handled{% endif %}">
+    <div class="wire-meta">
+      {% if w.status == 'new' %}<input type="checkbox" name="ids" value="{{ w.pk }}" form="wire-bulk" aria-label="تحديد">{% endif %}
+      <time datetime="{{ w.when|isoformat }}" title="{{ w.when|ar_date }}">{{ w.when|ar_time }}</time>
+      <span class="pill">{{ w.source.name }}</span>
+      {% if w.is_alert %}<span class="pill breaking">تنبيه</span>{% endif %}
+      {% if w.status == 'adopted' %}<span class="pill ok">اعتُمد{% if w.handled_by %} — {{ w.handled_by }}{% endif %}</span>{% elif w.status == 'ignored' %}<span class="pill">تُجوهل</span>{% endif %}
+      <span class="muted small">{{ w.when|ar_relative }}</span>
+    </div>
+    <h3>{{ w.title }}</h3>
+    {% if w.summary %}<p>{{ w.summary|truncatechars:320 }}</p>{% endif %}
+    {% if w.body or w.summary|length > 320 %}<details><summary>النص الكامل</summary><div class="wire-body">{% if w.body %}{{ w.body|safe }}{% else %}<p>{{ w.summary }}</p>{% endif %}</div></details>{% endif %}
+    <div class="btn-row">
+      {% if w.article %}<a class="btn sm" href="{% url 'studio:article_edit' w.article.pk %}">{{ "pen"|icon:14 }} المسودة</a>
+      {% elif can_adopt %}<form method="post" action="{% url 'studio:wires_action' %}">{% csrf_token %}<input type="hidden" name="action" value="adopt"><input type="hidden" name="item" value="{{ w.pk }}"><button class="btn sm primary" type="submit">{{ "plus"|icon:14 }} اعتمد مسودة</button></form>{% endif %}
+      {% if w.status == 'ignored' %}<form method="post" action="{% url 'studio:wires_action' %}">{% csrf_token %}<input type="hidden" name="action" value="restore"><input type="hidden" name="item" value="{{ w.pk }}"><input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn sm" type="submit">إرجاع</button></form>{% endif %}
+      {% if w.link %}<a class="btn sm" href="{{ w.link }}" target="_blank" rel="noopener noreferrer">الأصل ↗</a>{% endif %}
+    </div>
+  </article>
+  {% empty %}<div class="panel empty">لا مواد هنا{% if q %} تطابق «{{ q }}»{% endif %}.</div>{% endfor %}
+</div>
+{% if tab == 'new' or tab == 'alerts' %}{% if page.object_list %}<div class="btn-row wire-bulk"><button class="btn" type="submit" form="wire-bulk">تجاهل المحدد</button><span class="muted small">تُحدَّث الصفحة كل دقيقة ما لم تحدد شيئاً أو تفتح نصاً.</span></div>{% endif %}{% endif %}
+{% include "studio/partials/pagination.html" %}
+{% endblock %}

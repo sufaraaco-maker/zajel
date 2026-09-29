@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     "arcms.backups",
     "arcms.importer",
     "arcms.tips",
+    "arcms.wires",
     "arcms.studio",
     "arcms.public",
 ]
@@ -249,6 +250,11 @@ ARCMS_OFFSITE_VIRTUAL_HOST = env.get_bool("ARCMS_OFFSITE_VIRTUAL_HOST", False)
 ARCMS_OFFSITE_KEEP = env.get_int("ARCMS_OFFSITE_KEEP", 0)
 if TESTING:
     ARCMS_BACKUP_DIR = BASE_DIR / "var" / "test-backups"
+
+# --- مكتب الوكالات ---
+# خلاصات الوكالات على عناوين عامة فقط؛ فعّل هذا إن كانت الوكالة تسلّم على شبكة داخلية.
+ARCMS_WIRE_ALLOW_PRIVATE = env.get_bool("ARCMS_WIRE_ALLOW_PRIVATE", False)
+ARCMS_WIRE_RETENTION_DAYS = env.get_int("ARCMS_WIRE_RETENTION_DAYS", 14)
 
 # --- التحليلات ---
 ARCMS_ANALYTICS_RAW_DAYS = env.get_int("ARCMS_ANALYTICS_RAW_DAYS", 35)

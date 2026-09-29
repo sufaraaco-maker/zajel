@@ -102,6 +102,15 @@ def run_checks(live: bool = False) -> list[Check]:
     if failed:
         add(Check("العامل الخلفي", "warn", f"{failed} مهمة فشلت خلال 24 ساعة.", "راجع صفحة التوزيع لمعرفة السبب."))
 
+    # --- مكتب الوكالات ---
+    from arcms.wires.models import WireSource
+
+    stale = timezone.now() - timedelta(hours=1)
+    for source in WireSource.objects.filter(is_active=True).exclude(last_error=""):
+        if not source.last_ok_at or source.last_ok_at < stale:
+            add(Check("مكتب الوكالات", "warn", f"«{source.name}» لا يُجلب منذ مدة: {source.last_error}",
+                      "افتح الرابط من الخادم، أو عطّل المصدر من «مصادر الوكالات»."))
+
     # --- الأمان ---
     from arcms.accounts.models import User
 
