@@ -313,6 +313,20 @@ def dossier_detail(request, slug: str):
     return render(request, "public/dossier.html", _common({"dossier": dossier, "page": page, "most_read": most_read(5)}))
 
 
+def _record_search(request, raw: str, total: int) -> None:
+    """ما يبحث عنه القرّاء، مجمّعاً بلا هوية، ويحترم إعدادات القياس ورغبة «عدم التتبع»."""
+    site = SiteSettings.load()
+    if not site.analytics_enabled:
+        return
+    if site.analytics_respect_dnt and (request.META.get("HTTP_DNT") == "1" or request.META.get("HTTP_SEC_GPC") == "1"):
+        return
+    if request.user.is_authenticated:  # بحث الطاقم ليس بحث القرّاء
+        return
+    from arcms.analytics.searches import record
+
+    record(raw, total, user_agent=request.META.get("HTTP_USER_AGENT", ""))
+
+
 def search_view(request):
     raw = request.GET.get("q", "").strip()
     kind = request.GET.get("kind", "")
@@ -345,6 +359,8 @@ def search_view(request):
                 }
             )
     total = result.total if result else 0
+    if raw and number == 1 and not (kind or category or period):
+        _record_search(request, raw, total)
     pages = (total + PAGE_SIZE - 1) // PAGE_SIZE
     return render(
         request,

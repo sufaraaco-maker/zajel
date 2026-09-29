@@ -65,3 +65,17 @@ class DailySiteStat(models.Model):
     by_device = models.JSONField(default=dict)
     by_referrer = models.JSONField(default=dict)
     by_category = models.JSONField(default=dict)
+
+
+class SearchStat(models.Model):
+    """ما يبحث عنه القرّاء، مجمّعاً يومياً: نص البحث بعد التطبيع وعدد مرات البحث وعدد النتائج.
+    لا زائر ولا عنوان ولا توقيت دقيق، ويُحذف بعد 90 يوماً."""
+
+    day = models.DateField(db_index=True)
+    query = models.CharField(max_length=120)
+    sample = models.CharField(max_length=120)
+    searches = models.PositiveIntegerField(default=0)
+    results = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        unique_together = [("day", "query")]

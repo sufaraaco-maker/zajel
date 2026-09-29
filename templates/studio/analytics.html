@@ -69,6 +69,19 @@
   </table></div>
 </section>
 
+<div class="cols cols-2">
+  <section class="panel">
+    <h2>{{ "search"|icon:18 }} ما يبحث عنه القرّاء {% if days == 1 %}اليوم{% else %}خلال {{ days }} يوماً{% endif %}</h2>
+    <ul class="list small">{% for s in searches %}<li><span class="grow"><a href="{% url 'public:search' %}?q={{ s.sample|urlencode }}" target="_blank" rel="noopener">{{ s.sample }}</a></span>{% if not s.results %}<span class="pill warn">بلا نتائج</span>{% endif %}<span class="num">{{ s.n|ar_compact }}</span></li>{% empty %}<li class="empty">لا عمليات بحث مسجّلة بعد.</li>{% endfor %}</ul>
+  </section>
+  <section class="panel">
+    <h2>{{ "alert"|icon:18 }} بحثوا ولم يجدوا</h2>
+    <p class="small muted">كلمات بحث لم تُرجع أي مادة{% if days < 7 %} خلال 7 أيام{% endif %}: موضوعات يريدها القرّاء ولم نغطها، أو أسماء تُكتب بصيغة أخرى تستحق وسماً.</p>
+    <ul class="list small">{% for s in unanswered %}<li><span class="grow">{{ s.sample }}</span><span class="num">{{ s.n|ar_compact }}</span></li>{% empty %}<li class="empty">كل ما بحث عنه القرّاء وجد نتائج.</li>{% endfor %}</ul>
+    <p class="small muted">يُسجَّل نص البحث مجمّعاً في اليوم فقط، دون زائر أو عنوان، ولا تُسجَّل الأرقام الطويلة ولا عناوين البريد، ويُحذف بعد 90 يوماً.</p>
+  </section>
+</div>
+
 <div class="cols cols-3">
   <div class="kpi"><div class="label">مشتركو النشرة</div><div class="value">{{ subscribers.newsletter|ar_compact }}</div></div>
   <div class="kpi"><div class="label">مشتركو الإشعارات</div><div class="value">{{ subscribers.push|ar_compact }}</div></div>

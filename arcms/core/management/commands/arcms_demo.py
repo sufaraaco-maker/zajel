@@ -169,6 +169,8 @@ class Command(BaseCommand):
         if not opts["no_traffic"]:
             self._traffic()
         call_command("arcms_reindex", verbosity=0, stdout=self.stdout)
+        if not opts["no_traffic"]:
+            self._searches()
         lines = [f"{u}\t{DEMO_PASSWORD}\tTOTP: {s}" for u, s in creds]
         self.stdout.write(self.style.SUCCESS(f"اكتمل الموقع التجريبي: {brand['name']}."))
         if self.photos is not None:
@@ -473,3 +475,18 @@ class Command(BaseCommand):
 
         for row in PageView.objects.exclude(article_id__isnull=True).values("article_id").annotate(n=Count("id")):
             Article.objects.filter(pk=row["article_id"]).update(view_count=row["n"])
+
+    def _searches(self):
+        """ما بحث عنه القرّاء (مجمّعاً)، بعضه بلا نتائج ليظهر في «بحثوا ولم يجدوا». بعد الفهرسة."""
+        from arcms.analytics.models import SearchStat
+        from arcms.analytics.searches import key
+        from arcms.content.search import search_articles
+
+        rnd = random.Random(11)
+        today = timezone.localdate()
+        for day in range(7):
+            for q, n in (("الزيتون", 40), ("امتحانات الثانوية", 55), ("أسعار الخضار", 22), ("المكتبة العامة", 18),
+                         ("مواعيد الحافلات", 16), ("نتائج القبول الموحد", 12), ("الطقس", 30), ("دوري كرة السلة", 9)):
+                SearchStat.objects.create(day=today - timedelta(days=day), query=key(q), sample=q,
+                                          searches=max(1, n - day * 2 + rnd.randint(0, 6)),
+                                          results=search_articles(q, limit=1).total)

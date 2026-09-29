@@ -352,7 +352,7 @@ def whatsapp_subscribers(request):
 
 @requires(Cap.ANALYTICS)
 def analytics(request):
-    from arcms.analytics import queries
+    from arcms.analytics import queries, searches
     from arcms.analytics.models import PageView
 
     try:
@@ -383,6 +383,8 @@ def analytics(request):
         "devices": [(device_labels.get(k, k), v) for k, v in bd["devices"].most_common()],
         "referrers": bd["referrers"].most_common(10),
         "categories": [(cats.get(k, "—"), v) for k, v in bd["categories"].most_common(10)],
+        "searches": searches.top(days, 15),
+        "unanswered": searches.unanswered(max(days, 7), 15),
         "published_today": Article.objects.published().filter(
             published_at__gte=timezone.localtime().replace(hour=0, minute=0, second=0, microsecond=0)
         ).count(),
