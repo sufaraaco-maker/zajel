@@ -201,10 +201,11 @@ def render_article(article, site, fmt: str = "wide") -> bytes:
     w, h = SIZES[fmt]
     margin, logo_h, big, small, max_lines, pill_size = LAYOUT[fmt]
     p = site.palette()
-    photo = _open_asset(article.featured_image) if article.featured_image_id else None
+    image = article.share_image  # الصورة القاسية لا تخرج إلى المنصات: بطاقة بألوان الموقع بدلها
+    photo = _open_asset(image) if image is not None else None
     if photo is not None:
         canvas = ImageOps.fit(photo.convert("RGB"), (w, h), Image.Resampling.LANCZOS,
-                              centering=article.featured_image.focal).convert("RGBA")
+                              centering=image.focal).convert("RGBA")
         shade = Image.new("RGBA", (w, h), (0, 0, 0, 255))
         canvas = Image.composite(shade, canvas, _gradient((w, h), 0.18 if fmt == "wide" else 0.3, 235))
         canvas = Image.composite(shade, canvas, _top_shade((w, h), 0.32, 120))  # يوضّح الشعار فوق الصور الفاتحة
@@ -281,8 +282,8 @@ def _site_key(site) -> str:
 def article_version(article, site) -> str:
     raw = "|".join([
         VERSION, article.title, article.display_kicker or "", str(article.category_id or ""),
-        str(article.featured_image_id or ""),
-        "%.3f,%.3f" % article.featured_image.focal if article.featured_image_id else "",
+        str(article.share_image.pk if article.share_image else ""),
+        "%.3f,%.3f" % article.share_image.focal if article.share_image else "",
         str(article.is_breaking), _site_key(site),
     ])
     return hashlib.sha1(raw.encode("utf-8")).hexdigest()[:10]

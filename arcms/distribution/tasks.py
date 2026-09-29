@@ -19,7 +19,7 @@ def _content(delivery: Delivery) -> dict:
     site = SiteSettings.load()
     if delivery.article_id:
         a = delivery.article
-        image = article_card_url(a, site) or (a.featured_image.social if a.featured_image_id else "")
+        image = article_card_url(a, site) or (a.share_image.social if a.share_image else "")
         return {
             "title": a.title,
             "summary": a.subtitle or a.summary,

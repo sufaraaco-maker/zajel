@@ -38,6 +38,7 @@ from arcms.content.models import (
     Tag,
 )
 from arcms.content.sanitize import plain_text, render_embeds
+from arcms.content.sensitive import mark_body as mark_sensitive
 from arcms.content.signals import public_cache_version
 from arcms.content.workflow import can_view
 from arcms.core.models import AdSlot, SiteSettings
@@ -131,7 +132,7 @@ def article_detail(request, pk: int, slug: str = ""):
     if not preview and slug != article.slug:
         return redirect(article.get_absolute_url(), permanent=True)
     gallery = list(article.gallery_items.select_related("media")) if article.kind == ArticleKind.GALLERY else []
-    body = render_embeds(article.body)
+    body = mark_sensitive(render_embeds(article.body))
     if "[poll:" in body:
         from arcms.polls.services import render_shortcodes
 
@@ -188,8 +189,8 @@ def _news_article_ld(a: Article) -> dict:
         "author": [{"@type": "Person", "name": au.name, "url": absolute_url(au.get_absolute_url())} for au in a.authors.all()]
         or [{"@type": "Organization", "name": site.name}],
     }
-    if a.featured_image_id:
-        data["image"] = [absolute_url(a.featured_image.social), absolute_url(a.featured_image.large)]
+    if a.share_image:
+        data["image"] = [absolute_url(a.share_image.social), absolute_url(a.share_image.large)]
     if site.logo_id:
         data["publisher"]["logo"] = {"@type": "ImageObject", "url": absolute_url(site.logo.url)}
     if a.category_id:

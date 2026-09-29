@@ -454,7 +454,7 @@ class WhatsAppSubscriberForm(forms.ModelForm):
 class MediaMetaForm(forms.ModelForm):
     class Meta:
         model = MediaAsset
-        fields = ["title", "caption", "credit", "alt_text", "focal_x", "focal_y"]
+        fields = ["title", "caption", "credit", "alt_text", "sensitive", "focal_x", "focal_y"]
         widgets = {"focal_x": forms.HiddenInput(), "focal_y": forms.HiddenInput()}
 
     def _clean_unit(self, name):

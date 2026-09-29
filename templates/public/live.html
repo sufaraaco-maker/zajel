@@ -10,7 +10,7 @@
       {% if live.summary %}<p class="subtitle">{{ live.summary }}</p>{% endif %}
       <p class="meta">بدأت {{ live.started_at|ar_datetime }}{% if live.ended_at %} · انتهت {{ live.ended_at|ar_datetime }}{% endif %}</p>
     </header>
-    {% if live.cover %}<figure class="figure"><img src="{{ live.cover.large }}" alt="{{ live.cover.alt_text }}">{% if live.cover.caption %}<figcaption>{{ live.cover.caption }}</figcaption>{% endif %}</figure>{% endif %}
+    {% if live.cover %}<figure class="figure"><img{% if live.cover.sensitive %} data-sensitive{% endif %} src="{{ live.cover.large }}" alt="{{ live.cover.alt_text }}">{% if live.cover.caption %}<figcaption>{{ live.cover.caption }}</figcaption>{% endif %}</figure>{% endif %}
     {% if live.is_live %}<div class="live-status" data-live-status>{{ "clock"|icon:16 }} تُحدَّث الصفحة تلقائياً كل 30 ثانية</div>{% endif %}
     <ol class="live-feed" {% if live.is_live %}data-live-feed="{% url 'public:live_entries' live.slug %}"{% endif %}>
       {% for e in entries %}{% include "public/partials/live_entry.html" %}{% empty %}<li class="empty">لا تحديثات بعد.</li>{% endfor %}

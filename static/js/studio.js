@@ -126,10 +126,15 @@
       box.innerHTML = '<span class="placeholder-text">اختر صورة أو ارفع جديدة</span>';
       box.setAttribute("aria-label", box.getAttribute("data-label"));
       clear.remove();
+      var n = wrap.querySelector(".sensitive-note");
+      if (n) n.remove();
       box.focus();
       markDirty();
     });
     wrap.appendChild(clear);
+    var note = wrap.querySelector(".sensitive-note");
+    if (note) note.remove();
+    if (a.sensitive) wrap.appendChild(el("p", { "class": "small sensitive-note" }, "صورة قاسية: تظهر للقرّاء مموّهة حتى يختاروا رؤيتها، ولا تُستخدم في بطاقة المشاركة ولا في المنصات."));
     var meta = wrap.parentNode.querySelector("[data-removed-meta]");
     if (meta) {
       meta.hidden = !(a.removed && a.removed.length);

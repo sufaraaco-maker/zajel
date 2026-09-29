@@ -7,6 +7,6 @@
       {% if b.link %}<a class="btn promo-btn" href="{{ b.link }}"{% if not b.link|slice:":1" == "/" %} target="_blank" rel="noopener"{% endif %}>{{ b.block.button_label|default:"تابعنا" }}</a>{% endif %}
     </div>
     {% if b.qr_svg %}<div class="promo-qr" aria-hidden="true">{{ b.qr_svg|safe }}<small>امسح الرمز بهاتفك</small></div>{% endif %}
-    {% if b.block.image %}<img class="promo-img" src="{{ b.block.image.card }}" alt="{{ b.block.image.alt_text }}" loading="lazy">{% endif %}
+    {% if b.block.image %}<img{% if b.block.image.sensitive %} data-sensitive{% endif %} class="promo-img" src="{{ b.block.image.card }}" alt="{{ b.block.image.alt_text }}" loading="lazy">{% endif %}
   </div>
 </section>

@@ -8,7 +8,7 @@
     {% if a.video_embed %}
     <div class="video-player">
       <button class="video-facade" type="button" data-video-embed="{{ a.video_embed }}" aria-label="تشغيل: {{ a.title }}">
-        {% if a.featured_image %}<img src="{{ a.featured_image.large }}" alt="" loading="lazy"{% if a.featured_image.focal_style %} style="{{ a.featured_image.focal_style }}"{% endif %}>{% endif %}
+        {% if a.featured_image %}<img{% if a.featured_image.sensitive %} data-sensitive{% endif %} src="{{ a.featured_image.large }}" alt="" loading="lazy"{% if a.featured_image.focal_style %} style="{{ a.featured_image.focal_style }}"{% endif %}>{% endif %}
         <span class="play-big">{{ "play"|icon:34 }}</span>
       </button>
       <h3><a href="{{ a.get_absolute_url }}">{{ a.title }}</a></h3>

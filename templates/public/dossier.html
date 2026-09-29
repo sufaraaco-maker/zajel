@@ -2,7 +2,7 @@
 {% block title %}{{ dossier.title }} | {{ site.name }}{% endblock %}
 {% block content %}
 <div class="dossier-banner section"{% if dossier.color %} style="--dossier: {{ dossier.color }}"{% endif %}>
-  {% if dossier.cover %}<img src="{{ dossier.cover.large }}" alt=""{% if dossier.cover.focal_style %} style="{{ dossier.cover.focal_style }}"{% endif %}>{% endif %}
+  {% if dossier.cover %}<img{% if dossier.cover.sensitive %} data-sensitive{% endif %} src="{{ dossier.cover.large }}" alt=""{% if dossier.cover.focal_style %} style="{{ dossier.cover.focal_style }}"{% endif %}>{% endif %}
   <div class="info"><span class="kicker">ملف خاص</span><h1 style="font-family:var(--font-head);margin:6px 0">{{ dossier.title }}</h1><p>{{ dossier.description|linebreaksbr }}</p></div>
 </div>
 <div class="with-sidebar">

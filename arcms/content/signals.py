@@ -62,7 +62,11 @@ def connect() -> None:
     for through in (Article.tags.through, Article.authors.through):
         m2m_changed.connect(article_m2m_changed, sender=through, dispatch_uid=f"arcms-m2m-{through.__name__}")
 
-    from .models import BreakingNews, Category, LiveEntry, Page
+    from . import sensitive
+    from .models import BreakingNews, Category, LiveEntry, MediaAsset, Page
+
+    post_save.connect(sensitive.forget, sender=MediaAsset, dispatch_uid="arcms-sensitive-media")
+    post_delete.connect(sensitive.forget, sender=MediaAsset, dispatch_uid="arcms-sensitive-media-d")
 
     for model in (BreakingNews, Category, LiveEntry, Page):
         post_save.connect(invalidate_public_cache, sender=model, dispatch_uid=f"arcms-inv-{model.__name__}")

@@ -61,9 +61,8 @@ class LatestFeed(Feed):
     def item_extra_kwargs(self, item):
         from arcms.core.utils import absolute_url
 
-        if item.featured_image_id:
-            return {"image": absolute_url(item.featured_image.card)}
-        return {}
+        image = item.share_image
+        return {"image": absolute_url(image.card)} if image else {}
 
 
 class CategoryFeed(LatestFeed):

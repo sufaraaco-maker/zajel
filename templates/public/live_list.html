@@ -6,7 +6,7 @@
 <div class="grid grid-3">
   {% for live in page.object_list %}
   <article class="card">
-    <a href="{{ live.get_absolute_url }}" tabindex="-1" aria-hidden="true"><div class="thumb{% if not live.cover %} placeholder{% endif %}">{% if live.cover %}<img src="{{ live.cover.card }}" alt="" loading="lazy">{% else %}{{ "live"|icon:40 }}{% endif %}</div></a>
+    <a href="{{ live.get_absolute_url }}" tabindex="-1" aria-hidden="true"><div class="thumb{% if not live.cover %} placeholder{% endif %}">{% if live.cover %}<img{% if live.cover.sensitive %} data-sensitive{% endif %} src="{{ live.cover.card }}" alt="" loading="lazy">{% else %}{{ "live"|icon:40 }}{% endif %}</div></a>
     <div>{% if live.is_live %}<span class="live-badge"><span class="pulse"></span>مباشر</span>{% else %}<span class="kicker outline">انتهت</span>{% endif %}
     <h3><a href="{{ live.get_absolute_url }}">{{ live.title }}</a></h3>
     <div class="meta">بدأت {{ live.started_at|ar_date_short }}</div></div>

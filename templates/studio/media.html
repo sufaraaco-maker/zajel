@@ -15,7 +15,7 @@
   <a class="media-item" href="{% url 'studio:media_edit' a.pk %}" title="{{ a.caption }}">
     <img src="{{ a.thumb }}" alt="{{ a.alt_text }}" loading="lazy">
     <div class="cap">{{ a.caption|default:a.credit|default:"بلا تعليق" }}</div>
-    <div class="cap">{{ a.width }}×{{ a.height }}{% if a.removed_metadata %} · {{ "shield"|icon:12 }} نُزعت بيانات{% endif %}</div>
+    <div class="cap">{{ a.width }}×{{ a.height }}{% if a.removed_metadata %} · {{ "shield"|icon:12 }} نُزعت بيانات{% endif %}{% if a.sensitive %} · <span class="pill breaking">قاسية</span>{% endif %}</div>
   </a>
   {% empty %}<p class="empty">لا صور بعد.</p>{% endfor %}
 </div>

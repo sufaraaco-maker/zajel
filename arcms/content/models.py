@@ -175,6 +175,11 @@ class MediaAsset(models.Model):
     # نقطة التركيز (0..1 من اليسار ومن الأعلى): كل قصّ بنسبة ثابتة يتمركز حولها
     focal_x = models.FloatField("نقطة التركيز أفقياً", default=0.5)
     focal_y = models.FloatField("نقطة التركيز عمودياً", default=0.4)
+    sensitive = models.BooleanField(
+        "صورة قاسية", default=False,
+        help_text="دماء أو جثث أو إصابات: تُعرض في الموقع مموّهة حتى يختار القارئ رؤيتها، "
+                  "ولا تُستخدم في بطاقات المشاركة ولا في المنصات والنشرة.",
+    )
 
     class Meta:
         ordering = ["-created_at"]
@@ -474,6 +479,12 @@ class Article(models.Model):
         spaced = re.sub(r"\[poll:\d+\]", " ", spaced)  # رموز التضمين ليست نصاً
         text = " ".join(strip_tags(spaced).split())
         return text[:220] + ("…" if len(text) > 220 else "")
+
+    @property
+    def share_image(self):
+        """الصورة التي تخرج من الموقع (بطاقات المشاركة والمنصات والنشرة والخلاصات): لا تكون صورة قاسية."""
+        image = self.featured_image if self.featured_image_id else None
+        return None if image is None or image.sensitive else image
 
     @property
     def primary_author(self):

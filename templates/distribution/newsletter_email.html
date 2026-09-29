@@ -11,7 +11,7 @@
     </td></tr>
     {% for a in articles %}
     <tr><td style="padding:18px 22px;border-bottom:1px solid #eee;text-align:right;">
-      {% if forloop.first and a.featured_image %}<a href="{{ home_url }}s/{{ a.pk }}?utm_source=newsletter"><img src="{{ home_url }}{{ a.featured_image.card|slice:'1:' }}" width="556" alt="" style="width:100%;max-width:556px;height:auto;border-radius:4px;display:block;margin-bottom:10px;"></a>{% endif %}
+      {% if forloop.first and a.share_image %}<a href="{{ home_url }}s/{{ a.pk }}?utm_source=newsletter"><img src="{{ home_url }}{{ a.share_image.card|slice:'1:' }}" width="556" alt="" style="width:100%;max-width:556px;height:auto;border-radius:4px;display:block;margin-bottom:10px;"></a>{% endif %}
       {% if a.category %}<div style="color:{{ site.primary_color }};font-size:12px;font-weight:bold;">{{ a.category.name }}</div>{% endif %}
       <a href="{{ home_url }}s/{{ a.pk }}?utm_source=newsletter" style="color:#16181b;text-decoration:none;font-size:{% if forloop.first %}21{% else %}17{% endif %}px;font-weight:bold;line-height:1.6;">{{ a.title }}</a>
       {% if forloop.first or a.subtitle %}<p style="color:#555;font-size:14px;line-height:1.8;margin:6px 0 0;">{{ a.subtitle|default:a.summary|truncatewords:40 }}</p>{% endif %}

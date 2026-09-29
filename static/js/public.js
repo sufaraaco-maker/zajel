@@ -13,6 +13,43 @@
   function store(k, v) { try { v === null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} }
   function read(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
 
+  // --- الصور القاسية: مموّهة حتى يختار القارئ رؤيتها. داخل رابط (بطاقة) تُعلَّم فقط، والكشف في صفحة المادة ---
+  function veil(root) {
+    $$("img[data-sensitive]", root).forEach(function (img) {
+      if (img.hasAttribute("data-veiled")) return;
+      img.setAttribute("data-veiled", "");
+      var link = img.closest("a");
+      if (link) {
+        var box = img.parentElement;
+        box.classList.add("has-sensitive");
+        var tag = document.createElement("span");
+        tag.className = "sensitive-tag";
+        tag.textContent = "صورة قاسية";
+        box.appendChild(tag);
+        return;
+      }
+      var wrap = document.createElement("span");
+      wrap.className = "sensitive-wrap";
+      img.parentNode.insertBefore(wrap, img);
+      wrap.appendChild(img);
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "sensitive-veil";
+      btn.appendChild(document.createTextNode("صورة قد تكون قاسية"));
+      var hint = document.createElement("small");
+      hint.textContent = "اضغط لعرضها";
+      btn.appendChild(hint);
+      btn.addEventListener("click", function () {
+        img.removeAttribute("data-sensitive");
+        btn.remove();
+        img.setAttribute("tabindex", "-1");
+        img.focus({ preventScroll: true });
+      });
+      wrap.appendChild(btn);
+    });
+  }
+  veil(document);
+
   // --- الوضع الداكن ---
   var themeBtn = $("[data-theme-toggle]");
   function currentTheme() {
@@ -123,6 +160,7 @@
             tmp.innerHTML = e.html.trim();
             var node = tmp.firstElementChild;
             node.classList.add("new");
+            veil(node);
             feed.insertBefore(node, first || feed.firstChild);
             first = node;
           });

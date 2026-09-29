@@ -30,6 +30,7 @@ def _asset_json(a: MediaAsset) -> dict:
         "width": a.width,
         "height": a.height,
         "removed": a.removed_metadata,
+        "sensitive": a.sensitive,
     }
 
 
@@ -107,6 +108,10 @@ def edit(request, pk: int):
             from arcms.content.imaging import recrop
 
             recrop(saved)
+        if "sensitive" in form.changed_data:
+            from arcms.content.signals import invalidate_public_cache
+
+            invalidate_public_cache()  # الرئيسية والأقسام مخزنة مؤقتاً بالصورة كما كانت
         messages.success(request, "حُفظت بيانات الصورة.")
         return redirect("studio:media")
     return render(request, "studio/media_edit.html", {"asset": asset, "form": form})

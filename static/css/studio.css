@@ -157,6 +157,7 @@ legend { font-weight: 700; padding: 0 6px; }
 .featured-box img { width: 100%; display: block; }
 .image-field { position: relative; }
 .image-field > .clear { position: absolute; top: 8px; inset-inline-start: 8px; }
+.sensitive-note { color: var(--bad); margin: 6px 0 0; }
 .removed-meta { font-size: .78rem; color: var(--ok); margin-top: 6px; display: flex; gap: 4px; align-items: flex-start; }
 .action-box .btn { width: 100%; margin-bottom: 6px; }
 .notes { max-height: 360px; overflow-y: auto; }

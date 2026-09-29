@@ -39,14 +39,14 @@ python manage.py runserver
 ## الاختبارات والفحص
 
 ```bash
-python manage.py test          # 404 اختبارات
+python manage.py test          # 411 اختباراً
 ruff check arcms config
 ```
 
 ## البنية
 
 - `arcms/arabic` مكتبة اللغة (تطبيع، تجذيع، بحث، تواريخ، مدقق الأسلوب `style.py`) — بلا اعتماد على Django إلا في التواريخ. دليل أسلوب المؤسسة في `SiteSettings.style_rules`، وواجهة الفحص `studio:api_style`.
-- `arcms/content` المواد وسير العمل (`workflow.py`) والبحث (`search.py`) ونزع بيانات الصور (`imaging.py`) وبطاقات المشاركة (`cards.py`، خطوطها في `card_fonts/`).
+- `arcms/content` المواد وسير العمل (`workflow.py`) والبحث (`search.py`) ونزع بيانات الصور (`imaging.py`) والصور القاسية (`sensitive.py`) وبطاقات المشاركة (`cards.py`، خطوطها في `card_fonts/`).
 - `arcms/polls` استطلاعات القرّاء (رمز `[poll:رقم]` في المتن يُعرض عبر `services.render_shortcodes`).
 - `arcms/planning` خطة التغطية (المرحلة تتبع المادة عبر `signals.py`).
 - `arcms/wires` مكتب الوكالات (جلب RSS/Atom آمن في `feeds.py`، والاعتماد مسودةً في `services.py`).
