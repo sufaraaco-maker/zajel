@@ -240,8 +240,17 @@ def article_edit(request, pk: int | None = None):
         "can_sources": article is None or can_view_sources(user, article),
         "kinds": ArticleKind.choices,
         "now_local": timezone.localtime().strftime("%Y-%m-%dT%H:%M"),
+        **_card_context(),
     }
     return render(request, "studio/article_edit.html", ctx)
+
+
+def _card_context() -> dict:
+    from arcms.content import cards
+    from arcms.core.models import SiteSettings
+
+    return {"cards_on": SiteSettings.load().share_cards and cards.available(),
+            "card_formats": [(key, short, hint) for key, (short, hint) in cards.FORMAT_LABELS.items()]}
 
 
 _REVIEWED_FIELDS = ("kicker", "title", "subtitle", "excerpt", "dateline", "body", "category_id", "featured_image_id",

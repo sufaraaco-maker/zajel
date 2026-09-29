@@ -24,6 +24,8 @@
       {% for b in page %}
       <li>
         <div class="grow">{% if b.is_active %}<span class="pill breaking">ظاهر</span>{% else %}<span class="pill">مخفي</span>{% endif %} {{ b.text }}<div class="sub">{{ b.created_by|default:"" }} · {{ b.created_at|ar_datetime }}{% if b.article %} · مرتبط بـ «{{ b.article.title|truncatechars:40 }}»{% endif %}</div></div>
+        {% if cards_on %}<a class="btn sm" href="{% url 'studio:breaking_card' b.pk %}?f=square&download=1" title="بطاقة مربعة للمنصات">{{ "image"|icon:14 }} بطاقة</a>
+        <a class="btn sm" href="{% url 'studio:breaking_card' b.pk %}?f=story&download=1" title="بطاقة للقصص">قصة</a>{% endif %}
         <form method="post" action="{% url 'studio:breaking_toggle' b.pk %}">{% csrf_token %}<button class="btn sm">{% if b.is_active %}إخفاء{% else %}إظهار{% endif %}</button></form>
       </li>
       {% empty %}<li class="empty">لا أخبار عاجلة بعد.</li>{% endfor %}

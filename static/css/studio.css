@@ -384,3 +384,4 @@ form.inline { display: inline; }
 .wire-filter select { width: auto; min-width: 150px; }
 .wire-filter input[type=search] { width: 230px; }
 @media (max-width: 700px) { .wire-filter, .wire-filter input[type=search], .wire-filter select { width: 100%; } }
+.share-card img { width: 100%; height: auto; border-radius: 6px; display: block; margin-bottom: 8px; background: var(--line); }

@@ -126,6 +126,15 @@
       {% include "studio/partials/field.html" with field=form.hide_featured_image %}
     </section>
 
+    {% if article and cards_on %}
+    <section class="panel share-card">
+      <h2>{{ "send"|icon:18 }} بطاقة المشاركة</h2>
+      <a href="{% url 'studio:article_card' article.pk %}" target="_blank" rel="noopener"><img src="{% url 'studio:article_card' article.pk %}?v={{ article.updated_at|date:'U' }}" alt="بطاقة المشاركة" loading="lazy" width="1200" height="630"></a>
+      <p class="small muted">تظهر عند مشاركة الرابط، وتُرسل مع المادة إلى تيليجرام. تتحدّث بعد الحفظ.</p>
+      <div class="btn-row">{% for key, short, hint in card_formats %}<a class="btn sm" href="{% url 'studio:article_card' article.pk %}?f={{ key }}&download=1" title="{{ hint }}">{{ "upload"|icon:14 }} {{ short }}</a>{% endfor %}</div>
+    </section>
+    {% endif %}
+
     <section class="panel">
       <h2>{{ "bolt"|icon:18 }} الإبراز</h2>
       <div class="checks-inline">

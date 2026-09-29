@@ -29,7 +29,9 @@ def breaking(request):
         messages.success(request, "نُشر العاجل في الشريط وأُرسل إلى القنوات المختارة.")
         return redirect("studio:breaking")
     page = paginate(request, BreakingNews.objects.select_related("created_by", "article"), 30)
-    return render(request, "studio/breaking.html", {"form": form, "page": page, "now": timezone.now()})
+    from .views_articles import _card_context
+
+    return render(request, "studio/breaking.html", {"form": form, "page": page, "now": timezone.now(), **_card_context()})
 
 
 @requires(Cap.BREAKING)
@@ -99,3 +101,55 @@ def live_entry_action(request, pk: int, entry: int):
         item.is_pinned = not item.is_pinned
         item.save()
     return redirect("studio:live_detail", pk=pk)
+
+
+def _card_download(request, data: bytes, name: str):
+    from django.http import HttpResponse
+
+    resp = HttpResponse(data, content_type="image/jpeg")
+    resp["Cache-Control"] = "private, no-store"
+    if request.GET.get("download"):
+        resp["Content-Disposition"] = f'attachment; filename="{name}"'
+    return resp
+
+
+def _card_format(request) -> str:
+    from arcms.content.cards import SIZES
+
+    fmt = request.GET.get("f", "wide")
+    return fmt if fmt in SIZES else "wide"
+
+
+@requires(Cap.ARTICLE_CREATE, Cap.ARTICLE_EDIT_ANY, Cap.DIST_SEND)
+def article_card(request, pk: int):
+    """معاينة بطاقة المشاركة وتنزيلها بالمقاسات الثلاثة. المسودة تُرسم دون حفظ في الوسائط العامة."""
+    from django.core.exceptions import PermissionDenied
+    from django.http import Http404
+
+    from arcms.content import cards
+    from arcms.content.models import Article
+    from arcms.content.workflow import can_view
+    from arcms.core.models import SiteSettings
+
+    article = get_object_or_404(Article.objects.select_related("featured_image", "category"), pk=pk)
+    if not can_view(request.user, article):
+        raise PermissionDenied
+    if not cards.available():
+        raise Http404("مكتبة تشكيل النص العربي (libraqm) غير مثبتة على الخادم.")
+    site, fmt = SiteSettings.load(), _card_format(request)
+    data = cards.article_card(article, site, fmt) if article.is_live else cards.render_article(article, site, fmt)
+    return _card_download(request, data, f"card-{article.pk}-{fmt}.jpg")
+
+
+@requires(Cap.BREAKING)
+def breaking_card(request, pk: int):
+    from django.http import Http404
+
+    from arcms.content import cards
+    from arcms.core.models import SiteSettings
+
+    item = get_object_or_404(BreakingNews, pk=pk)
+    if not cards.available():
+        raise Http404("مكتبة تشكيل النص العربي (libraqm) غير مثبتة على الخادم.")
+    site, fmt = SiteSettings.load(), _card_format(request)
+    return _card_download(request, cards.breaking_card(item, site, fmt), f"breaking-{item.pk}-{fmt}.jpg")

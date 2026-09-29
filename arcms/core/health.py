@@ -102,6 +102,15 @@ def run_checks(live: bool = False) -> list[Check]:
     if failed:
         add(Check("العامل الخلفي", "warn", f"{failed} مهمة فشلت خلال 24 ساعة.", "راجع صفحة التوزيع لمعرفة السبب."))
 
+    # --- بطاقات المشاركة ---
+    from arcms.content import cards
+
+    from .models import SiteSettings
+
+    if SiteSettings.load().share_cards and not cards.available():
+        add(Check("بطاقات المشاركة", "warn", "تشكيل النص العربي في الصور غير متاح (libraqm/fribidi).",
+                  "ثبّت libfribidi0 على الخادم؛ حتى ذلك تُستخدم صورة المادة عند المشاركة."))
+
     # --- مكتب الوكالات ---
     from arcms.wires.models import WireSource
 

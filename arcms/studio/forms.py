@@ -374,6 +374,7 @@ class SiteSettingsForm(forms.ModelForm):
         (COLOR_SECTION, ["primary_color", "accent_color", "header_dark", *SiteSettings.COLOR_AREAS]),
         ("الخطوط والشكل", ["font_headings", "font_body", "corner_style"]),
         ("الترويسة والتذييل", ["header_style", "header_cta_label", "header_cta_url", "app_ios_url", "app_android_url"]),
+        ("المشاركة على المنصات", ["share_cards"]),
         ("التاريخ والأرقام", ["month_style", "digits", "clock", "show_hijri", "hijri_adjust"]),
         ("شريط العاجل", ["ticker_enabled", "ticker_label", "ticker_hours"]),
         ("روابط التواصل", ["telegram", "whatsapp", "x_twitter", "facebook", "instagram", "youtube", "tiktok",

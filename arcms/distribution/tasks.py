@@ -12,10 +12,14 @@ from .models import Channel, ChannelConfig, Delivery, PushSubscription, WhatsApp
 
 
 def _content(delivery: Delivery) -> dict:
-    """نص موحّد للمادة أو العاجل."""
+    """نص موحّد للمادة أو العاجل. الصورة بطاقة المشاركة بهوية الموقع إن فُعّلت، وإلا صورة المادة."""
+    from arcms.content.cards import article_card_url, breaking_card_url
+    from arcms.core.models import SiteSettings
+
+    site = SiteSettings.load()
     if delivery.article_id:
         a = delivery.article
-        image = a.featured_image.social if a.featured_image_id else ""
+        image = article_card_url(a, site) or (a.featured_image.social if a.featured_image_id else "")
         return {
             "title": a.title,
             "summary": a.subtitle or a.summary,
@@ -27,13 +31,14 @@ def _content(delivery: Delivery) -> dict:
         }
     b = delivery.breaking
     url = b.get_url()
+    card = breaking_card_url(b, site)
     return {
         "title": b.text,
         "summary": "",
         "url": absolute_url(url) if url else absolute_url("/"),
         "kicker": "عاجل",
         "category": "",
-        "image": "",
+        "image": absolute_url(card) if card else "",
         "tag": f"breaking-{b.pk}",
     }
 

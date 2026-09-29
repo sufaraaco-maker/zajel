@@ -146,6 +146,7 @@ def article_detail(request, pk: int, slug: str = ""):
             "most_read": most_read(6),
             "latest": list(published().exclude(pk=article.pk)[:6]),
             "share_url": absolute_url(article.get_short_url()),
+            "share_card": _share_card(article),
             "canonical": absolute_url(article.get_absolute_url()),
             "ad_inline": AdSlot.live_for("article_inline"),
             "ad_end": AdSlot.live_for("article_end"),
@@ -155,6 +156,15 @@ def article_detail(request, pk: int, slug: str = ""):
         }
     )
     return render(request, "public/article.html", ctx)
+
+
+def _share_card(article: Article) -> str:
+    if not article.is_live:
+        return ""
+    from arcms.content.cards import article_card_url
+
+    url = article_card_url(article, SiteSettings.load())
+    return absolute_url(url) if url else ""
 
 
 def _news_article_ld(a: Article) -> dict:
@@ -188,6 +198,35 @@ def short_link(request, pk: int):
     target = article.get_absolute_url()
     query = request.META.get("QUERY_STRING")
     return redirect(f"{target}?{query}" if query else target, permanent=True)
+
+
+def _card_response(data: bytes) -> HttpResponse:
+    resp = HttpResponse(data, content_type="image/jpeg")
+    resp["Cache-Control"] = "public, max-age=86400"
+    return resp
+
+
+def article_card(request, pk: int):
+    """بطاقة المشاركة للمادة المنشورة فقط؛ المسودات لا تُكشف عناوينها."""
+    from arcms.content import cards
+
+    site = SiteSettings.load()
+    if not (site.share_cards and cards.available()):
+        raise Http404
+    article = get_object_or_404(Article.objects.select_related("featured_image", "category"), pk=pk)
+    if not article.is_live:
+        raise Http404
+    return _card_response(cards.article_card(article, site))
+
+
+def breaking_card(request, pk: int):
+    from arcms.content import cards
+
+    site = SiteSettings.load()
+    if not (site.share_cards and cards.available()):
+        raise Http404
+    breaking = get_object_or_404(BreakingNews, pk=pk, is_active=True)
+    return _card_response(cards.breaking_card(breaking, site))
 
 
 def category_detail(request, slug: str):
